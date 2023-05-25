@@ -1,5 +1,24 @@
 # Structured Threat Models *WORK IN PROGRESS*
 
+## Development setup
+Run from this directory:
+
+from github.com:corda/threat-model-tool
+```bash
+python setup.py develop
+```
+
+from the github.com:corda/threat-modeling.git
+```bash
+pip install -e ../threat-model-tool
+```
+
+execute from console, example:
+
+```bash 
+python -m r3threatmodeling.TMReportTool --rootTMYaml ../Corda5ThreatModels/threatModels/C5.yaml --TMID C5  --browserSync --outputDir ../Corda5ThreatModels/build/generated_reports --template TM_templateFull
+```
+
 ## Status
 [GANTT report](threatModels/generated_reports/gantt.md)
 ## Introduction
