@@ -1,19 +1,17 @@
 # Structured Threat Models *WORK IN PROGRESS*
 
 ## Development setup
-Run from this directory:
-
-from github.com:corda/threat-model-tool
+Run from github.com:corda/threat-model-tool checkout directory:
 ```bash
 python setup.py develop
 ```
 
-from the github.com:corda/threat-modeling.git
+Run from the github.com:corda/threat-modeling.git checkout directory:
 ```bash
 pip install -e ../threat-model-tool
 ```
 
-execute from console, example:
+execute it from console, example:
 
 ```bash 
 python -m r3threatmodeling.TMReportTool --rootTMYaml ../Corda5ThreatModels/threatModels/C5.yaml --TMID C5  --browserSync --outputDir ../Corda5ThreatModels/build/generated_reports --template TM_templateFull
