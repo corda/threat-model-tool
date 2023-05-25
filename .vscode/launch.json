@@ -1,0 +1,45 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Module for R3 C5 Full",
+            "type": "python",
+            "request": "launch",
+            "module": "r3threatmodeling.TMReportTool",
+            "justMyCode": true,
+            "args": [
+                "--rootTMYaml",
+                "../Corda5ThreatModels/threatModels/C5.yaml",
+                "--TMID",
+                "C5",
+                "C5.CPIPackaging",
+                "C5.HTTPGateway",
+                "C5.ClusterConfiguration",
+                "C5.ClusterDeployment",
+                "C5.CryptoLibrary",
+                "C5.e2e",
+                "C5.VNodeOnboarding",
+                "C5.Sandboxes",
+                "--browserSync",
+                // "--watchFiles",
+                // "pyConThreatMod/template/TM_templateFull.mako",
+                // "threatModels/CPIPackaging.yaml",
+                // "threatModels/VNodeOnboarding.yaml",
+                // "pyConThreatMod/template/TM_template.mako",
+                // "pyConThreatMod/template/lib.mako",
+                // "threatModels/C5.yaml",
+                // "threatModels/HTTPGateway.yaml",
+                // "threatModels/ClusterConfiguration.yaml",
+                // "threatModels/ClusterDeployment.yaml",
+                // "threatModels/CPIPackaging.yaml",
+                "--outputDir",
+                "../Corda5ThreatModels/build/generated_reports",
+                "--template",
+                "TM_templateFull"
+            ]
+        }
+    ]
+}

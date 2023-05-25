@@ -1,0 +1,10 @@
+# install with:
+# pip install -r requirements.txt
+pathvalidate
+pyyaml
+markdown
+watchdog
+mako
+cvss
+pyvis
+ruamel.yaml
