@@ -1,15 +1,16 @@
 # Structured Threat Models *WORK IN PROGRESS*
 
 ## Development setup
-Run from github.com:corda/threat-model-tool checkout directory:
+Run from [github.com:corda/threat-model-tool](https://github.com/corda/threat-model-tool) checkout directory:
 ```bash
 python setup.py develop
 ```
 
-Run from the github.com:corda/threat-modeling.git checkout directory:
+Run from the [github.com:corda/threat-modeling.git](https://github.com/corda/threat-modeling) checkout directory:
 ```bash
 pip install -e ../threat-model-tool
 ```
+## Report generation command
 
 execute it from console, example:
 
