@@ -73,6 +73,15 @@ def valueOr(o, a, alt):
 from fileinput import filename
 
 class BaseThreatModelObject:
+
+    originDict= None
+
+    def update(self, dict):
+        try: 
+            self.originDict.update(dict)
+        except:
+            raise BaseException(f"originDict not set by the object parser in: {self.id}")
+
     @property
     def id(self):
         if not hasattr(self, '_id'):
@@ -107,6 +116,8 @@ class BaseThreatModelObject:
         return
     def __init__(self, dict, parent):
 
+        self.originDict = dict
+
         self.markdown_to_text = markdown_to_text
 
         self.description = "undefined"
@@ -118,8 +129,11 @@ class BaseThreatModelObject:
             parent.children = {self}
 
         self._id = dict["ID"]
+
         for k, v in dict.items():
             setattr(self, k, v)
+
+
     def printAsText(self):
         return "\nID: " + self.id + " \nDescription: " + self.description
     
@@ -289,10 +303,13 @@ class Scope():
     def __init__(self):
         return
     def __init__(self, dict):
-          for k, v in dict.items():
-            # if k == "securityObjective":
-            #     self.securityObjectives.append(SecurityObjective(v))
-            # else:
+
+        self.originDict = dict
+
+        for k, v in dict.items():
+        # if k == "securityObjective":
+        #     self.securityObjectives.append(SecurityObjective(v))
+        # else:
             setattr(self, k, v)
 
 
@@ -313,6 +330,8 @@ class Countermeasure(BaseThreatModelObject):
     def __init__(self, dict, threat):
         # self.threats: list[Threat] = []
 
+        self.originDict = dict
+
         parent = threat
         if hasattr(parent, "children"):
             parent.children.add(self)
@@ -328,6 +347,7 @@ class Countermeasure(BaseThreatModelObject):
 
         for k, v in dict.items():
             setattr(self, k, v)
+
     def printAsText(self):
         return "\nID: " + self.id + " \nDescription: " + self.description 
     
@@ -441,6 +461,8 @@ class Threat(BaseThreatModelObject):
 
         return
     def __init__(self, dict, tm):
+
+        self.originDict = dict
 
         parent = tm
         if hasattr(parent, "children"):
@@ -592,10 +614,20 @@ class ThreatModel(BaseThreatModelObject):
 
     def __init__(self):
         return
-    def __init__(self, dict, parent = None):
-        self.childrenTM = []
-        
+    def __init__(self, fileIn, parent = None):
 
+        self.fileName = fileIn.name
+
+        print ("processing:" + fileIn.name)
+        fileIn.seek(0)
+        if not fileIn.name.endswith('.yaml'):
+            print("input file needs to be .yaml")
+            exit -2   
+        tmDict = yaml.load(fileIn)
+        
+        self.originDict = tmDict
+
+        self.childrenTM = []
 
         #Parent First (this is recursive)
         if parent is None:
@@ -607,18 +639,18 @@ class ThreatModel(BaseThreatModelObject):
         else:
             parent.childrenTM.append(self)
             self.parent = parent
-        
+
         self.threats: list[Threat] = []
-        self._id = dict["ID"]
-        self.scope = Scope(dict["scope"])
-        self.analysis = dict["analysis"]
+        self._id = tmDict["ID"]
+        self.scope = Scope(tmDict["scope"])
+        self.analysis = tmDict["analysis"]
         self.assets: list[Asset]  = []
         self.securityObjectives: list[SecurityObjective]  = []
         self.attackers: list[Attacker] = []
         self.assumptions: list[Assumption] = []
 
 
-        for scope_k, scope_v in dict['scope'].items():    
+        for scope_k, scope_v in tmDict['scope'].items():    
             if "securityObjectives" == scope_k:
                 try:
                     if scope_v is not None:
@@ -655,25 +687,27 @@ class ThreatModel(BaseThreatModelObject):
                     pass
 
 
-        for k, v in dict.items():
+        for k, v in tmDict.items():
             if k == "scope" or k == "parent":
                 pass
 
             elif k == "title":
-                self._title=dict['title']
+                self._title=tmDict['title']
 
             elif "threats"  == k:
-                if  dict["threats"] != None:
-                    for threatDict in dict["threats"]:
+                if  tmDict["threats"] != None:
+                    for threatDict in tmDict["threats"]:
                         threat = Threat(threatDict, self)
                         self.threats.append(threat)
                 
             elif "children"  == k:
-                for childrenDict in dict['children'].values():
-                    childTM = ThreatModel(childrenDict, self)
-                    # self.childrenTM.append(childTM) # added in init of the children
+                for childrenDict in tmDict['children']:
+                    childTM = ThreatModel(
+                        fileIn= open( os.path.dirname(fileIn.name)  + os.path.sep +  childrenDict['ID'] +".yaml"),
+                        parent = self)
+
             elif "gantt"  == k:
-                self.gantt=dict['gantt']
+                self.gantt=tmDict['gantt']
 
             else:
                 try:
@@ -849,44 +883,29 @@ def parseFiles(yamlFiles):
     assignParents(TMS)
     return TMS
 
-def parseYamlThreatModelAndChildren(fileIn):  
+def parseYamlThreatModelAndChildrenXXX(fileIn):  
     print ("processing:" + fileIn.name)
     fileIn.seek(0)
     if not fileIn.name.endswith('.yaml'):
         print("input file needs to be .yaml")
         exit -2   
-    tm = yaml.load(fileIn)#, Loader=SafeLoader)
-    tm["fileName"] = fileIn.name
+    tmDict = yaml.load(fileIn)#, Loader=SafeLoader)
+    # tmDict["fileName"] = fileIn.name
     # TMS[tmData["ID"]] = tmData
 
-    if "children" in tm.keys():
-        idList = tm['children']
+    if "children" in tmDict.keys():
+        idList = tmDict['children']
         if idList == None:
             idList = []
-        tm['children']=dict()
+        tmDict['children']=dict()
         for childrenIDDict in idList:
             childrenId = childrenIDDict['ID']
-            childrenTMDict = parseYamlThreatModelAndChildren (  open( os.path.dirname(fileIn.name)  + os.path.sep +  childrenId +".yaml"))
-            childrenTMDict['parent'] = tm
-            tm['children'][childrenTMDict['ID']]=childrenTMDict
+            childrenTMDict = parseYamlThreatModelAndChildrenXXX (  open( os.path.dirname(fileIn.name)  + os.path.sep +  childrenId +".yaml"))
+            childrenTMDict['parent'] = tmDict
+            tmDict['children'][childrenTMDict['ID']]=childrenTMDict
 
-    return tm
+    return tmDict
 
-def parseYamlThreatModelAndParentsToDict(fileIn):  
-    print ("processing:" + fileIn.name)
-    fileIn.seek(0)
-    if not fileIn.name.endswith('.yaml'):
-        print("input file needs to be .yaml")
-        exit -2   
-    tm = yaml.load(fileIn)#, Loader=SafeLoader)
-    tm["fileName"] = fileIn.name
-    # TMS[tmData["ID"]] = tmData
-
-    if "parent" in tm.keys(): 
-        #standard name of the parent is ID and the same folder with yaml lowercase extension
-        tm['parent'] = parseYamlThreatModelAndParentsToDict (  open( os.path.dirname(fileIn.name)  + os.path.sep +  tm.get("parent")+".yaml"))
-    
-    return tm
 
 def  lookupParent(tm):
 
@@ -959,9 +978,9 @@ def processMultipleTMIDs(TMIDs, outputDir, browserSync, rootTMYamlFile, template
     if not rootTMYamlFile.name.lower().endswith('.yaml'):
         raise ValueError("input file "+ rootTMYamlFile.name + "needs to be .yaml")
     
-    tmDict = parseYamlThreatModelAndChildren(rootTMYamlFile)
+    # tmDict = parseYamlThreatModelAndChildren(rootTMYamlFile)
 
-    tmoRoot = ThreatModel(tmDict)
+    tmoRoot = ThreatModel(rootTMYamlFile)
  
 
     for tmid in TMIDs:
