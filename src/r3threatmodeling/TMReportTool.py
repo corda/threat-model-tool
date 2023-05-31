@@ -74,6 +74,12 @@ def main():
     required=False
     )
 
+    CLI.add_argument(
+    "--rewriteYAMLDev",  
+    action='store_true',
+    required=False
+    )
+
     CLI.add_argument('--ancestorData', action='store_true')
     CLI.add_argument('--no-ancestorData', dest='ancestorData', action='store_false')
     CLI.set_defaults(ancestorData=True)
@@ -89,11 +95,14 @@ def main():
     template = args.template
     ancestorData = args.ancestorData
     baseFileName = args.baseFileName
+    rewriteYAMLDev = args.rewriteYAMLDev
 
     os.makedirs(outputDir, exist_ok=True)
     
     #First call, when run Generates the files
-    processCommandLine(TMIDs, outputDir, browserSync, rootTMYaml, template, ancestorData, baseFileName)
+    processMultipleTMIDs(args)
+
+
 
     if watchFiles is not None:
         print (" watching Files ")
@@ -102,7 +111,7 @@ def main():
         #                         datefmt='%Y-%m-%d %H:%M:%S')
         # event_handler = LoggingEventHandler()
         observer = Observer()
-        handler= make_handler(watchFiles, processCommandLine, TMIDs, outputDir, browserSync, rootTMYaml, template, ancestorData, baseFileName)
+        handler= make_handler(watchFiles, processMultipleTMIDs, args)
         observer.schedule(
             handler,
              os.getcwd(), recursive=True)
@@ -115,32 +124,128 @@ def main():
         observer.join()
 
 
-def processCommandLine(TMIDs, outputDir, browserSync, rootTMYaml, template, ancestorData, baseFileName):
-    # if rootTMYaml == None:
-    #     return processSeparatedReports(TMID, outputDir, browserSync, template)
-    # else:
-    processMultipleTMIDs(TMIDs, outputDir, browserSync, rootTMYaml, template, ancestorData, baseFileName)
-        # return -2
+
+def processMultipleTMIDs(args):
+
+    # print ("processRootTMYaml file: " + rootTMYamlFile.name)
+    # if not rootTMYamlFile.name.lower().endswith('.yaml'):
+    #     raise ValueError("input file "+ rootTMYamlFile.name + "needs to be .yaml")
+    rootTMYamlFile = args.rootTMYaml
+    TMIDs = args.TMID
+
+    tmoRoot = ThreatModel(rootTMYamlFile)
+ 
+
+    for tmid in TMIDs:
+        processSingleTMID(tmoRoot, tmid, args)
 
 
+def processSingleTMID(tmoRoot, TMID, args):
 
-# def processSeparatedReports(TMID, outputDir, browserSync):
-#     for tmid in TMID:
-#         print ("processing Threat Model ID  " + tmid.name)
-#         if not tmid.name.lower().endswith('.yaml'):
-#             print("input file needs to be .yaml")
-#             exit -2
-     
-#         mdOutFileName = ntpath.basename(tmid.name)[:-5] + ".md"
-#         htmlOutFileName = ntpath.basename(tmid.name)[:-5] + ".html"
+    TMIDs = args.TMID
+    outputDir = args.outputDir
+    browserSync = args.browserSync
+    watchFiles = args.watchFiles
+    template = args.template
+    ancestorData = args.ancestorData
+    baseFileName = args.baseFileName
+    rewriteYAMLDev = args.rewriteYAMLDev
 
-#         try:
-#             tmDict = parseYamlThreatModelAndParentsToDict(tmid)
-#             mdReport = createMarkdownReport(tmDict)
-#             mdReport = createTableOfContent(mdReport)
-#         except:
-#             raise
-#         postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileName, mdReport)
+    if baseFileName is None:
+        baseFileName = TMID
+
+    mdOutFileName = baseFileName + ".md"
+    htmlOutFileName = baseFileName + ".html"
+
+    rootID = TMID.split('.')[0]
+    if tmoRoot._id == rootID:
+        tmo = tmoRoot
+    else:
+        raise Exception('root id: '+ rootID +' not recognized, should be : '+tmoRoot._id)
+
+        
+    for idPathPart in TMID.split('.')[1:]:
+        tmo = tmo.getChildrenTMbyID(idPathPart)
+        
+
+    try:
+        mdTemplate = Template(
+        filename=  os.path.join(os.path.dirname(__file__),
+            'template/'+template+'.mako'),
+            lookup=TemplateLookup(
+                directories=['.', 
+                             os.path.join(os.path.dirname(__file__),'/template/'), "/"]
+                            , output_encoding='utf-8', preprocessor=[lambda x: x.replace("\r\n", "\n")]
+            ))
+        # ancestorData = True
+        mdReport = mdTemplate.render(tmo=tmo, ancestorData=ancestorData)
+    except:
+        # print(mako_exceptions.text_error_template().render())
+        traceback = RichTraceback()
+        for (filename, lineno, function, line) in traceback.traceback:
+            print("File %s, line %s, in %s" % (filename, lineno, function))
+            print(line, "\n")
+        print("%s: %s" % (str(traceback.error.__class__.__name__), traceback.error))
+        return 
+        # raise BaseException("Template rendering error")
+
+    mdReport = createTableOfContent(mdReport)
+
+    mdReport = createRFIs(mdReport)
+
+
+    postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileName, mdReport)
+    return
+
+def postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileName, mdReport):
+    mermaidHtmlTags = mdReport.replace(#FIX mermaid diagrams for html
+                "<!-- mermaid start. Do not delete this comment-->\n```mermaid", "<div class=mermaid>").replace("```\n<!-- mermaid end. comment needed to it covert to HTML-->","</div>")
+
+    htmlReport = markdown.markdown(mermaidHtmlTags, extensions=['md_in_html'])
+        
+    baseHTML = """<!DOCTYPE html>
+        <html>
+        <head>
+        <style>
+        @media print {
+            .pagebreak {
+                clear: both;
+                min-height: 1px;
+                page-break-after: always;
+            }
+        }</style>
+        <link rel="stylesheet" href="css/tm.css">
+        </head>
+        <body>%BODY%</body>
+        </html>
+        """
+    htmlReport = baseHTML.replace("%BODY%", htmlReport)
+
+    if browserSync:
+        htmlReport=htmlReport.replace("</body>","""
+            <script id="__bs_script__">//<![CDATA[
+        document.write("<script async src='http://HOST:3000/browser-sync/browser-sync-client.js?v=2.27.10'><\/script>".replace("HOST", location.hostname));//]]></script>
+    </body> """)
+        
+    mermaid_script = """
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true});
+</script>
+"""
+    htmlReport=htmlReport.replace("</body>",    mermaid_script + "</body>")    
+
+
+    outMDPath = os.path.join(outputDir, mdOutFileName)
+    print ("output MD file:" + outMDPath)
+
+    outHTMLPath = os.path.join(outputDir, htmlOutFileName)
+    print ("output HTML file:" + outHTMLPath)
+
+    with open(outHTMLPath, 'w') as outFile:
+        outFile.write(htmlReport)
+
+    with open(outMDPath, 'w') as outFile:
+        outFile.write(mdReport)
 
 
 
