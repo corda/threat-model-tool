@@ -383,6 +383,7 @@ class Threat(BaseThreatModelObject):
     def ticketLink(self, value):
         self._ticketLink = value
         self.originDict.update({'ticketLink': value})
+
     
     @property
     def description(self):

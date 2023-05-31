@@ -12,8 +12,9 @@
             "justMyCode": true,
             "args": [
                 "--rootTMYaml",
-                "../Corda5ThreatModels/threatModels/C5.yaml",
-                "--YAMLprefix", "devticket_"
+                "../Corda5ThreatModels/threatModels/C5.yaml"
+                // ,
+                // "--YAMLprefix", "devticket_"
             ]
         },
 
