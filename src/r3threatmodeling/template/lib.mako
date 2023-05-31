@@ -147,7 +147,7 @@ Yes
 ${makeMarkdownLinkedHeader(2, "Threats Summary", skipTOC = False)}
 
 <% unmitigatedYesOperational = tmo.getThreatsByFullyMitigatedAndOperational(False, True)%>
-<% unmitigatedNoOperatinoal = tmo.getThreatsByFullyMitigatedAndOperational(False, False)%>
+<% unmitigatedNoOperational = tmo.getThreatsByFullyMitigatedAndOperational(False, False)%>
 <% mitigated  = tmo.getThreatsByFullyMitigated (True)%>
 <% unmitigated  = tmo.getThreatsByFullyMitigated (False)%>
 > This section contains an executive summary of the threats and thier mitigation status
@@ -156,7 +156,7 @@ ${makeMarkdownLinkedHeader(2, "Threats Summary", skipTOC = False)}
   **No threat identified or listed **
 %else:
 There are a total of **${len(tmo.getAllDown('threats'))}** identified threats of which **${len(unmitigated)}** are not fully mitigated 
-by default, and  **${len(unmitigatedNoOperatinoal)}** are unmitigated without proposed operational controls.<br/>
+by default, and  **${len(unmitigatedNoOperational)}** are unmitigated without proposed operational controls.<br/>
 
 <div markdown="1">
 

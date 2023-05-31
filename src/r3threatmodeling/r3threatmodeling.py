@@ -376,6 +376,15 @@ class Threat(BaseThreatModelObject):
             raise BaseException(f"Threat {self.id} needs attack attribute")
 
     @property
+    def ticketLink(self):
+        return self._ticketLink
+    
+    @ticketLink.setter
+    def ticketLink(self, value):
+        self._ticketLink = value
+        self.originDict.update({'ticketLink': value})
+    
+    @property
     def description(self):
         if hasattr(self, 'attack') and hasattr(self, 'impact'):
             return "**Attack:** " + self.attack + "<br/> **Impact:** " + self.impact
