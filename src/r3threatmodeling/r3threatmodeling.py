@@ -24,6 +24,7 @@ import ntpath
 import html
 import copy
 from cvss import CVSS3
+import sys
 
 
 
@@ -603,6 +604,23 @@ class Assumption(BaseThreatModelObject):
 
 
 class ThreatModel(BaseThreatModelObject):
+
+    def dumpRecursive(self, folder=None, prefix=""):
+        
+        originalFolder, fn = os.path.split(self.fileName)
+
+        if folder is None:
+            folder = originalFolder
+        fn = prefix + fn
+        path = folder + os.path.sep +  fn
+        outputStream = open(path, "wb")
+        print (f"...dumping yaml file: {path}")
+        yaml.indent(mapping=2, sequence=4, offset=2)
+        yaml.dump(self.originDict, outputStream)
+
+        for childrenTM in self.childrenTM:
+            childrenTM.dumpRecursive(folder, prefix)
+
     
     # scope: Scope
 
@@ -910,6 +928,8 @@ def parseYamlThreatModelAndChildrenXXX(fileIn):
 def  lookupParent(tm):
 
     return 
+
+
 
 
 # def createMarkdownReport(tmo, indent=0):

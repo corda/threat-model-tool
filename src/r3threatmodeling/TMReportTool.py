@@ -80,6 +80,12 @@ def main():
     required=False
     )
 
+    CLI.add_argument(
+    "--formatYAML",  
+    action='store_true',
+    required=False
+    )
+
     CLI.add_argument('--ancestorData', action='store_true')
     CLI.add_argument('--no-ancestorData', dest='ancestorData', action='store_false')
     CLI.set_defaults(ancestorData=True)
@@ -95,7 +101,6 @@ def main():
     template = args.template
     ancestorData = args.ancestorData
     baseFileName = args.baseFileName
-    rewriteYAMLDev = args.rewriteYAMLDev
 
     os.makedirs(outputDir, exist_ok=True)
     
@@ -138,6 +143,13 @@ def processMultipleTMIDs(args):
 
     for tmid in TMIDs:
         processSingleTMID(tmoRoot, tmid, args)
+
+    if args.rewriteYAMLDev:
+        tmoRoot.dumpRecursive(prefix="dev_")
+
+    if args.formatYAML:
+        tmoRoot.dumpRecursive()
+        
 
 
 def processSingleTMID(tmoRoot, TMID, args):

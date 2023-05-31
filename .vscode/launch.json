@@ -16,13 +16,6 @@
                 "--TMID",
                 "C5",
                 "C5.CPIPackaging",
-                "C5.HTTPGateway",
-                "C5.ClusterConfiguration",
-                "C5.ClusterDeployment",
-                "C5.CryptoLibrary",
-                "C5.e2e",
-                "C5.VNodeOnboarding",
-                "C5.Sandboxes",
                 "--browserSync",
                 // "--watchFiles",
                 // "pyConThreatMod/template/TM_templateFull.mako",
@@ -38,7 +31,8 @@
                 "--outputDir",
                 "../Corda5ThreatModels/build/generated_reports",
                 "--template",
-                "TM_templateFull"
+                "TM_templateFull",
+                "--formatYAML"
             ]
         }
     ]
