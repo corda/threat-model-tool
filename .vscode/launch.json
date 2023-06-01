@@ -24,8 +24,8 @@
             "name": "Python: Module for R3 C5 Full",
             "type": "python",
             "request": "launch",
-            "module": "r3threatmodeling.TMReportTool",
-            "justMyCode": true,
+            "module": "r3threatmodeling.report_generator",
+            "justMyCode": false,
             "args": [
                 "--rootTMYaml",
                 "../Corda5ThreatModels/threatModels/C5.yaml",

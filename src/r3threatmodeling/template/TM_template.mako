@@ -1,5 +1,5 @@
 <%! import html %>
-<%! from r3threatmodeling.TMReportTool import createTitleAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
+<%! from r3threatmodeling.template_utils import createTitleAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
 
 <% PAGEBREAK = """<br style="page-break-before: always"><div class="pagebreak"></div>"""%>
 <% H6 = """###### """ %>

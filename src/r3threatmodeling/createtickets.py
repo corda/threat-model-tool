@@ -52,4 +52,5 @@ def main():
     if(not args.dryRun):
         tm.dumpRecursive(prefix=args.YAMLprefix)
 
-main()
+if __name__ == "__main__":
+    main()

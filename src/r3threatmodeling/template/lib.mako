@@ -1,6 +1,6 @@
 
 <%! import html %>
-<%! from r3threatmodeling.TMReportTool import mermaid_escape, getShortDescForMermaid, createTitleAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
+<%! from r3threatmodeling.template_utils import mermaid_escape, getShortDescForMermaid, createTitleAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
 
 <%! from cvss import CVSS3 %>
 <%! from datetime import datetime %>
@@ -411,7 +411,9 @@ ${makeMarkdownLinkedHeader(1, tmo.title + ' Threat Model', skipTOC = False)}
 Version: ${tmo.version}
 % endif 
 
-Generated time: ${datetime.now().strftime("%Y-%m-%d %H:%M:%S")} 
+%if toc:
+Last update: ${datetime.now().strftime("%Y-%m-%d %H:%M:%S")} 
+%endif
 
 % if hasattr(tmo, 'authors'):
 Authors: ${tmo.authors}
