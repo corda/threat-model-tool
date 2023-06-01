@@ -18,10 +18,6 @@ import html
 import copy
 from cvss import CVSS3
 
-
-
-#example from https://stackoverflow.com/questions/761824/python-how-to-convert-markdown-formatted-text-to-text
-
 def unmark_element(element, stream=None):
     if stream is None:
         stream = StringIO()
@@ -44,8 +40,6 @@ def markdown_to_text(text):
     return __md.convert(text)
 
 def mermaid_escape(text):
-    # if text is None:
-    #     return "XXX_NONE_OBJECT"
     text = re.sub(r"\(RFI[\s:]*(.*)\)", "", text)
     return html.escape(markdown_to_text(text).replace("\"","#quot;")).replace("(", "&lpar;").replace(")", "&rpar;")
 
@@ -56,14 +50,6 @@ def valueOr(o, a, alt):
     else:
         return alt
 
-# class ThreatModel:
-#     parent = ""
-#     prefix = ""
-#     def __init__(self):
-#         return
-
-
-from fileinput import filename
 
 class BaseThreatModelObject:
 
@@ -178,11 +164,6 @@ class BaseThreatModelObject:
             if res != None:
                 return res
         return None
-        # for tm in self.childrenTM:
-        #     res = tm.getFirstById(id)
-        #     if res != None:
-        #         return res
-
 
     def mermaid_escaped_prop(self, propName):
         return mermaid_escape(getattr(self, propName))
