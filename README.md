@@ -15,7 +15,7 @@ pip install -e ../threat-model-tool
 execute it from console, example:
 
 ```bash 
-python -m r3threatmodeling.TMReportTool --rootTMYaml ../Corda5ThreatModels/threatModels/C5.yaml --TMID C5  --browserSync --outputDir ../Corda5ThreatModels/build/generated_reports --template TM_templateFull
+python -m r3threatmodeling.report_generator --rootTMYaml ../Corda5ThreatModels/threatModels/C5.yaml --TMID C5  --browserSync --outputDir ../Corda5ThreatModels/build/generated_reports --template TM_templateFull
 ```
 
 ## Status
