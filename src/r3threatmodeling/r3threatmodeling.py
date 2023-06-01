@@ -91,8 +91,6 @@ class BaseThreatModelObject:
             return self.parent.getAllUp(attrName) + getattr(self, attrName)
 
     def getAllDown(self, attrName):
-        # if not hasattr(self, 'children'):
-        #     return getattr(self, attrName, [])
         ret = getattr(self, attrName, [])
         for c in self.childrenTM:
             ret = ret + c.getAllDown(attrName)
@@ -129,7 +127,7 @@ class BaseThreatModelObject:
             if res != None:
                 return res
         return None
-
+    
 class TMCVSS(CVSS3):
 
     def getSmartScoreIndex(self):
@@ -183,14 +181,6 @@ class TMCVSS(CVSS3):
         ret = self.scores()[index]
         return ret
 
-    # def getScoresMap(self):
-    #     map = {
-    #         "Base score":  self.getScores()[0],
-    #         "Temporal score":  self.getScores()[1],
-    #         "Temporal score":  self.getScores()[2]
-    #         }
-    #     return ("Base score", "Temporal score", "Temporal score"), self.getScores()
-
 class SecurityObjective(BaseThreatModelObject):
     def __init__(self):
         return
@@ -222,7 +212,6 @@ class SecurityObjective(BaseThreatModelObject):
                             self.contributesTo.append(copiedObject)
             else:
                 setattr(self, k, v)
-
 
     def linkedImpactMDText(self):
         return  f"Compromised <code><a href=\"#{self.id}\">{self._id}</a></code>: {self.title}"
@@ -524,7 +513,6 @@ class ThreatModel(BaseThreatModelObject):
         for childrenTM in self.childrenTM:
             childrenTM.dumpRecursive(folder, prefix)
 
-
     def __init__(self):
         return
     def __init__(self, fileIn, parent = None):
@@ -544,10 +532,6 @@ class ThreatModel(BaseThreatModelObject):
 
         #Parent First (this is recursive)
         if parent is None:
-            # if "parent" in dict:
-            #     self.parent = ThreatModel(dict["parent"])
-            #     self.parent.childrenTM.append(self)
-            # else:
                 self.parent = None
         else:
             parent.childrenTM.append(self)
@@ -598,7 +582,6 @@ class ThreatModel(BaseThreatModelObject):
                 except TypeError as te:
                     print(self.id + ' has no assumptions defined')
                     pass
-
 
         for k, v in tmDict.items():
             if k == "scope" or k == "parent":

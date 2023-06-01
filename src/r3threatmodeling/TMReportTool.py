@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-
 import os
 from tokenize import String
 import argparse
@@ -357,11 +356,4 @@ def createTitleAnchorHash(title):
     hash = title.lower().rstrip().replace(' ','-').replace(':','').replace(',','').replace("`","").replace("'","")
     return hash
 
-
-
-
-
-
 main()
-
-
