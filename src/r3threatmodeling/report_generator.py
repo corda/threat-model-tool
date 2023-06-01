@@ -16,9 +16,6 @@ from .threatmodel_data import *
 from markdown import Markdown
 from .template_utils import *
 
-
-
-
 def make_handler(files, func, *args):
     class Handler(PatternMatchingEventHandler):
         def on_modified(self, event):
