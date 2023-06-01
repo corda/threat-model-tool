@@ -1,6 +1,6 @@
 
 <%! import html %>
-<%! from r3threatmodeling.TMReportTool import createTitleAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
+<%! from r3threatmodeling.TMReportTool import mermaid_escape, getShortDescForMermaid, createTitleAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
 
 <%! from cvss import CVSS3 %>
 <%! from datetime import datetime %>
@@ -29,11 +29,11 @@ ${MERMAID_AT_HEAD}
     <b>Impact:</b> ${mermaid_escape(valueOr(threat, 'impact_desc', "TOO add impact info"))} 
     
     "]:::threat
-    A1["<b>Attack:</b> ${threat.getAttackDescForMermaid()}"]:::attack --exploits--> T1
+    A1["<b>Attack:</b> ${getShortDescForMermaid(threat.attack , 290)}"]:::attack --exploits--> T1
     % if len(threat.countermeasures) > 0:
     % for countermeasure in threat.countermeasures:
      % if countermeasure.description is not None:
-    C${countermeasure.id}["<b>Countermeasure:</b> ${countermeasure.mermaid_escaped_prop('title')}"]:::${countermeasure.RAGStyle()} --mitigates--> A1
+    C${countermeasure.id}["<b>Countermeasure:</b> ${mermaid_escape(countermeasure.title)}"]:::${countermeasure.RAGStyle()} --mitigates--> A1
 
      % endif 
     % endfor

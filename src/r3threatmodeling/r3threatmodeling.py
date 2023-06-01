@@ -12,43 +12,10 @@ yaml=YAML(typ='rt')
 
 import os
 import re
-from markdown import Markdown
 from io import StringIO
 import html
 import copy
 from cvss import CVSS3
-
-def unmark_element(element, stream=None):
-    if stream is None:
-        stream = StringIO()
-    if element.text:
-        stream.write(element.text)
-    for sub in element:
-        unmark_element(sub, stream)
-    if element.tail:
-        stream.write(element.tail)
-    return stream.getvalue()
-
-
-# patching Markdown
-Markdown.output_formats["plain"] = unmark_element
-__md = Markdown(output_format="plain")
-__md.stripTopLevelTags = False
-
-
-def markdown_to_text(text):
-    return __md.convert(text)
-
-def mermaid_escape(text):
-    text = re.sub(r"\(RFI[\s:]*(.*)\)", "", text)
-    return html.escape(markdown_to_text(text).replace("\"","#quot;")).replace("(", "&lpar;").replace(")", "&rpar;")
-
-def valueOr(o, a, alt):
-    if hasattr(o, a ):
-        ret =  getattr(o, a)
-        return ret
-    else:
-        return alt
 
 
 class BaseThreatModelObject:
@@ -96,8 +63,6 @@ class BaseThreatModelObject:
     def __init__(self, dict, parent):
 
         self.originDict = dict
-
-        self.markdown_to_text = markdown_to_text
 
         self.description = "undefined"
         self.parent = parent
@@ -164,9 +129,6 @@ class BaseThreatModelObject:
             if res != None:
                 return res
         return None
-
-    def mermaid_escaped_prop(self, propName):
-        return mermaid_escape(getattr(self, propName))
 
 class TMCVSS(CVSS3):
 
@@ -313,15 +275,6 @@ class Countermeasure(BaseThreatModelObject):
 
         
 class Threat(BaseThreatModelObject):
-        
-    def getAttackDescForMermaid(self):
-        try:
-            if len(self.attack) >= 290:
-                return mermaid_escape(self.attack)[:290]+ "[...]"
-            else:
-                return mermaid_escape(self.attack)
-        except:
-            raise BaseException(f"Threat {self.id} needs attack attribute")
 
     @property
     def ticketLink(self):
