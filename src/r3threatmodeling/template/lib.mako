@@ -1,6 +1,7 @@
 
 <%! import html %>
-<%! from r3threatmodeling.r3threatmodeling import createTitleAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
+<%! from r3threatmodeling.TMReportTool import createTitleAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
+
 <%! from cvss import CVSS3 %>
 <%! from datetime import datetime %>
 

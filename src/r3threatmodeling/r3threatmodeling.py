@@ -8,23 +8,15 @@ R3 Threat Modeling
 from xml.etree.ElementPath import get_parent_map
 from ruamel.yaml import YAML
 #import yaml
-
 yaml=YAML(typ='rt')
-from mako.template import Template
-from mako.runtime import Context
-from yaml.loader import SafeLoader
+
 import os
-from mako.exceptions import RichTraceback
-from mako.lookup import TemplateLookup
 import re
-import markdown
 from markdown import Markdown
 from io import StringIO
-import ntpath
 import html
 import copy
 from cvss import CVSS3
-import sys
 
 
 
@@ -129,8 +121,10 @@ class BaseThreatModelObject:
         else:
             parent.children = {self}
 
-        self._id = dict["ID"]
-
+        if "ID" in dict:
+            self._id = dict["ID"]
+        else:
+            self._id = "undefined"
         for k, v in dict.items():
             setattr(self, k, v)
 
@@ -296,40 +290,13 @@ class SecurityObjective(BaseThreatModelObject):
     def printAsText(self):
         return "\nID: " + self.id + " \nDescription: " + self.description 
 
-class Scope():
-    # description = "undefined"
-    # title = "undefined"
-    securityObjective = []
-
-    def __init__(self):
-        return
-    def __init__(self, dict):
-
-        self.originDict = dict
-
-        for k, v in dict.items():
-        # if k == "securityObjective":
-        #     self.securityObjectives.append(SecurityObjective(v))
-        # else:
-            setattr(self, k, v)
-
-
-    def printAsText(self):
-        return "\nID: " + self.id + " \nDescription: " + self.description 
-
-    @property
-    def fmtdescription(self):
-        import re
-        return re.sub('(?<![\r\n])(\r?\n|\n?\r)(?![\r\n])', ' ', self.description)
+class Scope(BaseThreatModelObject):
+    pass
         
-
-
-    
 class Countermeasure(BaseThreatModelObject):
     def __init__(self):
         return
     def __init__(self, dict, threat):
-        # self.threats: list[Threat] = []
 
         self.originDict = dict
 
@@ -382,7 +349,11 @@ class Threat(BaseThreatModelObject):
     @ticketLink.setter
     def ticketLink(self, value):
         self._ticketLink = value
-        self.originDict.update({'ticketLink': value})
+        if( hasattr(self.originDict, 'insert') and not 'ticketLink' in self.originDict ): # it may be not an ordered  dict (with insert method) as in ruaml yaml parser
+            self.originDict.insert(1, 'ticketLink', value) #gives a nice order on roundtrip yaml file update
+        else:
+            self.originDict.update({'ticketLink': value})
+            
 
     
     @property
@@ -408,8 +379,6 @@ class Threat(BaseThreatModelObject):
                 ret += secObj.linkedImpactMDText()+ "<br/> "
         if hasattr(self, 'impact'):
             ret += self.impact + "<br/> "
-        # if not self.impacts and not hasattr(self, 'impact'):
-        #     return None
         return ret
 
     @property
@@ -490,18 +459,11 @@ class Threat(BaseThreatModelObject):
         self.threatModel = tm
 
         self._id = dict["ID"]
-
-        # if not "fullyMitigated" in dict:
-        #     #default to False
-        #     dict['fullyMitigated'] = False
         
         dict.setdefault('CVSS', {'base':'TODO CVSS', 'vector':''})
         dict.setdefault('fullyMitigated', False)
 
         for k, v in dict.items():
-            # if k == "title":
-            #     self._title=dict['title']
-            # el
             if k == "countermeasures":
                 for cmData in v:
                     if "ID" in cmData:
@@ -569,7 +531,6 @@ class Threat(BaseThreatModelObject):
         if not hasattr(self, "threatType"):
             raise BaseException(f"threatType required for {self.id}")
 
-
         #set defaults for CVSS
         if self.CVSS['vector']:
             try:
@@ -587,8 +548,6 @@ class Threat(BaseThreatModelObject):
 
     def printAsText(self):
         return "\nID: " + self.id + " \nDescription: " + self.description
-
-
 
 
 class Asset(BaseThreatModelObject):
@@ -631,14 +590,6 @@ class ThreatModel(BaseThreatModelObject):
         for childrenTM in self.childrenTM:
             childrenTM.dumpRecursive(folder, prefix)
 
-    
-    # scope: Scope
-
-    # id = "undefined" 
-    # analysis: str
-    # threats = []
-
-    # parent = None
 
     def __init__(self):
         return
@@ -670,7 +621,7 @@ class ThreatModel(BaseThreatModelObject):
 
         self.threats: list[Threat] = []
         self._id = tmDict["ID"]
-        self.scope = Scope(tmDict["scope"])
+        self.scope = Scope(tmDict["scope"], self)
         self.analysis = tmDict["analysis"]
         self.assets: list[Asset]  = []
         self.securityObjectives: list[SecurityObjective]  = []
@@ -774,17 +725,9 @@ class ThreatModel(BaseThreatModelObject):
         ts = [t for t in self.getAllDown('threats') if (t.fullyMitigated is fullyMitigated and t.operational is operational)]
         ret =  sorted(ts, key=lambda x: x.getSmartScoreVal(), reverse=True )
         return ret
-    
-    # def getAllThreats(self):
-    #     if self.parent is None:
-    #         return self.threats
-    #     else:
-    #         return self.parent.getAllThreats() + self.threats
 
     def getAllThreatsByFullyMitigated(self, fullyMitigated ):
         return  [t for t in self.getAllThreats() if t.fullyMitigated is fullyMitigated]
-
-            
 
     def getAssetById(self, id):
         if id is None:
@@ -794,14 +737,6 @@ class ThreatModel(BaseThreatModelObject):
                 return x
         raise Exception("Asset with ID not found in "+ self._id+ ": " + id)
 
-    # def getAttackerById(self, id):
-    #     if id is None:
-    #          raise Exception("Attacker ID not found in "+ self._id)
-    #     for x in self.getAllUp('attackers'):
-    #         if x._id == id:
-    #             return x
-    #     raise Exception("Attacker with ID not found in "+ self._id+ ": " + id)
-    
     def getChildrenTMbyID(self, id):
         return next((tmo for tmo in self.childrenTM if tmo._id == id), None)
     
@@ -822,185 +757,3 @@ class ThreatModel(BaseThreatModelObject):
     @title.setter
     def title(self, value):
         self._title = value
-    
-    # def merge (self, tmo):
-    #     #merge from the root, self is the target
-
-    #     #TODO find common ancestor iterating target chain (self), if not found (two different roots then error)
-    #     #make it recursive
-
-    #     if self.parent._id == tmo.parent._id:
-    #         self.childrenTM.update(tmo.children)
-    #     else:
-    #         self.parent.
-
-
-
-    #     #if parent is the same 
-    #         #them merge
-    #         #if different parent 
-    #             #find common parent, even None/Root
-    #     #else (same parent) 
-    #         #merge/union children
-
-        
-    #     return None
-
-def printAllThreats(tm, indent):
-
-    tm.setdefault('threats', [])
-    print("-"*indent + "+ " + tm["ID"])
-
-    for threat in tm["threats"]:
-        #print( "-"*indent + "+Threat: " +    str(threat))
-        t = Threat(threat)
-        print( "-"*indent + " Threat: " + t.printAsText())
-        for cm in t.countermeasures:
-            print(print( "-"*indent + "  Countermeasure: " + cm.printAsText()) )
-    return
-
-
-def printIndentedID(tm, indent):
-    print("-"*indent + "+ " + tm["ID"])
-
-
-def traverseRootTM(tm, indent = 0, func = printIndentedID):
-    func(tm, indent)
-    tm.setdefault('children', [])
-
-    for children in tm["children"]:
-        traverseRootTM(children, indent+1, func)
-    return 
-
-def traverseAllRoots(TMS: dict, func = printIndentedID):
-    for tm in TMS.items():
-        traverseRootTM(tm[1], func=func)
-    return
-
-def assignParents( TMS ):
-
-    for tmKey in TMS.keys(): #for every tm
-        tm = TMS[tmKey]
-        if "parent" in tm.keys(): #if they have a parent ref key and value
-            childTM = tm
-            parentKey = childTM.get("parent")
-            if not parentKey in TMS:
-                print("Error in parsing yaml data:"+ childTM[filename] +
-                "references a parent key that is not found: " + parentKey) #TODO test
-                exit -2
-            parent = TMS[parentKey]  
-            parent.setdefault('children', []).append(childTM)   
-    
-    for tmKey in list(TMS.keys()): #for every tm 
-        tm = TMS[tmKey]
-        if "parent" in tm.keys():
-            TMS.pop(tmKey)
-    return
-
-
-def parseFiles(yamlFiles):
-    TMS = {}
-    for fileIn in yamlFiles:
-        print ("processing:" + fileIn.name)
-        if not fileIn.name.endswith('.yaml'):
-            print("input file needs to be .yaml")
-            exit -2   
-        tmData = yaml.load(fileIn)#, Loader=SafeLoader)
-        tmData["fileName"] = fileIn.name
-        TMS[tmData["ID"]] = tmData
-    assignParents(TMS)
-    return TMS
-
-def parseYamlThreatModelAndChildrenXXX(fileIn):  
-    print ("processing:" + fileIn.name)
-    fileIn.seek(0)
-    if not fileIn.name.endswith('.yaml'):
-        print("input file needs to be .yaml")
-        exit -2   
-    tmDict = yaml.load(fileIn)#, Loader=SafeLoader)
-    # tmDict["fileName"] = fileIn.name
-    # TMS[tmData["ID"]] = tmData
-
-    if "children" in tmDict.keys():
-        idList = tmDict['children']
-        if idList == None:
-            idList = []
-        tmDict['children']=dict()
-        for childrenIDDict in idList:
-            childrenId = childrenIDDict['ID']
-            childrenTMDict = parseYamlThreatModelAndChildrenXXX (  open( os.path.dirname(fileIn.name)  + os.path.sep +  childrenId +".yaml"))
-            childrenTMDict['parent'] = tmDict
-            tmDict['children'][childrenTMDict['ID']]=childrenTMDict
-
-    return tmDict
-
-
-def  lookupParent(tm):
-
-    return 
-
-
-
-
-# def createMarkdownReport(tmo, indent=0):
-
-
-
-def createTitleAnchorHash(title):
-    hash = title.lower().rstrip().replace(' ','-').replace(':','').replace(',','').replace("`","").replace("'","")
-    return hash
-
-SKIP_TOC = "skipTOC"
-
-#Credits to https://github.com/exhesham/python-markdown-index-generator/blob/master/markdown_toc.py
-def createTableOfContent(mdData):
-    toc = ""
-    lines = mdData.split('\n')
-    for line in lines:
-        if SKIP_TOC not in line:
-            if re.match(r'^#+ ', line):
-                title = re.sub('#','',line).strip()
-                hash = createTitleAnchorHash(title)
-                manipulated_line = '**[%s](#%s)**' % (title, hash)
-                tabs = re.sub('#','  ',line.strip()[:line.strip().index(' ')+1])
-                toc += (tabs+ '* ' + manipulated_line + "\n")
-    return mdData.replace("__TOC_PLACEHOLDER__", toc)
-
-def createRFIs(mdData):
-    rfilist = []
-    newstring = ''
-    start = 0
-    counter = 1
-    
-    for m in re.finditer(r"\(RFI[\s:]*(.*)\)", mdData):
-        
-        rfi = m.group(1) if m.group(1) else 'Please complete'
-        rfilist.append(rfi)
-        end, newstart = m.span()
-        newstring += mdData[start:end]
-        
-        # doesn't cope with markdown embedded in html
-        # rep = f'[^{counter}] '
-        rep = f'<sup><a id="backtorfi{counter}" href="#rfi{counter}">[RFI:{counter}]</a></sup> '
-
-        newstring += rep
-        start = newstart
-        counter += 1
-    newstring += mdData[start:]
-
-    #rfi = '\n'.join( [ f'[^{i+1}]: {r}' for i,r in enumerate(rfilist) ] )
-
-    rfil = '\n'.join( [ f'<li id="rfi{i+1}">{r} <a href="#backtorfi{i+1}">&#8617</a></li>' for i,r in enumerate(rfilist) ] )
-
-    rfi = '<ol>'+rfil+'</ol>'
-
-    return newstring.replace("__RFI_PLACEHOLDER__", rfi)
-
-def makeMarkdownLinkedHeader(level, title, skipTOC = False):
-    code=  "<a name='"+createTitleAnchorHash(title) + "'></a>\n" + level * "#" + " " + title.rstrip()
-    if skipTOC:
-        code += " <div class='" + SKIP_TOC + "'></div>"
-    return "\n" + code + "\n"
-    
-
-

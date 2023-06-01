@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
 
-from lib2to3.pygram import pattern_symbols
-from pathvalidate import sanitize_filename
+
 import os
 from tokenize import String
-import yaml
-import sys
 import argparse
 import time
-import logging
 from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler, PatternMatchingEventHandler
 import traceback
-
+from mako.exceptions import RichTraceback
+from mako.lookup import TemplateLookup
+from mako.template import Template
+import markdown
 
 from .r3threatmodeling import *
 
@@ -93,14 +92,14 @@ def main():
     CLI.add_argument('--baseFileName', default=None, required=False)
 
     args = CLI.parse_args()
-    TMIDs = args.TMID
+    # TMIDs = args.TMID
     outputDir = args.outputDir
-    browserSync = args.browserSync
-    rootTMYaml = args.rootTMYaml
+    # browserSync = args.browserSync
+    # rootTMYaml = args.rootTMYaml
     watchFiles = args.watchFiles
-    template = args.template
-    ancestorData = args.ancestorData
-    baseFileName = args.baseFileName
+    # template = args.template
+    # ancestorData = args.ancestorData
+    # baseFileName = args.baseFileName
 
     os.makedirs(outputDir, exist_ok=True)
     
@@ -258,6 +257,63 @@ def postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileNa
 
     with open(outMDPath, 'w') as outFile:
         outFile.write(mdReport)
+
+SKIP_TOC = "skipTOC"
+
+#Credits to https://github.com/exhesham/python-markdown-index-generator/blob/master/markdown_toc.py
+def createTableOfContent(mdData):
+    toc = ""
+    lines = mdData.split('\n')
+    for line in lines:
+        if SKIP_TOC not in line:
+            if re.match(r'^#+ ', line):
+                title = re.sub('#','',line).strip()
+                hash = createTitleAnchorHash(title)
+                manipulated_line = '**[%s](#%s)**' % (title, hash)
+                tabs = re.sub('#','  ',line.strip()[:line.strip().index(' ')+1])
+                toc += (tabs+ '* ' + manipulated_line + "\n")
+    return mdData.replace("__TOC_PLACEHOLDER__", toc)
+
+def createRFIs(mdData):
+    rfilist = []
+    newstring = ''
+    start = 0
+    counter = 1
+    
+    for m in re.finditer(r"\(RFI[\s:]*(.*)\)", mdData):
+        
+        rfi = m.group(1) if m.group(1) else 'Please complete'
+        rfilist.append(rfi)
+        end, newstart = m.span()
+        newstring += mdData[start:end]
+        
+        # doesn't cope with markdown embedded in html
+        # rep = f'[^{counter}] '
+        rep = f'<sup><a id="backtorfi{counter}" href="#rfi{counter}">[RFI:{counter}]</a></sup> '
+
+        newstring += rep
+        start = newstart
+        counter += 1
+    newstring += mdData[start:]
+
+    #rfi = '\n'.join( [ f'[^{i+1}]: {r}' for i,r in enumerate(rfilist) ] )
+
+    rfil = '\n'.join( [ f'<li id="rfi{i+1}">{r} <a href="#backtorfi{i+1}">&#8617</a></li>' for i,r in enumerate(rfilist) ] )
+
+    rfi = '<ol>'+rfil+'</ol>'
+
+    return newstring.replace("__RFI_PLACEHOLDER__", rfi)
+
+def makeMarkdownLinkedHeader(level, title, skipTOC = False):
+    code=  "<a name='"+createTitleAnchorHash(title) + "'></a>\n" + level * "#" + " " + title.rstrip()
+    if skipTOC:
+        code += " <div class='" + SKIP_TOC + "'></div>"
+    return "\n" + code + "\n"
+    
+
+def createTitleAnchorHash(title):
+    hash = title.lower().rstrip().replace(' ','-').replace(':','').replace(',','').replace("`","").replace("'","")
+    return hash
 
 
 

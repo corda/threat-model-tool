@@ -49,10 +49,6 @@ def main():
     for  threat in unmitigatedNoOperational:
         threat.ticketLink = f"http://jira....?id={threat.id}"
 
-        #optional: this is to change the order in the case of new yaml property (cannot be easily done inside the threat class)
-        threat.originDict.insert(1, 'ticketLink', threat.ticketLink)
-
-
     if(not args.dryRun):
         tm.dumpRecursive(prefix=args.YAMLprefix)
 
