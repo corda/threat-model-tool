@@ -57,7 +57,7 @@ jobs:
       - name: Upload generated package
         uses: actions/upload-pages-artifact@v1
         with:
-          path: '${{ github.event.repository.name }}/dist/r3threatmodeling-0.1.0-py3-none-any.whl'
+          path: '${{ github.event.repository.name }}/dist/'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v2
