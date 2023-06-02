@@ -61,4 +61,10 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v2
+
+      - name: Publish
+        run: | 
+          gh release upload ${{github.ref_name}} dist/r3threatmodeling-0.1.0-py3-none-any.whl
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}    
             
