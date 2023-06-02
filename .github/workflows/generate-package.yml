@@ -64,7 +64,7 @@ jobs:
 
       - name: Publish
         run: | 
-          gh release upload ${{github.ref_name}} dist/r3threatmodeling-0.1.0-py3-none-any.whl
+          gh release upload ${{github.ref_name}} '${{ github.event.repository.name }}/dist/r3threatmodeling-0.1.0-py3-none-any.whl'
         env: 
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}    
             
