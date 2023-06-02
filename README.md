@@ -10,6 +10,16 @@ Run from the [github.com:corda/threat-modeling.git](https://github.com/corda/thr
 ```bash
 pip install -e ../threat-model-tool
 ```
+
+## Crete a distribution 
+
+```bash
+python3 -m pip install --upgrade build
+python3 -m build
+pip install dist/r3threatmodeling-0.1.0-py3-none-any.whl
+```
+
+
 ## Report generation command
 
 execute it from console, example:

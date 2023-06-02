@@ -1,0 +1,64 @@
+name: Generate Reports
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+    - master
+    - main
+    # paths:
+    # - '**.yaml'   
+    # # - '**.yml' suspended otherwise it runs continiusly developing other workflows
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: ${{ github.event.repository.name }}
+      
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10' # install the python version needed
+          cache: 'pip' # caching pip dependencies
+          
+      - name: Install python requirements
+        working-directory: ${{ github.event.repository.name }}
+        run: |
+          pwd
+          ls
+          echo "${{ github.workspace }}"
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python -m pip install --upgrade build
+          python -m build
+
+      # - name: Package
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: generated-reports
+      #     path: |
+      #       ${{ github.event.repository.name }}/threatModels/generated_reports/
+      #       ${{ github.event.repository.name }}/dist/Corda5_NextGen_Threat_model.pdf
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+      # - name: Move static content
+      #   run: mv ./threatModels/generated_reports/static/* ./threatModels/generated_reports/
+      - name: Upload generated package
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: '${{ github.event.repository.name }}/dist/r3threatmodeling-0.1.0-py3-none-any.whl'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
+            
