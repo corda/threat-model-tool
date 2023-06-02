@@ -64,6 +64,8 @@ jobs:
 
       - name: Publish
         run: | 
+          pwd
+          ls
           gh release upload ${{github.ref_name}} ${{ github.event.repository.name }}
         env: 
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}    
