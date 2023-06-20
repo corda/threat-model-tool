@@ -1,4 +1,4 @@
-name: Generate Reports
+name: Generate package
 
 on:
   workflow_dispatch:
@@ -6,9 +6,6 @@ on:
     branches:
     - master
     - main
-    # paths:
-    # - '**.yaml'   
-    # # - '**.yml' suspended otherwise it runs continiusly developing other workflows
 
 permissions:
   contents: write
@@ -23,8 +20,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           path: ${{ github.event.repository.name }}
-      
-
+    
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
@@ -41,26 +37,6 @@ jobs:
           pip install -r requirements.txt
           python -m pip install --upgrade build
           python -m build
-
-      # - name: Package
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: generated-reports
-      #     path: |
-      #       ${{ github.event.repository.name }}/threatModels/generated_reports/
-      #       ${{ github.event.repository.name }}/dist/Corda5_NextGen_Threat_model.pdf
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v3
-      # - name: Move static content
-      #   run: mv ./threatModels/generated_reports/static/* ./threatModels/generated_reports/
-      - name: Upload generated package
-        uses: actions/upload-pages-artifact@v1
-        with:
-          path: '${{ github.event.repository.name }}/dist/'
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v2
 
       - name: Publish
         run: | 
