@@ -1,4 +1,4 @@
-from pyConThreatMod import *
+from r3threatmodeling import *
 from pyvis.network import Network
 
 def createEmptyNet():
