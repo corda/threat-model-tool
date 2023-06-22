@@ -38,18 +38,17 @@ def make_handler(files, func, *args):
 
 def prepare_output_directory(outputDir, assetDir = None):
 
-  staticDir = Path(outputDir)# / "static"
   os.makedirs(outputDir, exist_ok=True)
-  os.makedirs(staticDir, exist_ok=True )
 
   if not assetDir:
-    assetDir = Path(__file__).parent / "assets"
+    assetDir = []    
 
-  # copy everything from assets into destination/static 
-  #if os.path.exists(staticDir):
-  #  shutil.rmtree(staticDir)
-    
-  shutil.copytree(assetDir, staticDir, dirs_exist_ok = True)
+  # copy the basic assets first that are defined by this tool
+  assetDir.insert(0, Path(__file__).parent / "assets")
+
+  # copy everything from assets into destination 
+  for asset in assetDir:
+    shutil.copytree(asset, outputDir, dirs_exist_ok = True)
 
 def main():
     CLI=argparse.ArgumentParser()
@@ -104,6 +103,7 @@ def main():
 
     CLI.add_argument(
     "--assetDir",
+    nargs="+", 
     required=False
     )
 
