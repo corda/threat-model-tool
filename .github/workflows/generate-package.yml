@@ -16,8 +16,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-        with:
-          path: ${{ github.event.repository.name }}
     
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -38,6 +36,7 @@ jobs:
       - name: Update module version with tag
         shell: bash
         run: |
+          ls
           sed -i -E "s|__version__.*|__version__ = '${{steps.extractversion.outputs.VERSION}}'|g" src/r3threatmodeling/__init__.py
           git diff
           cat src/r3threatmodeling/__init__.py
