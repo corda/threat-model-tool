@@ -16,6 +16,9 @@ from .threatmodel_data import *
 from markdown import Markdown
 from .template_utils import *
 
+from pathlib import Path
+import shutil
+
 def make_handler(files, func, *args):
     class Handler(PatternMatchingEventHandler):
         def on_modified(self, event):
@@ -33,6 +36,20 @@ def make_handler(files, func, *args):
 
     return Handler(patterns=patterns) 
 
+def prepare_output_directory(outputDir, assetDir = None):
+
+  staticDir = Path(outputDir)# / "static"
+  os.makedirs(outputDir, exist_ok=True)
+  os.makedirs(staticDir, exist_ok=True )
+
+  if not assetDir:
+    assetDir = Path(__file__).parent / "assets"
+
+  # copy everything from assets into destination/static 
+  #if os.path.exists(staticDir):
+  #  shutil.rmtree(staticDir)
+    
+  shutil.copytree(assetDir, staticDir, dirs_exist_ok = True)
 
 def main():
     CLI=argparse.ArgumentParser()
@@ -85,6 +102,11 @@ def main():
     required=False
     )
 
+    CLI.add_argument(
+    "--assetDir",
+    required=False
+    )
+
     CLI.add_argument('--ancestorData', action='store_true')
     CLI.add_argument('--no-ancestorData', dest='ancestorData', action='store_false')
     CLI.set_defaults(ancestorData=True)
@@ -101,7 +123,8 @@ def main():
     # ancestorData = args.ancestorData
     # baseFileName = args.baseFileName
 
-    os.makedirs(outputDir, exist_ok=True)
+    prepare_output_directory(args.outputDir, args.assetDir)
+    
     
     #First call, when run Generates the files
     processMultipleTMIDs(args)
