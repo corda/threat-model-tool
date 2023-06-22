@@ -30,6 +30,7 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "r3threatmodeling" = ["**/*.mako"]
+"r3threatmodeling.assets" = ["**"]
 
 [tool.setuptools.exclude-package-data]
 "r3threatmodeling" = ["tests*"]
