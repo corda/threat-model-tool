@@ -8,3 +8,4 @@ mako
 cvss
 pyvis
 ruamel.yaml
+watchdog
