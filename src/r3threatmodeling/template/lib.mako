@@ -492,16 +492,16 @@ ${makeMarkdownLinkedHeader(3, 'Diagrams')}
 ${tmo.scope.diagram}
 %endif 
 
-${PAGEBREAK}
-${makeMarkdownLinkedHeader(3, 'Attackers')}
+
 
 > **Note** This section contains the list of attackers, personas, roles and potential threat agents considered to be within the scope of analysis.
 ###  Defined in this threat model 
 
-% if len(tmo.attackers) == 0:
-No attackers defined in this scope
-% else:
-
+% if len(tmo.attackers) > 0:
+## No attackers defined in this scope
+## % else:
+${PAGEBREAK}
+${makeMarkdownLinkedHeader(3, 'Attackers')}
 % for attacker in tmo.attackers:
 ${lib.renderAttacker(attacker)}
 
@@ -509,11 +509,11 @@ ${lib.renderAttacker(attacker)}
 % endif
 
 % if ancestorData and tmo.parent != None:
-% if len(tmo.parent.getAllAttackers()) == 0:
-No other attackers inherited
-% else:
+% if len(tmo.parent.getAllAttackers()) > 0:
+## No other attackers inherited
+## % else:
 
-${makeMarkdownLinkedHeader(4, 'Attackers inherited from other threat models')}
+${makeMarkdownLinkedHeader(3, 'Attackers inherited from other threat models')}
 
 % for attacker in tmo.parent.getAllAttackers():
 ${lib.renderAttacker(attacker)}
