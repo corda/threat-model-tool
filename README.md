@@ -79,3 +79,18 @@ Please refer to .vscode/launch.json to see report generations commands
 ```
 
 Source yaml files in [threatModels](threatModels/) folder.
+
+
+## YAML schema documentation (work in progress) 
+### Assets
+
+```yaml
+    - ID: unique ID of the asset
+      specifies: optional, reference to more general Asset ID (e.g. a specific REST endpoint specify general HTTP server)
+      type: process, dataFlow, credential...
+      title: |
+        short title of the asset
+      description: |
+        description fo the asset
+      inScope: true/false
+```

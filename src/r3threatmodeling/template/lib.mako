@@ -378,6 +378,11 @@ ${makeMarkdownLinkedHeader(5, asset.title, skipTOC = True )}
 <dd markdown="block">${asset.authentication}</dd>
 %endif
 <dt>Type:</dt><dd>${asset.type}</dd>
+%if hasattr(asset, "specifies"):
+<dt>Specifies and inherit analysis from:</dt>
+<% specifiedAsset = tmo.getById(asset.specifies) %>
+<dd markdown="block"> ${specifiedAsset.title}  ( <a href="#${specifiedAsset.id}">${specifiedAsset.id}</a> ) </dd>
+%endif
 <dt>In scope:</dt><dd>${asset.inScope}</dd>
 </dl>
 </%def>

@@ -653,6 +653,9 @@ class ThreatModel(BaseThreatModelObject):
             if x._id == id:
                 return x
         raise Exception("Asset with ID not found in "+ self._id+ ": " + id)
+    
+    def getById(self, id):
+        return self.getRoot().getDescendantFirstById(id)
 
     def getChildrenTMbyID(self, id):
         return next((tmo for tmo in self.childrenTM if tmo._id == id), None)
