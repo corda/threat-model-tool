@@ -379,9 +379,9 @@ ${makeMarkdownLinkedHeader(5, asset.title, skipTOC = True )}
 %endif
 <dt>Type:</dt><dd>${asset.type}</dd>
 %if hasattr(asset, "specifies"):
-<dt>Specifies and inherit analysis from:</dt>
+<dt>Specifies, inherit analysis and attribute from:</dt>
 <% specifiedAsset = tmo.getById(asset.specifies) %>
-<dd markdown="block"> ${specifiedAsset.title}  ( <a href="#${specifiedAsset.id}">${specifiedAsset.id}</a> ) </dd>
+<dd markdown="block"> ${specifiedAsset.title}  (<a href="#${specifiedAsset.id}">${specifiedAsset._id}</a>) </dd>
 %endif
 <dt>In scope:</dt><dd>${asset.inScope}</dd>
 </dl>
@@ -424,9 +424,9 @@ Last update: ${datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 Authors: ${tmo.authors}
 % endif 
 
-${PAGEBREAK}
-
 % if toc:
+${PAGEBREAK}
+${makeMarkdownLinkedHeader(2, 'Table of contents', skipTOC = True)}
 __TOC_PLACEHOLDER__
 ${PAGEBREAK}
 
