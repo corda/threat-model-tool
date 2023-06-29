@@ -1,0 +1,94 @@
+#based on: https://datatracker.ietf.org/doc/html/rfc6819
+
+ID: OAuth2
+title: OAuth2.0
+version: rfc6819
+children:
+  - ID: AuthorizationEndpoint
+
+authors: |
+  Example by Security Research team at *R3* based on: https://datatracker.ietf.org/doc/html/rfc6819
+  - David Cervigni
+  - James Brown
+  - Bassem Ammar
+
+history: |
+  - 2023.1 Draft  2023-06-20: First release
+
+scope:
+  securityObjectives:
+    - ID: FULL_CIA
+      title: Confidentiality Integrity and availability of a Corda Network
+      description: |
+        Ability to maintain fundamental confidentiality
+        integrity and availability of the system
+      group: General security Objectives
+
+    - ID: INTEGRITY
+      title: Data integrity
+      description: |
+        Ability to maintain fundamental integrity of the system
+      contributesTo:
+        - REFID: FULL_CIA
+      group: General security Objectives
+    - ID: CONFIDENTIALITY
+      title: Data confidentiality
+      description: |
+        Ability to maintain fundamental confidentiality of the system data
+      contributesTo:
+        - REFID: FULL_CIA
+      group: General security Objectives
+    - ID: AVAILABILITY
+      title: System availability
+      description: |
+        Ability to maintain fundamental availability of the system
+      contributesTo:
+        - REFID: FULL_CIA
+      group: General security Objectives
+
+    - ID: COMPLIANCE
+      title: Compliance
+      description: |
+        Ability to obtain and maintain maintain compliance with required regulations
+      contributesTo:
+        - REFID: AVAILABILITY
+      group: Business specific
+    - ID: NON_REPUDIATION
+      title: Non repudiation of ...
+      description: |
+        Ability to have available  evidence of the user and actor main actions executed...
+      contributesTo:
+        - REFID: INTEGRITY
+        - REFID: COMPLIANCE
+      group: Business specific
+  
+  description:
+  diagram:
+
+    assets:
+    - ID: token
+      type: credential
+      title: 
+      description: 
+      inScope: true
+
+  assumptions:
+    - ID:
+      description: |
+        A Auth server may host several ...
+
+  attackers:
+    - ID: ANONYMOUS
+      description: |
+        Anonymous internet user
+      inScope: true
+
+    - ID: CLIENT
+      description: |
+        Client app
+      inScope: true
+  
+  analysis:
+
+ 
+threats: 
