@@ -5,20 +5,23 @@
 <% H6 = "######" %>
 <%namespace name="lib" file="lib.mako"/> 
 
+<% dataModel = tmo.getOperationalGuideData() %> 
+ 
+${makeMarkdownLinkedHeader(1, 'Corda NextGen operational security hardening guides', skipTOC = False)}
 
-% for descendantTM in tmo.getDescendants():
-  % for threat in descendantTM.threats:
-    <% cms = threat.getOperationalCountermeasures() %>
-    % for countermeasure in cms:
 
-% if not countermeasure.isReference :
+__TOC_PLACEHOLDER__
+
+% for operator, countermeasures in sorted(dataModel.items()):
+<% PAGEBREAK = """<div class="pagebreak"></div>"""%>
+
+${makeMarkdownLinkedHeader(1, 'Operational guide for ' + operator, skipTOC = False)}
+
+% for countermeasure in countermeasures:
 
 ${makeMarkdownLinkedHeader(2, countermeasure.title.capitalize())}
-**ID:** `${countermeasure.id}`
-### <br/>
 
-## % else:
-## **Reference to `${countermeasure.id}` ${countermeasure.title}**<br/>
+**ID:** `${countermeasure.id}`
 
 **Mitigates:** ${countermeasure.parent.title}
 
@@ -28,19 +31,15 @@ ${makeMarkdownLinkedHeader(2, countermeasure.title.capitalize())}
 
 % if  hasattr(threat, 'conditional'):
 **Valid when:** ${threat.conditional}
-## % else:
-## Always valid
+
 % endif
 
 ${countermeasure.description}
 
-% endif #REFID
+% endfor # coutnermeasures
 
-    % endfor
-  % endfor
+% endfor # oeprator
 
-% endfor
 
-## ${makeMarkdownLinkedHeader(2, 'Requests For Information')}
 
 

@@ -260,6 +260,15 @@ class Countermeasure(BaseThreatModelObject):
     
     #default value
     operational = False
+
+    _operator = "UNDEFINED"
+    @property
+    def operator(self):
+        return self._operator
+    @operator.setter
+    def operator(self, operator):
+        self._operator = operator
+
       
 
         
@@ -442,8 +451,6 @@ class Threat(BaseThreatModelObject):
                             raise BaseException("REFID needed to reference an actual attacker ID in: "+self.id )
                     except: 
                         raise BaseException(f"Problem in attacker definition reference in {self.id}, try using correct \"- REFID: \" " )
-
-
 
             else:
                 try:
@@ -642,6 +649,34 @@ class ThreatModel(BaseThreatModelObject):
         ts = [t for t in self.getAllDown('threats') if (t.fullyMitigated is fullyMitigated and t.operational is operational)]
         ret =  sorted(ts, key=lambda x: x.getSmartScoreVal(), reverse=True )
         return ret
+
+
+    def getOperationalGuideData(self):
+
+        guideData = {}
+
+        ts = [t for t in self.getAllDown('threats') if (t.operational is True)]
+        ts =  sorted(ts, key=lambda x: x.getSmartScoreVal(), reverse=True )
+
+        # extract all countermeasures
+
+        cms = []
+        operators = set()
+        for t in ts:
+            for c in t.countermeasures:
+                if not c.isReference and c.operational:
+                    cms.append(c)
+                    # extract all operators
+                    operators.add(c.operator)
+
+        # associate countermeasure with operator
+        for op in operators:
+            guideData[op]=[]
+
+        for countermeasure in cms:
+            guideData[countermeasure.operator].append(countermeasure)
+
+        return guideData
 
     def getAllThreatsByFullyMitigated(self, fullyMitigated ):
         return  [t for t in self.getAllThreats() if t.fullyMitigated is fullyMitigated]

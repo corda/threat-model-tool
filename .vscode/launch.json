@@ -50,6 +50,26 @@
                 "TM_templateFull",
                 "--formatYAML"
             ]
+        },
+        {
+            "name": "Corda Sec Hardening Guide ",
+            "type": "python",
+            "request": "launch",
+            "module": "r3threatmodeling.report_generator",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--rootTMYaml",
+                "../Corda5ThreatModels/threatModels/C5.yaml",
+                "--TMID",
+                "C5",
+                "--outputDir",
+                "../Corda5ThreatModels/build/generated_reports",
+                "--template",
+                "operationalHardeningGuide",
+                "--baseFileName",
+                "CordaHardeningGuide"
+            ]
         }
     ]
 }
