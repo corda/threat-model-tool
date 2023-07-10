@@ -18,7 +18,7 @@
             ]
         },
         {
-            "name": "Python: Module refactorYAML01to02",
+            "name": "Python: Module refactorYAML01to02 OVERWRITE",
             "type": "python",
             "request": "launch",
             "module": "r3threatmodeling.refactorYAML01to02",
@@ -26,8 +26,8 @@
             "args": [
                 "--rootTMYaml",
                 "../Corda5ThreatModels/threatModels/C5.yaml"
-                ,
-                "--YAMLprefix", "refactored_"
+                // ,
+                // "--YAMLprefix", "refactored_"
             ]
         },
 

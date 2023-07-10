@@ -430,9 +430,9 @@ class Threat(BaseThreatModelObject):
                     for assetData in v:
                         try:
                             #TODO rename to REFID
-                            self.assets.append(tm.getAssetById(assetData["ID"])) 
+                            self.assets.append(tm.getAssetById(assetData["REFID"])) 
                         except:
-                            raise BaseException("reference To asset ID "+v[0]['ID']+" not found  in: "+self.id )
+                            raise BaseException("reference To asset ID "+v[0]['REFID']+" not found  in: "+self.id )
             
             elif k == "attackers":
                 for attackerData in v:

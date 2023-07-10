@@ -28,6 +28,21 @@ execute it from console, example:
 python -m r3threatmodeling.report_generator --rootTMYaml ../Corda5ThreatModels/threatModels/C5.yaml --TMID C5  --browserSync --outputDir ../Corda5ThreatModels/build/generated_reports --template TM_templateFull
 ```
 
+
+## Refactor yaml schema from version 0.1 to 0,2
+
+
+```bash 
+pip install git+https://github.com/corda/threat-model-tool.git@v0.1.4
+```
+```bash python -m r3threatmodeling.report_generator --rootTMYaml ../Corda5ThreatModels/threatModels/
+C5.yaml --TMID C5 C5.CPIPackaging --browserSync --outputDir ../Corda5ThreatModels/build/generated_reports --template TM_tem
+plateFull --formatYAML
+```
+pip install pip install git+https://github.com/corda/threat-model-tool.git
+
+
+
 ## Status
 [GANTT report](threatModels/generated_reports/gantt.md)
 ## Introduction
