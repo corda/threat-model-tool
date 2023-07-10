@@ -246,7 +246,7 @@ ${renderMermaidThreatTree(threat)}
 <% H6 = "######" %>
 
 <dt>Threat Description</dt><dd markdown="block">${threat.attack}</dd>
-% if hasattr(threat, "impact") or  hasattr(threat, "impacts") :
+% if hasattr(threat, "impactDesc") or  hasattr(threat, "impactedSecObjs") :
 <dt>Impact</dt><dd markdown="block">${threat.impact_desc}</dd>
 % endif
 

@@ -288,8 +288,8 @@ class Threat(BaseThreatModelObject):
     
     @property
     def description(self):
-        if hasattr(self, 'attack') and hasattr(self, 'impact'):
-            return "**Attack:** " + self.attack + "<br/> **Impact:** " + self.impact
+        if hasattr(self, 'attack'):
+            return "**Attack:** " + self.attack + "<br/> **Impact:** " + self.impactDesc
         else:
             return "undefined"
         
@@ -303,12 +303,12 @@ class Threat(BaseThreatModelObject):
     @property
     def impact_desc(self):
         ret = ""
-        if self.impacts:
+        if self.impactedSecObjs:
             secObj: SecurityObjective 
-            for secObj in self.impacts:
+            for secObj in self.impactedSecObjs:
                 ret += secObj.linkedImpactMDText()+ "<br/> "
-        if hasattr(self, 'impact'):
-            ret += self.impact + "<br/> "
+        if hasattr(self, 'impactDesc'):
+            ret += self.impactDesc + "<br/> "
         return ret
 
     @property
@@ -382,7 +382,7 @@ class Threat(BaseThreatModelObject):
 
         self.countermeasures = []
         self.assets = []
-        self.impacts = []
+        self.impactedSecObjs = []
         self.attackers = []
 
         self.parent = tm 
@@ -409,7 +409,7 @@ class Threat(BaseThreatModelObject):
                     else:
                         raise BaseException("REFID or ID needed to define a countermeasure in: "+self.id )
 
-            elif k == "impacts":
+            elif k == 'impactedSecObj':
                 for cmData in v:
                     try:
                         if "REFID" in cmData:
@@ -419,11 +419,11 @@ class Threat(BaseThreatModelObject):
                                 raise BaseException("REFID: "+ cmData['REFID'] +" not found in: "+self.id )
                             copiedObject  = copy.copy(referenced)
                             copiedObject.isReference = True
-                            self.impacts.append(copiedObject)
+                            self.impactedSecObjs.append(copiedObject)
                         else:
                             raise BaseException("REFID needed to reference an impacted Security Objective in: "+self.id )
                     except: 
-                        raise BaseException(f"Problem in impacts definition reference in {self.id}, try using correct \"- REFID: \" " )
+                        raise BaseException(f"Problem in impactedSecObj definition reference in {self.id}, try using correct \"- REFID: \" " )
 
             elif k == "assets":
                 if v is not None:
