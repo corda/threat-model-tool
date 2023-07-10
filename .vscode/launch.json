@@ -17,7 +17,19 @@
                 // "--YAMLprefix", "devticket_"
             ]
         },
-
+        {
+            "name": "Python: Module refactorYAML01to02",
+            "type": "python",
+            "request": "launch",
+            "module": "r3threatmodeling.refactorYAML01to02",
+            "justMyCode": true,
+            "args": [
+                "--rootTMYaml",
+                "../Corda5ThreatModels/threatModels/C5.yaml"
+                ,
+                "--YAMLprefix", "refactored_"
+            ]
+        },
 
 
         {

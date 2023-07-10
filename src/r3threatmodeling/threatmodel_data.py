@@ -261,15 +261,13 @@ class Countermeasure(BaseThreatModelObject):
     #default value
     operational = False
 
-    _operator = "UNDEFINED"
+    _operator = "TODO: UNDEFINED"
     @property
     def operator(self):
         return self._operator
     @operator.setter
     def operator(self, operator):
         self._operator = operator
-
-      
 
         
 class Threat(BaseThreatModelObject):
