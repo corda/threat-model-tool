@@ -267,7 +267,8 @@ class Countermeasure(BaseThreatModelObject):
         return self._operator
     @operator.setter
     def operator(self, operator):
-        self._operator = operator
+        if operator:
+            self._operator = operator
 
         
 class Threat(BaseThreatModelObject):
@@ -577,7 +578,7 @@ class ThreatModel(BaseThreatModelObject):
                         asset = Attacker(assetDict, self)
                         self.attackers.append(asset)
                 except TypeError as te:
-                    print(self.id + ' has no attackers defined')
+                    # print(self.id + ' has no attackers defined')
                     pass
             elif "assumptions" == scope_k:
                 try:
@@ -585,7 +586,7 @@ class ThreatModel(BaseThreatModelObject):
                         assumption = Assumption(assumptionDict, self)
                         self.assumptions.append(assumption)
                 except TypeError as te:
-                    print(self.id + ' has no assumptions defined')
+                    # print(self.id + ' has no assumptions defined')
                     pass
 
         for k, v in tmDict.items():
