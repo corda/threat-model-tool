@@ -15,7 +15,14 @@ __TOC_PLACEHOLDER__
 % for operator, countermeasures in sorted(dataModel.items()):
 <% PAGEBREAK = """<div class="pagebreak"></div>"""%>
 
-${makeMarkdownLinkedHeader(1, 'Operational guide for ' + operator, skipTOC = False)}
+<% 
+operatorName = operator
+operatorObj= tmo.getRoot().getDescendantFirstById(operator)  
+if operatorObj:
+    operatorName = operatorObj.title
+%>
+
+${makeMarkdownLinkedHeader(1, 'Operational guide for ' + operatorName, skipTOC = False)}
 
 % for countermeasure in countermeasures:
 
