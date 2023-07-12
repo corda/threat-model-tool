@@ -12,6 +12,8 @@ from mako.lookup import TemplateLookup
 from mako.template import Template
 import markdown
 
+from r3threatmodeling.mermaid_include import MermaidInclude
+
 from .threatmodel_data import *
 from markdown import Markdown
 from .template_utils import *
@@ -180,6 +182,7 @@ def processSingleTMID(tmoRoot, TMID, args):
     ancestorData = args.ancestorData
     baseFileName = args.baseFileName
     rewriteYAMLDev = args.rewriteYAMLDev
+    assetDir = args.assetDir
 
     if baseFileName is None:
         baseFileName = TMID
@@ -224,14 +227,19 @@ def processSingleTMID(tmoRoot, TMID, args):
     mdReport = createRFIs(mdReport)
 
 
-    postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileName, mdReport)
+    postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileName, mdReport, assetDir)
     return
 
-def postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileName, mdReport):
+def postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileName, mdReport, assetDir):
+    if not assetDir:
+        assetDir = 'assets'
     mermaidHtmlTags = mdReport.replace(#FIX mermaid diagrams for html
                 "<!-- mermaid start. Do not delete this comment-->\n```mermaid", "<div class=mermaid>").replace("```\n<!-- mermaid end. comment needed to it covert to HTML-->","</div>")
 
-    htmlReport = markdown.markdown(mermaidHtmlTags, extensions=['md_in_html'])
+    mermaid_include = MermaidInclude(
+    configs={'base_path': assetDir[1].__str__()}
+)
+    htmlReport = markdown.markdown(mermaidHtmlTags, extensions=['md_in_html', 'markdown_include.include', mermaid_include])
         
     baseHTML = """<!DOCTYPE html>
         <html>

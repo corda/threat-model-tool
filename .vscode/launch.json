@@ -60,7 +60,9 @@
                 "../Corda5ThreatModels/build/generated_reports",
                 "--template",
                 "TM_templateFull",
-                "--formatYAML"
+                "--formatYAML",
+                "--assetDir",
+                "../Corda5ThreatModels/threatModels/assets"
             ]
         },
         {
