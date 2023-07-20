@@ -228,7 +228,7 @@ def processSingleTMID(tmoRoot, TMID, args):
 
     mdReport = createRFIs(mdReport)
 
-    mdReport = "\n".join(process_mermaidInclude(mdReport.splitlines(), assetDir[1]))
+    # mdReport = "\n".join(process_mermaidInclude(mdReport.splitlines(), assetDir[1]))
 
 
     postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileName, mdReport, assetDir)

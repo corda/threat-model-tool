@@ -18,6 +18,16 @@ import copy
 from cvss import CVSS3
 
 
+def matchesAllPros(object, **kwargs):
+    for key, value in kwargs.items():
+        try:
+            if getattr(object, key) != value:
+                return False
+        except:
+            return False
+    return True
+
+
 class BaseThreatModelObject:
 
     originDict= None
@@ -626,11 +636,11 @@ class ThreatModel(BaseThreatModelObject):
         else:
             return self.parent.getAllAttackers() + self.attackers
 
-    def getAllAssets(self):
-        if self.parent is None:
-            return self.assets
-        else:
-            return self.parent.getAllAssets() + self.assets
+    # def getAllAssets(self):
+    #     if self.parent is None:
+    #         return self.assets
+    #     else:
+    #         return self.parent.getAllAssets() + self.assets
 
     def isRoot(self):
         return self.parent == None
@@ -648,6 +658,10 @@ class ThreatModel(BaseThreatModelObject):
         ts = [t for t in self.getAllDown('threats') if (t.fullyMitigated is fullyMitigated and t.operational is operational)]
         ret =  sorted(ts, key=lambda x: x.getSmartScoreVal(), reverse=True )
         return ret
+
+    def getAssetsByProps(self, **kwargs ):
+        res = [asset for asset in self.getAllDown('assets') if matchesAllPros(asset , **kwargs)]
+        return res
 
 
     def getOperationalGuideData(self):
