@@ -491,6 +491,15 @@ class Threat(BaseThreatModelObject):
 
 class Asset(BaseThreatModelObject):
 
+    def keyPropertiesHTML(self):
+        ret = "<ul>"
+        try:
+            for k, v in self.keyProperties.items():
+                ret = ret + f"<li style='margin: 0px 0;'><b>{k}:</b> &nbsp;{v}</li>"
+        except:
+            pass
+        return ret + "</ul>"
+
     @property
     def inScope(self):
         try:
