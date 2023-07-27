@@ -125,7 +125,8 @@ class BaseThreatModelObject:
             return self
         else:
             return self.parent.getRoot()
-
+        
+    #get an object by ID inside a TM and all its children 
     def getDescendantFirstById(self, id):
         res = self.getDescendantById(id)
         if res != None:
@@ -133,7 +134,7 @@ class BaseThreatModelObject:
         if not hasattr(self, 'childrenTM'):
             return self.getDescendantById(id)
         for tm in self.childrenTM:
-            res = tm.getDescendantById(id)
+            res = tm.getDescendantFirstById(id)
             if res != None:
                 return res
         return None
@@ -416,6 +417,8 @@ class Threat(BaseThreatModelObject):
                             raise BaseException("REFID: "+ cmData['REFID'] +" not found in: "+self.id )
                         copiedObject  = copy.copy(referencedCM)
                         copiedObject.isReference = True
+                        # if 'notes' in cmData:
+                        #     copiedObject.notes = cmData['notes']
                         self.countermeasures.append(copiedObject)
                     else:
                         raise BaseException("REFID or ID needed to define a countermeasure in: "+self.id )
@@ -443,7 +446,7 @@ class Threat(BaseThreatModelObject):
                             #TODO rename to REFID
                             self.assets.append(tm.getAssetById(assetData["REFID"])) 
                         except:
-                            raise BaseException("reference To asset ID "+v[0]['REFID']+" not found  in: "+self.id )
+                            raise BaseException("reference To asset ID, REFID not found  in: "+self.id )
             
             elif k == "attackers":
                 for attackerData in v:
@@ -618,6 +621,7 @@ class ThreatModel(BaseThreatModelObject):
             elif "threats"  == k:
                 if  tmDict["threats"] != None:
                     for threatDict in tmDict["threats"]:
+                        print("Parsing threat: "+ threatDict['ID'])
                         threat = Threat(threatDict, self)
                         self.threats.append(threat)
                 

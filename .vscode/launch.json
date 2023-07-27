@@ -66,6 +66,29 @@
             ]
         },
         {
+            "name": "Python: Module for OAuth 2.0 TM",
+            "type": "python",
+            "request": "launch",
+            "module": "r3threatmodeling.report_generator",
+            "justMyCode": false,
+            "args": [
+                "--rootTMYaml",
+                "../personal/threat-models/OAuth 2.0/OAuth2.0.yaml",
+                "--TMID",
+                "OAuth2",
+                "--browserSync",
+                // "--watchFiles",
+                // "pyConThreatMod/template/TM_templateFull.mako",
+                "--outputDir",
+                "../personal/threat-models/build",
+                "--template",
+                "TM_templateFull",
+                "--formatYAML",
+                "--assetDir",
+                "../personal/threat-models/OAuth 2.0/assets"
+            ]
+        },
+        {
             "name": "Corda Sec Hardening Guide ",
             "type": "python",
             "request": "launch",
