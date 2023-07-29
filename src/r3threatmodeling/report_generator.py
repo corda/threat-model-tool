@@ -268,7 +268,7 @@ def postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileNa
         
     mermaid_script = """
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-<script>mermaid.initialize({startOnLoad:true});
+<script>mermaid.initialize({startOnLoad:true, securityLevel: 'loose'});
 </script>
 """
     htmlReport=htmlReport.replace("</body>",    mermaid_script + "</body>")    

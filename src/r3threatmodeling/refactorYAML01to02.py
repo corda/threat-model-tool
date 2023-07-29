@@ -72,11 +72,13 @@ def updateThreatYaml(self):
 
     if 'assets' in self.originDict:
         # self.originDict['assets'].append({'REFID': 't4st'})
-        for i in range(len(self.originDict['assets'])):
-        # for asset in self.originDict['assets']:
-            self.originDict['assets'][i] = {'REFID':  self.originDict['assets'][i]['ID']}
-            # self.originDict['assets'].insert(1, 'REFID', asset['ID'])
-            # self.originDict['assets'].pop(asset['ID'])
+        if self.originDict['assets'] != None:
+            for i in range(len(self.originDict['assets'])):
+            # for asset in self.originDict['assets']:
+                if not "REFID" in self.originDict['assets'][i]:
+                    self.originDict['assets'][i] = {'REFID':  self.originDict['assets'][i]['ID']}
+                # self.originDict['assets'].insert(1, 'REFID', asset['ID'])
+                # self.originDict['assets'].pop(asset['ID'])
 
 
 

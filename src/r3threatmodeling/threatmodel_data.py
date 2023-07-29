@@ -53,6 +53,8 @@ class BaseThreatModelObject:
             return self._id
     @id.setter
     def id(self, id):
+        if " " in id:
+            raise BaseException(f"ID dows not support blank spaces: {id}")
         self._id = id
 
     isReference = False 
@@ -225,7 +227,7 @@ class SecurityObjective(BaseThreatModelObject):
                 setattr(self, k, v)
 
     def linkedImpactMDText(self):
-        return  f"Compromised <code><a href=\"#{self.id}\">{self._id}</a></code>: {self.title}"
+        return  f"<code><a href=\"#{self.id}\">{self._id}</a></code>"
     
     def contributedToMDText(self):
         return  f"Contributes to <code><a href=\"#{self.id}\">{self._id}</a></code> *({self.title})*"
@@ -315,12 +317,14 @@ class Threat(BaseThreatModelObject):
     @property
     def impact_desc(self):
         ret = ""
+        if hasattr(self, 'impactDesc'):
+            ret +=   self.impactDesc  + "<br/> "
         if self.impactedSecObjs:
+            # ret = ret + "<br/> "
             secObj: SecurityObjective 
             for secObj in self.impactedSecObjs:
-                ret += secObj.linkedImpactMDText()+ "<br/> "
-        if hasattr(self, 'impactDesc'):
-            ret += self.impactDesc + "<br/> "
+                ret += secObj.linkedImpactMDText()
+
         return ret
 
     @property
@@ -413,6 +417,8 @@ class Threat(BaseThreatModelObject):
                     elif "REFID" in cmData:
                         refID = cmData['REFID']
                         referencedCM = self.getRoot().getDescendantFirstById(refID)
+                        if not isinstance(referencedCM, Countermeasure):
+                            raise BaseException(f"REFID: {cmData['REFID']} ({type(referencedCM)}) is not a Countermeasure" )
                         if referencedCM == None:
                             raise BaseException("REFID: "+ cmData['REFID'] +" not found in: "+self.id )
                         copiedObject  = copy.copy(referencedCM)
