@@ -162,6 +162,10 @@ def processMultipleTMIDs(args):
     TMIDs = args.TMID
 
     tmoRoot = ThreatModel(rootTMYamlFile)
+
+    #Default value when --TMID is omitted in args
+    if TMIDs == None:
+        TMIDs = [tmoRoot.id]
  
     for tmid in TMIDs:
         processSingleTMID(tmoRoot, tmid, args)

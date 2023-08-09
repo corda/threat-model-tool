@@ -12,9 +12,22 @@
             "justMyCode": true,
             "args": [
                 "--rootTMYaml",
-                "../Corda5ThreatModels/threatModels/C5.yaml"
+                "../Corda5ThreatModelsthreatModels/C5/C5.yaml"
                 // ,
                 // "--YAMLprefix", "devticket_"
+            ]
+        },
+        {
+            "name": "Python: Mermaid Diagrams",
+            "type": "python",
+            "request": "launch",
+            "module": "r3threatmodeling.createThreatMermaidDiagrams",
+            "justMyCode": true,
+            "args": [
+                "--rootTMYaml",
+                "../Corda5ThreatModelsthreatModels/C5/C5.yaml",
+                "--outputDir",
+                "../Corda5ThreatModels/build/generated_reports",
             ]
         },
         {
@@ -25,7 +38,7 @@
             "justMyCode": true,
             "args": [
                 "--rootTMYaml",
-                "../Corda5ThreatModels/threatModels/C5.yaml"
+                "../Corda5ThreatModelsthreatModels/C5/C5.yaml"
                 // ,
                 // "--YAMLprefix", "refactored_"
             ]
@@ -40,22 +53,22 @@
             "justMyCode": false,
             "args": [
                 "--rootTMYaml",
-                "../Corda5ThreatModels/threatModels/C5.yaml",
-                "--TMID",
-                "C5",
-                "C5.CPIPackaging",
+                "../Corda5ThreatModels/threatModels/C5/C5.yaml",
+                // "--TMID",
+                // "C5",
+                // "C5.CPIPackaging",
                 "--browserSync",
                 // "--watchFiles",
                 // "pyConThreatMod/template/TM_templateFull.mako",
-                // "threatModels/CPIPackaging.yaml",
-                // "threatModels/VNodeOnboarding.yaml",
+                // "threatModels/C5/CPIPackaging.yaml",
+                // "threatModels/C5/VNodeOnboarding.yaml",
                 // "pyConThreatMod/template/TM_template.mako",
                 // "pyConThreatMod/template/lib.mako",
-                // "threatModels/C5.yaml",
-                // "threatModels/HTTPGateway.yaml",
-                // "threatModels/ClusterConfiguration.yaml",
-                // "threatModels/ClusterDeployment.yaml",
-                // "threatModels/CPIPackaging.yaml",
+                // "threatModels/C5/C5.yaml",
+                // "threatModels/C5/HTTPGateway.yaml",
+                // "threatModels/C5/ClusterConfiguration.yaml",
+                // "threatModels/C5/ClusterDeployment.yaml",
+                // "threatModels/C5/CPIPackaging.yaml",
                 "--outputDir",
                 "../Corda5ThreatModels/build/generated_reports",
                 "--template",
@@ -97,7 +110,7 @@
             "justMyCode": true,
             "args": [
                 "--rootTMYaml",
-                "../Corda5ThreatModels/threatModels/C5.yaml",
+                "../Corda5ThreatModelsthreatModels/C5/C5.yaml",
                 "--TMID",
                 "C5",
                 "--outputDir",
@@ -117,7 +130,7 @@
             "justMyCode": true,
             "args": [
                 "--rootTMYaml",
-                "../Corda5ThreatModels/threatModels/C5.yaml",
+                "../Corda5ThreatModelsthreatModels/C5/C5.yaml",
                 "--TMID",
                 "C5",
                 "--outputDir",

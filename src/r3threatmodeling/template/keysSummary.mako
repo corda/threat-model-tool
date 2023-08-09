@@ -1,6 +1,6 @@
 <%! import html %>
 <%! from r3threatmodeling.template_utils import createTitleAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
-
+<%page args="printTOC=True"/>
 <% PAGEBREAK = """<div class="pagebreak"></div>"""%>
 <% H6 = "######" %>
 <%namespace name="lib" file="lib.mako"/> 
@@ -8,8 +8,9 @@
  
 ${makeMarkdownLinkedHeader(1, 'Keys classification ', skipTOC = False)}
 
-
+% if printTOC:
 __TOC_PLACEHOLDER__
+% endif
 
 ${makeMarkdownLinkedHeader(2, 'Application specific keys and PKI assets ', skipTOC = False)}
 

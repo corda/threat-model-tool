@@ -16,3 +16,14 @@ ${makeMarkdownLinkedHeader(2, 'Requests For Information')}
 
 __RFI_PLACEHOLDER__
 
+${PAGEBREAK}
+${makeMarkdownLinkedHeader(1, 'Annex 1')}
+<%include file="operationalHardeningGuide.mako" args="printTOC=False"/>
+
+${PAGEBREAK}
+${makeMarkdownLinkedHeader(1, 'Annex 2')}
+<%include file="keysSummary.mako" args="printTOC=False"/>
+
+
+
+

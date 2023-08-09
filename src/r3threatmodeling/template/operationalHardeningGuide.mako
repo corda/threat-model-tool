@@ -1,6 +1,6 @@
 <%! import html %>
 <%! from r3threatmodeling.template_utils import createTitleAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
-
+<%page args="printTOC=True"/>
 <% PAGEBREAK = """<div class="pagebreak"></div>"""%>
 <% H6 = "######" %>
 <%namespace name="lib" file="lib.mako"/> 
@@ -9,8 +9,9 @@
  
 ${makeMarkdownLinkedHeader(1, 'Corda NextGen operational security hardening guides', skipTOC = False)}
 
-
+% if printTOC:
 __TOC_PLACEHOLDER__
+% endif
 
 % for operator, countermeasures in sorted(dataModel.items()):
 <% PAGEBREAK = """<div class="pagebreak"></div>"""%>

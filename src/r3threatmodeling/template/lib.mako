@@ -9,7 +9,7 @@
 ${"<span style=\"color:green;\">&#10004;</span>" if value else "&#10060;" } \
 </%def>
 
-<%def name="renderMermaidThreatTree(threat: Threat)">
+<%def name="renderMermaidThreatTree(threat: Threatm, markdown=True)">
 <% MERMAID_AT_HEAD="""
 flowchart BT
 
@@ -21,9 +21,10 @@ flowchart BT
     """
 
 %>
-
+% if markdown: 
 <!-- mermaid start. Do not delete this comment-->
 ```mermaid
+% endif
 ${MERMAID_AT_HEAD}
     T1["<b>Threat:</b> ${mermaid_escape(threat.threatGeneratedTitle())}
     <b>Impact:</b> ${mermaid_escape(valueOr(threat, 'impact_desc', "TOO add impact info"))} 
@@ -38,8 +39,10 @@ ${MERMAID_AT_HEAD}
      % endif 
     % endfor
     % endif
+% if markdown: 
 ```
 <!-- mermaid end. comment needed to it covert to HTML-->
+% endif
 </%def>
 
 <%def name="renderTextSecurityObjectivesTree(securityObjectives: [])">
