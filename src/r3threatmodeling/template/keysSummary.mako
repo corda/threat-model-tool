@@ -12,36 +12,24 @@ ${makeMarkdownLinkedHeader(1, 'Keys classification ', skipTOC = False)}
 __TOC_PLACEHOLDER__
 % endif
 
-${makeMarkdownLinkedHeader(2, 'Application specific keys and PKI assets ', skipTOC = False)}
+<% appkeyassets=tmo.getAssetsByProps(isApplicationKey=True) %>
+% if appkeyassets:
+  ${makeMarkdownLinkedHeader(2, 'Application-specific keys', skipTOC = False)}
+  Keys issued to processes to communicate in a secure manner, not linked to a specific business logic
+  <%include file="keyTable.mako" args="assets=appkeyassets"/>
+% endif
 
+<% infrakeyassets=tmo.getAssetsByProps(isInfrastructureKey=True) %>
+% if infrakeyassets:
+  ${makeMarkdownLinkedHeader(2, 'Infrastructure Keys and PKI assets', skipTOC = False)}
+  <%include file="keyTable.mako" args="assets=infrakeyassets"/>
+% endif
 
-Keys issued to processes to communicate in a secure manner, not linked to a specific business logic
-
-<table markdown="block" style="print-color-adjust: exact; -webkit-print-color-adjust: exact;">
-<tr><th>Title (ID)</th><th>Description</th><th>Properties</th></tr>
-% for asset in tmo.getAssetsByProps(isApplicationKey=True):
-<tr><td>${asset.title}<br/>(${asset.id})</td><td>
-<b>${asset.type}</b><br>
-${asset.description}</td>
-<td>${asset.keyPropertiesHTML()}</td>
-</tr>
-% endfor ##asset
-</table>
-
-${makeMarkdownLinkedHeader(2, 'Infrastructure Keys and PKI assets', skipTOC = False)}
-
-
-<table markdown="block" style="print-color-adjust: exact; -webkit-print-color-adjust: exact;">
-<tr><th>Title (ID)</th><th>Description</th><th>Properties</th></tr>
-% for asset in tmo.getAssetsByProps(isInfrastructureKey=True):
-<tr><td>${asset.title}<br/>(${asset.id})</td><td>
-<b>${asset.type}</b><br>
-${asset.description}</td>
-<td>${asset.keyPropertiesHTML()}</td>
-</tr>
-% endfor ##asset
-</table>
-
+<% credassets=tmo.getAssetsByProps(isCredential=True) %>
+% if credassets:
+  ${makeMarkdownLinkedHeader(2, 'Credentials', skipTOC = False)}
+  <%include file="keyTable.mako" args="assets=credassets"/>
+% endif
 
 
 
