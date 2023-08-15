@@ -545,7 +545,7 @@ class ThreatModel(BaseThreatModelObject):
         yaml.dump(self.originDict, outputStream)
 
         for childrenTM in self.childrenTM:
-            childrenTM.dumpRecursive(folder, prefix)
+            childrenTM.dumpRecursive(prefix=prefix)
 
     def __init__(self):
         return
@@ -633,8 +633,9 @@ class ThreatModel(BaseThreatModelObject):
                 
             elif "children"  == k:
                 for childrenDict in tmDict['children']:
+                    childrenFilename = os.path.dirname(fileIn.name) + os.path.sep + childrenDict['ID'] + os.path.sep + childrenDict['ID'] +".yaml"
                     childTM = ThreatModel(
-                        fileIn= open( os.path.dirname(fileIn.name)  + os.path.sep +  childrenDict['ID'] +".yaml"),
+                        fileIn= open( childrenFilename),
                         parent = self)
 
             elif "gantt"  == k:
