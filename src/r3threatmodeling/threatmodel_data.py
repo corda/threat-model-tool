@@ -500,10 +500,13 @@ class Threat(BaseThreatModelObject):
 
 class Asset(BaseThreatModelObject):
 
-    def keyPropertiesHTML(self):
+    def propertiesHTML(self):
+        if not hasattr(self, 'properties'):
+            return ""
+        
         ret = "<ul>"
         try:
-            for k, v in self.keyProperties.items():
+            for k, v in self.properties.items():
                 ret = ret + f"<li style='margin: 0px 0;'><b>{k}:</b> &nbsp;{v}</li>"
         except:
             pass

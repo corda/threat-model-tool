@@ -8,8 +8,15 @@
   % for asset in assets:
   <tr>
     <td><strong><a href="#${asset.id}">${asset.title}</a></strong></td>
-    <td><b>${asset.type}</b><br>${asset.description}</td>
-    <td>${asset.keyPropertiesHTML()}</td>
+    <td><b>
+    <%
+    type = asset.type
+    if hasattr(asset, 'properties') and 'type' in asset.properties:
+      type = asset.properties['type']
+    %>
+    ${type}
+    </b><br>${asset.description}</td>
+    <td>${asset.propertiesHTML()}</td>
   </tr>
   % endfor ##asset
 </table>
