@@ -20,9 +20,11 @@ __TOC_PLACEHOLDER__
 % endif
 
 <% infrakeyassets=tmo.getAssetsByProps(infrastructureRelated=True, type = 'key') %>
-% if infrakeyassets:
+<% certassets=tmo.getAssetsByProps(type = 'certificate') %>
+% if infrakeyassets or certassets:
   ${makeMarkdownLinkedHeader(2, 'Infrastructure Keys and PKI assets', skipTOC = False)}
   <%include file="keyTable.mako" args="assets=infrakeyassets"/>
+  <%include file="keyTable.mako" args="assets=certassets"/>
 % endif
 
 <% credassets=tmo.getAssetsByProps(type='credential') %>
