@@ -31,6 +31,19 @@
             ]
         },
         {
+            "name": "Python: PlantUML threat Diagrams",
+            "type": "python",
+            "request": "launch",
+            "module": "r3threatmodeling.createThreatPlantUMLDiagrams",
+            "justMyCode": true,
+            "args": [
+                "--rootTMYaml",
+                "../Corda5ThreatModels/threatModels/C5/C5.yaml",
+                "--outputDir",
+                "../Corda5ThreatModels/build/generated_reports/img/threatTree",
+            ]
+        },
+        {
             "name": "Python: Module refactorYAML01to02 OVERWRITE",
             "type": "python",
             "request": "launch",

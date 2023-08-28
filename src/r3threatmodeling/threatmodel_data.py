@@ -270,6 +270,17 @@ class Countermeasure(BaseThreatModelObject):
         if self.inPlace:
             return "countermeasureIP"
         return "countermeasureNIP"
+
+    def statusColors(self):
+        
+        inPlace = { 'border':'#82B366', 'fill':'#D5E8D4'}
+        notInPlace = { 'border':'#D6B656', 'fill':'#FFF2CC'}
+
+        if not hasattr(self, "inPlace"):
+            return notInPlace
+        if self.inPlace:
+            return inPlace
+        return notInPlace
     
     #default value
     operational = False

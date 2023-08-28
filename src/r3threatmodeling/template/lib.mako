@@ -212,8 +212,11 @@ No \
 ${makeMarkdownLinkedHeader(3, title)}
 <a href=""></a>
 <div style="text-align: center;">
-${renderMermaidThreatTree(threat)}
+## ${renderMermaidThreatTree(threat)}
+<img src="img/threatTree/${threat._id}.svg"/>
 </div>
+
+
 
 <dl markdown="block">
 % if hasattr(threat, "assets") and threat.assets:
@@ -375,7 +378,13 @@ ${makeMarkdownLinkedHeader(5, asset.title, skipTOC = True )}
 %endif
 
 <dt markdown="block">Description</dt>
-<dd markdown="block">${asset.description}</dd>
+<dd markdown="block">${asset.description} </dd>
+% if hasattr(asset, 'properties'):
+<dt markdown="block">Other properties</dt>
+<dd markdown="block">
+${asset.propertiesHTML()}
+</dd>
+% endif
 %if hasattr(asset, "authentication"):
 <dt>Authentication</dt>
 <dd markdown="block">${asset.authentication}</dd>

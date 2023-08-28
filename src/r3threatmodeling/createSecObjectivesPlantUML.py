@@ -46,10 +46,21 @@ def main():
     required=False
     )
 
+    CLI.add_argument(
+    "--template",
+    # default = "TM_template",
+    required=True
+    )
+    CLI.add_argument(
+    "--outputFilename",
+    # default = "TM_template",
+    required=True
+    )
+
     args = CLI.parse_args()
 
-    template = "threatPlantUMLDiagram"
- 
+    template = args.template
+    outputFilename = args.outputFilename 
     tmo = ThreatModel(args.rootTMYaml)
     outputDir = args.outputDir
 
@@ -64,11 +75,12 @@ def main():
                                 , output_encoding='utf-8', preprocessor=[lambda x: x.replace("\r\n", "\n")]
                 ))
         
-        for threat in tmo.getAllDown("threats"):
-            mermaidText = mdTemplate.render(threat=threat)
-            mermaidFileName = outMDPath = os.path.join(outputDir, threat._id + ".puml")   
-            with open(mermaidFileName, 'w') as f:
-                f.write(mermaidText)
+        outText = mdTemplate.render(tmo=tmo)
+        outputFilename = outMDPath = os.path.join(outputDir, outputFilename)  
+
+        with open(outputFilename, 'w') as f:
+            print(f"OUTPUT: {f.name}") 
+            f.write(outText)
     except:
         # print(mako_exceptions.text_error_template().render())
         traceback = RichTraceback()
