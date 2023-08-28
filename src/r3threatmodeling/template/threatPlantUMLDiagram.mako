@@ -2,9 +2,14 @@
 <%! import textwrap %>\
 <%! from r3threatmodeling.template_utils import unmark, createTitleAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>\
 <%namespace name="lib" file="lib.mako"/>\
-<%def name="wrapText(input, columns=80)">\
-${"<br/>".join(textwrap.wrap(unmark(input), columns))}\
-</%def>\
+<%def name="wrapText(inputStr, columns=80, strSize=77*4)">
+<%
+if len(inputStr) >= strSize:
+  inputStr = inputStr[:strSize]+ "[...]"
+outputStr = "<br/>".join(textwrap.wrap(unmark(inputStr), columns))
+%>
+${outputStr}
+</%def> 
 <%def name="renderPlantUMLThreatTree(threat: Threatm, markdown=True)">\
 <% PlantUML_AT_HEAD="""@startuml
 digraph G {
