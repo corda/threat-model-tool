@@ -53,8 +53,9 @@ class BaseThreatModelObject:
             return self._id
     @id.setter
     def id(self, id):
-        if " " in id:
-            raise BaseException(f"ID dows not support blank spaces: {id}")
+        if not re.match("^[a-zA-Z0-9_]*$", id):
+        # if " " in id:
+            raise BaseException(f"ID does support other chars than alphanumeric and _ , pls change this ID: {id} (parent: {self.parent.id} )")
         self._id = id
 
     isReference = False 
@@ -254,6 +255,8 @@ class Countermeasure(BaseThreatModelObject):
         self.threat=threat
         self.parent=threat
         self.id = str(dict["ID"])
+
+
 
         if "inPlace" not in dict.keys():
             raise BaseException(f"Countermeasure {self.id} needs an 'inPlace' attribute True or False")

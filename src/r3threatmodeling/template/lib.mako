@@ -1,9 +1,20 @@
 
 <%! import html %>
-<%! from r3threatmodeling.template_utils import mermaid_escape, getShortDescForMermaid, createTitleAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
+<%! import textwrap %>\
+<%! from r3threatmodeling.template_utils import unmark, mermaid_escape, getShortDescForMermaid, createTitleAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
 
 <%! from cvss import CVSS3 %>
 <%! from datetime import datetime %>
+
+
+<%def name="wrapText(inputStr, columns=80, strSize=77*4)">
+<%
+if len(inputStr) >= strSize:
+  inputStr = inputStr[:strSize]+ "[...]"
+outputStr = "<br/>".join(textwrap.wrap(unmark(inputStr), columns))
+%>
+${outputStr}
+</%def> 
 
 <%def name="trueorFalseMark(value: Boolean)">
 ${"<span style=\"color:green;\">&#10004;</span>" if value else "&#10060;" } \
