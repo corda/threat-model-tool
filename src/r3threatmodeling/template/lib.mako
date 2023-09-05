@@ -380,16 +380,20 @@ ${countermeasure.description}</dd>
 
 <%def name="renderAsset(asset: Asset)">
 <hr/>
+<%
+  inScopeStr = "not in scope"
+  if asset.inScope:
+    inScopeStr = "in scope"
+%>
 <a id="${asset.id}"></a>
-${makeMarkdownLinkedHeader(5, asset.title, skipTOC = True )}
+${makeMarkdownLinkedHeader(5, 
+f"{asset.title} ({asset.type} {inScopeStr} - ID: <code>{asset._id}</code>)"
+ , skipTOC = True )} 
 <dl markdown="block">
-<dt>ID</dt><dd><code>${asset._id}</code></dd>
 %if hasattr(asset, "icon"): 
  <img src="${asset.icon}"/><br/>
 %endif
-
-<dt markdown="block">Description</dt>
-<dd markdown="block">${asset.description} </dd>
+${asset.description}
 % if hasattr(asset, 'properties'):
 <dt markdown="block">Other properties</dt>
 <dd markdown="block">
@@ -400,13 +404,11 @@ ${asset.propertiesHTML()}
 <dt>Authentication</dt>
 <dd markdown="block">${asset.authentication}</dd>
 %endif
-<dt>Type:</dt><dd>${asset.type}</dd>
 %if hasattr(asset, "specifies"):
 <dt>Specifies, inherit analysis and attribute from:</dt>
 <% specifiedAsset = tmo.getById(asset.specifies) %>
 <dd markdown="block"> ${specifiedAsset.title}  (<a href="#${specifiedAsset.id}">${specifiedAsset._id}</a>) </dd>
 %endif
-<dt>In scope:</dt><dd>${asset.inScope}</dd>
 </dl>
 </%def>
 
