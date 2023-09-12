@@ -418,7 +418,7 @@ class Threat(BaseThreatModelObject):
         self.parent = tm 
         self.threatModel = tm
 
-        self._id = dict["ID"]
+        self.id = dict["ID"]
         
         dict.setdefault('CVSS', {'base':'TODO CVSS', 'vector':''})
         dict.setdefault('fullyMitigated', False)

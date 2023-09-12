@@ -17,7 +17,7 @@ rankdir="BT";
   node [shape=plaintext, fontname="Arial" fontsize="12"];
     """%>\
 ${PlantUML_AT_HEAD}\
-threat [ fillcolor="#F8CECC", style=filled, shape=polygon, color="#B85450"
+${threat._id} [ fillcolor="#F8CECC", style=filled, shape=polygon, color="#B85450"
     label= 
     <<table border="0" cellborder="0" cellspacing="0">
      <tr><td align="center"><b>Threat</b><br/> ${wrapText(threat.threatGeneratedTitle())}</td></tr>
@@ -37,25 +37,25 @@ threat [ fillcolor="#F8CECC", style=filled, shape=polygon, color="#B85450"
    </table>>
    ];
     
-attack [ fillcolor="#f5f5f5", style=filled, shape=polygon, color="#666666", label =     
+${threat._id}_attack [ fillcolor="#f5f5f5", style=filled, shape=polygon, color="#666666", label =     
     <<table border="0" cellborder="0" cellspacing="0">
      <tr><td align="center"><b>Attack</b><br/>${wrapText(threat.attack)}</td></tr>
    </table>>
     ]
 
-attack -> threat [label = " exploits"]
+${threat._id}_attack -> ${threat._id}  [label = " exploits"]
 
     % if len(threat.countermeasures) > 0:
     % for i, countermeasure in enumerate(threat.countermeasures):
      % if countermeasure.description is not None:
-    countermeasure${i} [ 
+    ${threat._id}_countermeasure${i} [ 
        fillcolor="${countermeasure.statusColors()['fill']}", style=filled, shape=polygon, color="${countermeasure.statusColors()['border']}", label =     
     <<table border="0" cellborder="0" cellspacing="0">
      <tr><td align="left"><b>Countermeasure</b><br/> ${wrapText(countermeasure.title)}</td></tr>
    </table>>
    ]
 
-    countermeasure${i} -> attack [label = " mitigates"]
+     ${threat._id}_countermeasure${i} -> ${threat._id}_attack [label = " mitigates"]
 
      % endif 
     % endfor
