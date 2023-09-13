@@ -21,6 +21,42 @@ from .template_utils import *
 from pathlib import Path
 import shutil
 
+
+def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=True, browserSync=False):
+    print(f"FULL BUILD on {outputDir}")
+    os.makedirs(outputDir, exist_ok=True)
+
+    shutil.copytree(assetDir[0], outputDir, dirs_exist_ok=True)
+
+
+    tmo = ThreatModel(rootTMYaml)
+    
+    report_generator.generate(tmo, template, ancestorData, outputDir, browserSync, None, assetDir)
+
+
+    print(f"Generate plant uml diagrams")
+    threatTree_outputDir = outputDir+'/img/threatTree'
+    os.makedirs(threatTree_outputDir, exist_ok=True)
+    createThreatPlantUMLDiagrams.generate(tmo, threatTree_outputDir)
+    PUMLCommand = f"docker run --rm -v `realpath {threatTree_outputDir}`:/data plantuml/plantuml *.puml -svg -v"
+    print(f" executing: {PUMLCommand}")
+    os.system(PUMLCommand)
+    
+
+    secObjectives_outputDir = outputDir+'/img/secObjectives'
+    os.makedirs(secObjectives_outputDir, exist_ok=True)
+    createSecObjTreePUMLDiagrams.generate(tmo, secObjectives_outputDir)
+    PUMLCommand = f"docker run --rm -v `realpath {secObjectives_outputDir}`:/data plantuml/plantuml *.puml -svg -v"
+    print(f" executing: {PUMLCommand}")
+    os.system(PUMLCommand)
+
+    img_outputDir = outputDir+'/img'
+    os.makedirs(img_outputDir, exist_ok=True)
+    createSecObjectivesPlantUML.generate(tmo, img_outputDir)
+    PUMLCommand = f"docker run --rm -v `realpath {img_outputDir}`:/data plantuml/plantuml *.puml -svg -v"
+    print(f" executing: {PUMLCommand}")
+    os.system(PUMLCommand)
+
 def main():
     CLI=argparse.ArgumentParser()
 
@@ -93,40 +129,9 @@ def main():
     ancestorData = args.ancestorData
     browserSync = args.browserSync
     assetDir = args.assetDir
+    rootTMYaml = args.rootTMYaml
 
-
-    print(f"FULL BUILD on {outputDir}")
-    os.makedirs(outputDir, exist_ok=True)
-
-    shutil.copytree(assetDir[0], outputDir, dirs_exist_ok=True)
-
-
-    tmo = ThreatModel(args.rootTMYaml)
-    report_generator.generate(tmo, template, ancestorData, outputDir, browserSync, None, assetDir)
-
-
-    print(f"Generate plant uml diagrams")
-    threatTree_outputDir = outputDir+'/img/threatTree'
-    os.makedirs(threatTree_outputDir, exist_ok=True)
-    createThreatPlantUMLDiagrams.generate(tmo, threatTree_outputDir)
-    PUMLCommand = f"docker run --rm -v `realpath {threatTree_outputDir}`:/data plantuml/plantuml *.puml -svg -v"
-    print(f" executing: {PUMLCommand}")
-    os.system(PUMLCommand)
-    
-
-    secObjectives_outputDir = outputDir+'/img/threatTree'
-    os.makedirs(secObjectives_outputDir, exist_ok=True)
-    createSecObjTreePUMLDiagrams.generate(tmo, secObjectives_outputDir)
-    PUMLCommand = f"docker run --rm -v `realpath {secObjectives_outputDir}`:/data plantuml/plantuml *.puml -svg -v"
-    print(f" executing: {PUMLCommand}")
-    os.system(PUMLCommand)
-
-    img_outputDir = outputDir+'/img/threatTree'
-    os.makedirs(img_outputDir, exist_ok=True)
-    createSecObjectivesPlantUML.generate(tmo, img_outputDir)
-    PUMLCommand = f"docker run --rm -v `realpath {img_outputDir}`:/data plantuml/plantuml *.puml -svg -v"
-    print(f" executing: {PUMLCommand}")
-    os.system(PUMLCommand)
+    generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData, browserSync)
 
 
 

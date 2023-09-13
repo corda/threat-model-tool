@@ -76,7 +76,7 @@
             "name": "Python: C5 fullBuild (html and diagrams/images)",
             "type": "python",
             "request": "launch",
-            "module": "r3threatmodeling.fullBuild",
+            "module": "r3threatmodeling.fullBuildsingleTM",
             "justMyCode": false,
             "args": [
                 "--rootTMYaml",
@@ -84,6 +84,26 @@
                 "--browserSync",
                 "--outputDir",
                 "../Corda5ThreatModels/build/generated_reports/fullC5",
+                "--template",
+                "TM_templateFull",
+                "--formatYAML",
+                "--assetDir",
+                "../Corda5ThreatModels/threatModels/assets"
+            ]
+        },
+
+        {
+            "name": "Python: Directory fullBuild (html and diagrams/images)",
+            "type": "python",
+            "request": "launch",
+            "module": "r3threatmodeling.fullBuildDirectory",
+            "justMyCode": false,
+            "args": [
+                "--TMDirectory",
+                "../Corda5ThreatModels/threatModels",
+                "--browserSync",
+                "--outputDir",
+                "../Corda5ThreatModels/build/BUILD1",
                 "--template",
                 "TM_templateFull",
                 "--formatYAML",
