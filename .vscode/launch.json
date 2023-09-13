@@ -72,6 +72,25 @@
             ]
         },
 
+        {
+            "name": "Python: C5 fullBuild (html and diagrams/images)",
+            "type": "python",
+            "request": "launch",
+            "module": "r3threatmodeling.fullBuild",
+            "justMyCode": false,
+            "args": [
+                "--rootTMYaml",
+                "../Corda5ThreatModels/threatModels/C5/C5.yaml",
+                "--browserSync",
+                "--outputDir",
+                "../Corda5ThreatModels/build/generated_reports/fullC5",
+                "--template",
+                "TM_templateFull",
+                "--formatYAML",
+                "--assetDir",
+                "../Corda5ThreatModels/threatModels/assets"
+            ]
+        },
 
         {
             "name": "Python: Module for R3 C5 Full",

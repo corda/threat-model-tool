@@ -23,6 +23,32 @@ from markdown import Markdown
 from .template_utils import *
 
 
+def generate(tmo, outputDir, outputFilename = "secObjectives.puml", template="secObjectivesPlantUMLDiagram"):
+    try:
+        mdTemplate = Template(
+            filename =  os.path.join(os.path.dirname(__file__),
+                'template/'+template+'.mako'),
+                lookup=TemplateLookup(
+                    directories=['.', 
+                                os.path.join(os.path.dirname(__file__),'/template/'), "/"]
+                                , output_encoding='utf-8', preprocessor=[lambda x: x.replace("\r\n", "\n")]
+                ))
+        
+        outText = mdTemplate.render(tmo=tmo)
+        outputFilename = outMDPath = os.path.join(outputDir, outputFilename)  
+
+        with open(outputFilename, 'w') as f:
+            print(f"OUTPUT: {f.name}") 
+            f.write(outText)
+    except:
+        # print(mako_exceptions.text_error_template().render())
+        traceback = RichTraceback()
+        for (filename, lineno, function, line) in traceback.traceback:
+            print("File %s, line %s, in %s" % (filename, lineno, function))
+            print(line, "\n")
+        print("%s: %s" % (str(traceback.error.__class__.__name__), traceback.error))
+
+
 def main():
 
     CLI=argparse.ArgumentParser()
@@ -49,12 +75,13 @@ def main():
     CLI.add_argument(
     "--template",
     # default = "TM_template",
-    required=True
+    required=False,
+    default="secObjectivesPlantUMLDiagram"
     )
     CLI.add_argument(
     "--outputFilename",
-    # default = "TM_template",
-    required=True
+    default = "secObjectives.puml",
+    required=False
     )
 
     args = CLI.parse_args()
@@ -65,30 +92,8 @@ def main():
     outputDir = args.outputDir
 
 
-    try:
-        mdTemplate = Template(
-            filename =  os.path.join(os.path.dirname(__file__),
-                'template/'+template+'.mako'),
-                lookup=TemplateLookup(
-                    directories=['.', 
-                                os.path.join(os.path.dirname(__file__),'/template/'), "/"]
-                                , output_encoding='utf-8', preprocessor=[lambda x: x.replace("\r\n", "\n")]
-                ))
-        
-        outText = mdTemplate.render(tmo=tmo)
-        outputFilename = outMDPath = os.path.join(outputDir, outputFilename)  
-
-        with open(outputFilename, 'w') as f:
-            print(f"OUTPUT: {f.name}") 
-            f.write(outText)
-    except:
-        # print(mako_exceptions.text_error_template().render())
-        traceback = RichTraceback()
-        for (filename, lineno, function, line) in traceback.traceback:
-            print("File %s, line %s, in %s" % (filename, lineno, function))
-            print(line, "\n")
-        print("%s: %s" % (str(traceback.error.__class__.__name__), traceback.error))
-        return 
+    generate(tmo, outputDir, outputFilename, template)
+    return 
 
 if __name__ == "__main__":
     main()

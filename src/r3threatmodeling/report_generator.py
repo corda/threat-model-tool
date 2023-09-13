@@ -54,6 +54,44 @@ def prepare_output_directory(outputDir, assetDir = None):
   for asset in assetDir:
     shutil.copytree(asset, outputDir, dirs_exist_ok = True)
 
+
+def generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, assetDir ):
+
+    if baseFileName is None:
+        baseFileName = tmo._id
+
+    mdOutFileName = baseFileName + ".md"
+    htmlOutFileName = baseFileName + ".html"
+    try:
+        mdTemplate = Template(
+        filename=  os.path.join(os.path.dirname(__file__),
+            'template/'+template+'.mako'),
+            lookup=TemplateLookup(
+                directories=['.', 
+                             os.path.join(os.path.dirname(__file__),'/template/'), "/"]
+                            , output_encoding='utf-8', preprocessor=[lambda x: x.replace("\r\n", "\n")]
+            ))
+        # ancestorData = True
+        mdReport = mdTemplate.render(tmo=tmo, ancestorData=ancestorData)
+    except:
+        # print(mako_exceptions.text_error_template().render())
+        traceback = RichTraceback()
+        for (filename, lineno, function, line) in traceback.traceback:
+            print("File %s, line %s, in %s" % (filename, lineno, function))
+            print(line, "\n")
+        print("%s: %s" % (str(traceback.error.__class__.__name__), traceback.error))
+        return 
+        # raise BaseException("Template rendering error")
+
+    mdReport = createTableOfContent(mdReport)
+
+    mdReport = createRFIs(mdReport)
+
+    # mdReport = "\n".join(process_mermaidInclude(mdReport.splitlines(), assetDir[1]))
+
+
+    postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileName, mdReport, assetDir)
+
 def main():
     CLI=argparse.ArgumentParser()
 
@@ -190,11 +228,7 @@ def processSingleTMID(tmoRoot, TMID, args):
     rewriteYAMLDev = args.rewriteYAMLDev
     assetDir = args.assetDir
 
-    if baseFileName is None:
-        baseFileName = TMID
 
-    mdOutFileName = baseFileName + ".md"
-    htmlOutFileName = baseFileName + ".html"
 
     rootID = TMID.split('.')[0]
     if tmoRoot._id == rootID:
@@ -207,35 +241,7 @@ def processSingleTMID(tmoRoot, TMID, args):
         tmo = tmo.getChildrenTMbyID(idPathPart)
         
 
-    try:
-        mdTemplate = Template(
-        filename=  os.path.join(os.path.dirname(__file__),
-            'template/'+template+'.mako'),
-            lookup=TemplateLookup(
-                directories=['.', 
-                             os.path.join(os.path.dirname(__file__),'/template/'), "/"]
-                            , output_encoding='utf-8', preprocessor=[lambda x: x.replace("\r\n", "\n")]
-            ))
-        # ancestorData = True
-        mdReport = mdTemplate.render(tmo=tmo, ancestorData=ancestorData)
-    except:
-        # print(mako_exceptions.text_error_template().render())
-        traceback = RichTraceback()
-        for (filename, lineno, function, line) in traceback.traceback:
-            print("File %s, line %s, in %s" % (filename, lineno, function))
-            print(line, "\n")
-        print("%s: %s" % (str(traceback.error.__class__.__name__), traceback.error))
-        return 
-        # raise BaseException("Template rendering error")
-
-    mdReport = createTableOfContent(mdReport)
-
-    mdReport = createRFIs(mdReport)
-
-    # mdReport = "\n".join(process_mermaidInclude(mdReport.splitlines(), assetDir[1]))
-
-
-    postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileName, mdReport, assetDir)
+    generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, assetDir )
     return
 
 def postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileName, mdReport, assetDir):

@@ -23,6 +23,30 @@ from markdown import Markdown
 from .template_utils import *
 
 
+def generate(tmo, outputDir, template="secObjTreePlantUMLDiagram"):
+    try:
+        mdTemplate = Template(
+            filename =  os.path.join(os.path.dirname(__file__),
+                'template/'+template+'.mako'),
+                lookup=TemplateLookup(
+                    directories=['.', 
+                                os.path.join(os.path.dirname(__file__),'/template/'), "/"]
+                                , output_encoding='utf-8', preprocessor=[lambda x: x.replace("\r\n", "\n")]
+                ))
+        
+        for secObj in tmo.securityObjectives:
+            text = mdTemplate.render(secObj=secObj)
+            mermaidFileName = outMDPath = os.path.join(outputDir, secObj._id + ".puml")   
+            with open(mermaidFileName, 'w') as f:
+                f.write(text)
+    except:
+        # print(mako_exceptions.text_error_template().render())
+        traceback = RichTraceback()
+        for (filename, lineno, function, line) in traceback.traceback:
+            print("File %s, line %s, in %s" % (filename, lineno, function))
+            print(line, "\n")
+        print("%s: %s" % (str(traceback.error.__class__.__name__), traceback.error))
+
 def main():
 
     CLI=argparse.ArgumentParser()
@@ -53,30 +77,9 @@ def main():
     tmo = ThreatModel(args.rootTMYaml)
     outputDir = args.outputDir
 
+    generate(outputDir, template)
 
-    try:
-        mdTemplate = Template(
-            filename =  os.path.join(os.path.dirname(__file__),
-                'template/'+template+'.mako'),
-                lookup=TemplateLookup(
-                    directories=['.', 
-                                os.path.join(os.path.dirname(__file__),'/template/'), "/"]
-                                , output_encoding='utf-8', preprocessor=[lambda x: x.replace("\r\n", "\n")]
-                ))
-        
-        for secObj in tmo.securityObjectives:
-            text = mdTemplate.render(secObj=secObj)
-            mermaidFileName = outMDPath = os.path.join(outputDir, secObj._id + ".puml")   
-            with open(mermaidFileName, 'w') as f:
-                f.write(text)
-    except:
-        # print(mako_exceptions.text_error_template().render())
-        traceback = RichTraceback()
-        for (filename, lineno, function, line) in traceback.traceback:
-            print("File %s, line %s, in %s" % (filename, lineno, function))
-            print(line, "\n")
-        print("%s: %s" % (str(traceback.error.__class__.__name__), traceback.error))
-        return 
+    return 
 
 if __name__ == "__main__":
     main()
