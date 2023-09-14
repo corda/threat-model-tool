@@ -126,10 +126,10 @@ def main():
     
     generateIndexPage(tm_list, outputDir)
 
-    # for tm in tm_list:
-    #     rootTMYaml = tm['path']
-    #     TMoutputDir = outputDir + "/" + tm['name']
-    #     fullBuildSingleTM.generateSingleTM(open(rootTMYaml), TMoutputDir, assetDir, template, ancestorData, browserSync)
+    for tm in tm_list:
+        rootTMYaml = tm['path']
+        TMoutputDir = outputDir + "/" + tm['name']
+        fullBuildSingleTM.generateSingleTM(open(rootTMYaml), TMoutputDir, assetDir, template, ancestorData, browserSync)
 
 
 if __name__ == "__main__":

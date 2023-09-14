@@ -103,7 +103,7 @@
                 "../Corda5ThreatModels/threatModels",
                 "--browserSync",
                 "--outputDir",
-                "../Corda5ThreatModels/build/BUILD1",
+                "../Corda5ThreatModels/build",
                 "--template",
                 "TM_templateFull",
                 "--formatYAML",

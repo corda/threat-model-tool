@@ -564,6 +564,8 @@ class ThreatModel(BaseThreatModelObject):
         for childrenTM in self.childrenTM:
             childrenTM.dumpRecursive(prefix=prefix)
 
+    def assetDir(self):
+        return os.path.dirname(self.fileName)+ "/assets"
     def __init__(self):
         return
     def __init__(self, fileIn, parent = None):

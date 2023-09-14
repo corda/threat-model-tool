@@ -28,11 +28,14 @@ def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=Tru
 
     shutil.copytree(assetDir[0], outputDir, dirs_exist_ok=True)
 
-
     tmo = ThreatModel(rootTMYaml)
-    
+
     report_generator.generate(tmo, template, ancestorData, outputDir, browserSync, None, assetDir)
 
+    for tm in tmo.getDescendants():
+        asset_path = tm.assetDir()
+        if os.path.isdir(asset_path):
+            shutil.copytree(asset_path, outputDir, dirs_exist_ok=True)
 
     print(f"Generate plant uml diagrams")
     threatTree_outputDir = outputDir+'/img/threatTree'
