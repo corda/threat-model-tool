@@ -78,40 +78,40 @@ ${MERMAID_AT_HEAD}
 </%def>
 
 
-<%def name="renderMermaidSecurityObjectivesTree(securityObjectives: [])">
-<% MERMAID_AT_HEAD="""
-%%{init: {"flowchart": {"defaultRenderer": "elk"}} }%%
+## <%def name="renderMermaidSecurityObjectivesTree(securityObjectives: [])">
+## <% MERMAID_AT_HEAD="""
+## %%{init: {"flowchart": {"defaultRenderer": "elk"}} }%%
 
-flowchart BT
-    classDef threat fill:#F8CECC,stroke:#B85450
-    classDef attack fill:#F5F5F5,stroke:#666666
-    classDef secObjective fill:#D5E8D4,stroke:#82B366
-    classDef countermeasureNIP fill:#FFF2CC,stroke:#D6B656  
-    classDef default text-align:left
-    """
+## flowchart BT
+##     classDef threat fill:#F8CECC,stroke:#B85450
+##     classDef attack fill:#F5F5F5,stroke:#666666
+##     classDef secObjective fill:#D5E8D4,stroke:#82B366
+##     classDef countermeasureNIP fill:#FFF2CC,stroke:#D6B656  
+##     classDef default text-align:left
+##     """
 
-%>
+## %>
 
-<!-- mermaid start. Do not delete this comment-->
-```mermaid
-${MERMAID_AT_HEAD}
-<% subgraphName = "no" %>
-% for so in securityObjectives:
-  % if subgraphName != so.group:
-${'end' if subgraphName != "no" else ''}
-<% subgraphName = so.group %>
-subgraph ${subgraphName}
-  % endif
-  ${so._id}["${so.title}"]:::secObjective
-  % for rel_so in so.contributesTo:
-    ${so._id} --contributes to-->   ${rel_so._id}
-  % endfor
-% endfor
-end
+## <!-- mermaid start. Do not delete this comment-->
+## ```mermaid
+## ${MERMAID_AT_HEAD}
+## <% subgraphName = "no" %>
+## % for so in securityObjectives:
+##   % if subgraphName != so.group:
+## ${'end' if subgraphName != "no" else ''}
+## <% subgraphName = so.group %>
+## subgraph ${subgraphName}
+##   % endif
+##   ${so._id}["${so.title}"]:::secObjective
+##   % for rel_so in so.contributesTo:
+##     ${so._id} --contributes to-->   ${rel_so._id}
+##   % endfor
+## % endfor
+## end
 
-```
-<!-- mermaid end. comment needed to it covert to HTML-->
-</%def>
+## ```
+## <!-- mermaid end. comment needed to it covert to HTML-->
+## </%def>
 
 <%def name="executiveSummary(tmo)">
 ${makeMarkdownLinkedHeader(2, "Executive Summary", skipTOC = False)}
@@ -486,7 +486,8 @@ No Security Objectives defined in this scope
   **Summary list:**
 ${renderTextSecurityObjectivesTree(tmo.securityObjectives)}
   **Diagram:**
-${renderMermaidSecurityObjectivesTree(tmo.securityObjectives)}
+  <img src="img/secObjectives.svg"/>
+## ${renderMermaidSecurityObjectivesTree(tmo.securityObjectives)}
   **Details:**
     % for securityObjective in tmo.securityObjectives:
 ${lib.renderSecurityObjective(securityObjective)}

@@ -17,8 +17,9 @@ ${outputStr}
 <% PlantUML_AT_HEAD="""
 @startuml
 digraph G {
-rankdir="BT";
-  node [fontname="Arial" fontsize="12" color=green];
+ rankdir="BT";
+ ranksep=2;
+  node [fontname="Arial" fontsize="14" color=LightGray style=filled shape="box"];
 
     """
 
