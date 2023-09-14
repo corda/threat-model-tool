@@ -196,6 +196,9 @@ class TMCVSS(CVSS3):
         return ret
 
 class SecurityObjective(BaseThreatModelObject):
+
+    treeImage = False
+    
     def __init__(self):
         return
     def __init__(self, dict, parent):

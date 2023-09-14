@@ -343,10 +343,9 @@ ${countermeasure.description}</dd>
   <dd markdown="block">${secObjectiveContributed.contributedToMDText()}</dd>
 % endfor
 % endif
-% if hasattr(securityObjective, "treeImage"):
-**Attack tree**
-
-<img src="${securityObjective.treeImage}"/>
+% if securityObjective.treeImage:
+**Tree of attacks impacting ${securityObjective.title} **
+<img src="img/secObjectives/${securityObjective._id}.svg"/>
 % endif
 
 
