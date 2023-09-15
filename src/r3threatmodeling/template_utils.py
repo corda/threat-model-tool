@@ -22,7 +22,7 @@ __md.stripTopLevelTags = False
 
 
 def unmark(text):
-    return __md.convert(text)
+    return html.escape(__md.convert(text))
 
 
 

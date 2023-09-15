@@ -200,7 +200,7 @@ class TMCVSS(CVSS3):
 
 class SecurityObjective(BaseThreatModelObject):
 
-    treeImage = False
+    treeImage = True
     
     def __init__(self):
         return
