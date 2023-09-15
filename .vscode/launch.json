@@ -76,7 +76,7 @@
             "name": "Python: C5 fullBuild (html and diagrams/images)",
             "type": "python",
             "request": "launch",
-            "module": "r3threatmodeling.fullBuildsingleTM",
+            "module": "r3threatmodeling.fullBuildSingleTM",
             "justMyCode": false,
             "args": [
                 "--rootTMYaml",
