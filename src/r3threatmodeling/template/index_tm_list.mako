@@ -20,17 +20,35 @@
     2023.v1-DRAFT (ZIP file containing PDF)
 </a> 
 
-% for tm in tm_list:
-<h2>Latest SNAPSHOT</h2>
 
+
+<h2>Latest SNAPSHOT</h2>
 Latest published SNAPSHOT: __VERSION__ <br/>
 Generated on: __TIMEGEN__
-<p><a href="${tm['path']}/${tm['name']}.html">HTML version</a></p><br/>
-<p><a href="__PDF_FILENAME__">PDF version</a></p><br/>
-<p><a href="https://github.com/corda/threat-modeling/blob/master/threatModels/${tm['name']}">Source (yaml)</a></p><br/>
-<p><a href="CordaHardeningGuide.html">Security hardening operational guides (PoC)</a></p><br/>
-<p><a href="keysSummary.html">Keys and crypto sensitive assets summary report annex(PoC)</a></p><br/>
 
+<table>
+<thead>
+<tr>
+<th>Threat Model</th><th>PDF Report</th><th>Source</th><th>Hardening Guide</th><th>Key Summary</th>
+</tr>
+</thead>
+<tbody>
+% for tm in tm_list:
+    <%
+        tmOutputDir = tm['name'] 
+        tmName = tm['name']
+        tmPDF  = tm['pdf']
+    %>
+    <tr>
+    <td><a href="${tmOutputDir}/${tmName}.html">${tmName}</a></td>
+    <td><a href="${tmOutputDir}/${tmPDF}">${tmPDF}</a></td>
+    <td><a href="https://github.com/corda/threat-modeling/blob/master/threatModels/${tm['name']}">Source (yaml)</a></td>
+    <td><a href="${tmOutputDir}/SecurityGuide.html">Security hardening guide (${tmName})</a></td>
+    <td><a href="${tmOutputDir}/KeysSummary.html">Keys summary (${tmName})</a></td>
+    </tr>
 % endfor
+</tbody>
+</table>
+
 </body>
 </html>

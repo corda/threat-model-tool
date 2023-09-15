@@ -39,7 +39,7 @@ def generateIndexPage(tm_list, outputDir):
                                 , output_encoding='utf-8', preprocessor=[lambda x: x.replace("\r\n", "\n")]
                 ))
         
-        outText = mdTemplate.render(tm_list=tm_list)
+        outText = mdTemplate.render(tm_list=tm_list, outputDir=outputDir)
         outputFilename = outMDPath = os.path.join(outputDir, "index.html")  
         with open(outputFilename, 'w') as f:
             print(f"OUTPUT: {f.name}") 
@@ -123,6 +123,24 @@ def main():
     TMDir = args.TMDirectory
 
     tm_list = [{'name':f.stem, 'path':str(f)} for f in pathlib.Path(TMDir).glob("*/*.yaml") if pathlib.Path(f).parent.name == pathlib.Path(f).stem]
+
+    tm_list = []#{'name':f.stem, 'path':str(f)} 
+    for f in pathlib.Path(TMDir).glob("*/*.yaml"):
+      if pathlib.Path(f).parent.name == pathlib.Path(f).stem:
+        #tm_list
+        path = str(f)
+        name = f.stem
+        print(path)
+        import yaml
+        tm = yaml.safe_load(open(f))
+        title = tm['title']
+        version = tm['version']
+        pdfname = f'{title} Threat Model-{version}.pdf'
+        pdfname = re.sub('[^\w_.)(_-]', '_', pdfname)   # replace invalid chars with underscore
+        
+        tm_list.append({'name': name, 'path': path, 'title': title, 'pdf':pdfname})
+
+    print(tm_list)        
     
     generateIndexPage(tm_list, outputDir)
 
