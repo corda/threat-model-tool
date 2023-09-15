@@ -230,7 +230,7 @@ def processSingleTMID(tmoRoot, TMID, args):
 
 
 
-    rootID = TMID.split('.')[0]
+    rootID = TMID #.rsplit('.',1)[0]
     if tmoRoot._id == rootID:
         tmo = tmoRoot
     else:

@@ -75,6 +75,9 @@ class BaseThreatModelObject:
         return
     def __init__(self, dict, parent):
 
+        # if "ID" in dict and dict["ID"] is not None and "." in dict["ID"]:
+        #     dict["ID"] = dict["ID"].replace(".","_").upper()
+
         self.originDict = dict
 
         self.description = "undefined"
@@ -203,6 +206,9 @@ class SecurityObjective(BaseThreatModelObject):
         return
     def __init__(self, dict, parent):
         # self.threats: list[Threat] = []
+    
+        # if "ID" in dict and dict["ID"] is not None and "." in dict["ID"]:
+        #     dict["ID"] = dict["ID"].replace(".","_").upper()
 
         self.contributesTo = []
 
@@ -257,6 +263,8 @@ class Countermeasure(BaseThreatModelObject):
 
         self.threat=threat
         self.parent=threat
+        # if "ID" in dict and dict["ID"] is not None and "." in dict["ID"]:
+        #     dict["ID"] = dict["ID"].replace(".","_").upper()
         self.id = str(dict["ID"])
 
 
@@ -421,6 +429,8 @@ class Threat(BaseThreatModelObject):
         self.parent = tm 
         self.threatModel = tm
 
+        # if "ID" in dict and dict["ID"] is not None and "." in dict["ID"]:
+        #     dict["ID"] = dict["ID"].replace(".","_").upper()
         self.id = dict["ID"]
         
         dict.setdefault('CVSS', {'base':'TODO CVSS', 'vector':''})

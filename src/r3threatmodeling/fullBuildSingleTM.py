@@ -25,8 +25,9 @@ import shutil
 def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=True, browserSync=False):
     print(f"FULL BUILD on {outputDir}")
     os.makedirs(outputDir, exist_ok=True)
-
-    shutil.copytree(assetDir[0], outputDir, dirs_exist_ok=True)
+    
+    if assetDir:
+        shutil.copytree(assetDir[0], outputDir, dirs_exist_ok=True)
 
     tmo = ThreatModel(rootTMYaml)
 
