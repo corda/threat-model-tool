@@ -22,14 +22,14 @@ from pathlib import Path
 import shutil
 
 
-def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=True, browserSync=False):
+def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=True, browserSync=False, public=False):
     print(f"FULL BUILD on {outputDir}")
     os.makedirs(outputDir, exist_ok=True)
 
     if assetDir:
         shutil.copytree(assetDir[0], outputDir, dirs_exist_ok=True)
 
-    tmo = ThreatModel(rootTMYaml)
+    tmo = ThreatModel(rootTMYaml, public=public)
     tmID = tmo.id
     tmTitle = tmo.title
 
@@ -66,8 +66,8 @@ def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=Tru
 
     print("Generating PDF from html version")
     PDF_command =f"docker run -it --init --cap-add=SYS_ADMIN  -v ./scripts:/home/pptruser/scripts -v \
-          ./build/:/home/pptruser/build --rm ghcr.io/puppeteer/puppeteer:latest node scripts/pdfScript.js \
-            file:///home/pptruser/build/{tmID}/{tmID}.html build/{tmID}/{tmID}.pdf"
+          ./{outputDir}/:/home/pptruser/{outputDir} --rm ghcr.io/puppeteer/puppeteer:latest node scripts/pdfScript.js \
+            file:///home/pptruser/{outputDir}/{tmID}.html {outputDir}/{tmID}.pdf"
     os.system(PDF_command)
 
 def main():
@@ -88,6 +88,11 @@ def main():
     CLI.add_argument(
     "--browserSync", action='store_true'
     )
+
+    CLI.add_argument(
+    "--public", action='store_true'
+    )
+
 
     CLI.add_argument(
     "--rootTMYaml",
@@ -143,8 +148,8 @@ def main():
     browserSync = args.browserSync
     assetDir = args.assetDir
     rootTMYaml = args.rootTMYaml
-
-    generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData, browserSync)
+    public = args.public
+    generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData, browserSync, public = public)
 
 
 

@@ -411,7 +411,7 @@ class Threat(BaseThreatModelObject):
     def __init__(self):
 
         return
-    def __init__(self, dict, tm):
+    def __init__(self, dict, tm, public=False):
 
         self.originDict = dict
 
@@ -439,22 +439,25 @@ class Threat(BaseThreatModelObject):
         for k, v in dict.items():
             if k == "countermeasures":
                 for cmData in v:
-                    if "ID" in cmData:
-                        self.countermeasures.append(Countermeasure(cmData, self))
-                    elif "REFID" in cmData:
-                        refID = cmData['REFID']
-                        referencedCM = self.getRoot().getDescendantFirstById(refID)
-                        if not isinstance(referencedCM, Countermeasure):
-                            raise BaseException(f"REFID: {cmData['REFID']} ({type(referencedCM)}) is not a Countermeasure" )
-                        if referencedCM == None:
-                            raise BaseException("REFID: "+ cmData['REFID'] +" not found in: "+self.id )
-                        copiedObject  = copy.copy(referencedCM)
-                        copiedObject.isReference = True
-                        # if 'notes' in cmData:
-                        #     copiedObject.notes = cmData['notes']
-                        self.countermeasures.append(copiedObject)
+                    if public and 'public' in cmData and cmData['public'] == False:
+                        pass
                     else:
-                        raise BaseException("REFID or ID needed to define a countermeasure in: "+self.id )
+                        if "ID" in cmData:
+                            self.countermeasures.append(Countermeasure(cmData, self))
+                        elif "REFID" in cmData:
+                            refID = cmData['REFID']
+                            referencedCM = self.getRoot().getDescendantFirstById(refID)
+                            if not isinstance(referencedCM, Countermeasure):
+                                raise BaseException(f"REFID: {cmData['REFID']} ({type(referencedCM)}) is not a Countermeasure" )
+                            if referencedCM == None:
+                                raise BaseException("REFID: "+ cmData['REFID'] +" not found in: "+self.id )
+                            copiedObject  = copy.copy(referencedCM)
+                            copiedObject.isReference = True
+                            # if 'notes' in cmData:
+                            #     copiedObject.notes = cmData['notes']
+                            self.countermeasures.append(copiedObject)
+                        else:
+                            raise BaseException("REFID or ID needed to define a countermeasure in: "+self.id )
 
             elif k == 'impactedSecObj':
                 for cmData in v:
@@ -581,7 +584,7 @@ class ThreatModel(BaseThreatModelObject):
         return os.path.dirname(self.fileName)+ "/assets"
     def __init__(self):
         return
-    def __init__(self, fileIn, parent = None):
+    def __init__(self, fileIn, parent = None, public=False):
 
         self.fileName = fileIn.name
 
@@ -660,15 +663,17 @@ class ThreatModel(BaseThreatModelObject):
                 if  tmDict["threats"] != None:
                     for threatDict in tmDict["threats"]:
                         print("Parsing threat: "+ threatDict['ID'])
-                        threat = Threat(threatDict, self)
-                        self.threats.append(threat)
+                        if public and 'public' in threatDict and threatDict['public'] == False:
+                            pass
+                        else:
+                            threat = Threat(threatDict, self, public=public)
+                            self.threats.append(threat)
                 
             elif "children"  == k:
                 for childrenDict in tmDict['children']:
                     childrenFilename = os.path.dirname(fileIn.name) + os.path.sep + childrenDict['ID'] + os.path.sep + childrenDict['ID'] +".yaml"
-                    childTM = ThreatModel(
-                        fileIn= open( childrenFilename),
-                        parent = self)
+                    childTM = ThreatModel(open( childrenFilename),
+                        parent = self, public=public)
 
             elif "gantt"  == k:
                 self.gantt=tmDict['gantt']

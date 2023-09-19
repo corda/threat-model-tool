@@ -71,9 +71,29 @@
                 // "--YAMLprefix", "refactored_"
             ]
         },
+        {
+            "name": "public fullBuild (html and diagrams/images)",
+            "type": "python",
+            "request": "launch",
+            "module": "r3threatmodeling.fullBuildSingleTM",
+            "justMyCode": false,
+            "args": [
+                "--rootTMYaml",
+                "../Corda5ThreatModels/threatModels/C5/C5.yaml",
+                "--browserSync",
+                "--outputDir",
+                "build",
+                "--template",
+                "TM_templateFull",
+                "--formatYAML",
+                "--assetDir",
+                "../Corda5ThreatModels/threatModels/assets",
+                "--public"
+            ]
+        },
 
         {
-            "name": "Python: C5 fullBuild (html and diagrams/images)",
+            "name": "private fullBuild (html and diagrams/images)",
             "type": "python",
             "request": "launch",
             "module": "r3threatmodeling.fullBuildSingleTM",
