@@ -25,11 +25,13 @@ import shutil
 def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=True, browserSync=False):
     print(f"FULL BUILD on {outputDir}")
     os.makedirs(outputDir, exist_ok=True)
-    
+
     if assetDir:
         shutil.copytree(assetDir[0], outputDir, dirs_exist_ok=True)
 
     tmo = ThreatModel(rootTMYaml)
+    tmID = tmo.id
+    tmTitle = tmo.title
 
     report_generator.generate(tmo, template, ancestorData, outputDir, browserSync, None, assetDir)
 
@@ -61,6 +63,12 @@ def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=Tru
     PUMLCommand = f"docker run --rm -v `realpath {img_outputDir}`:/data plantuml/plantuml *.puml -svg -v"
     print(f" executing: {PUMLCommand}")
     os.system(PUMLCommand)
+
+    print("Generating PDF from html version")
+    PDF_command =f"docker run -it --init --cap-add=SYS_ADMIN  -v ./scripts:/home/pptruser/scripts -v \
+          ./build/:/home/pptruser/build --rm ghcr.io/puppeteer/puppeteer:latest node scripts/pdfScript.js \
+            file:///home/pptruser/build/{tmID}/{tmID}.html build/{tmID}/{tmID}.pdf"
+    os.system(PDF_command)
 
 def main():
     CLI=argparse.ArgumentParser()
