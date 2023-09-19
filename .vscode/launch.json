@@ -133,7 +133,28 @@
         },
 
         {
-            "name": "Python: Module for R3 C5 Full",
+            "name": "public  Module for R3 C5 Full",
+            "type": "python",
+            "request": "launch",
+            "module": "r3threatmodeling.report_generator",
+            "justMyCode": false,
+            "args": [
+                "--rootTMYaml",
+                "../Corda5ThreatModels/threatModels/C5/C5.yaml",
+                "--browserSync",
+                "--public",
+                "--outputDir",
+                "../Corda5ThreatModels/build/generated_reports",
+                "--template",
+                "TM_templateFull",
+                "--formatYAML",
+                "--assetDir",
+                "../Corda5ThreatModels/threatModels/assets"
+            ]
+        },
+
+        {
+            "name": "private  Module for R3 C5 Full",
             "type": "python",
             "request": "launch",
             "module": "r3threatmodeling.report_generator",

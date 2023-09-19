@@ -55,7 +55,7 @@ def prepare_output_directory(outputDir, assetDir = None):
     shutil.copytree(asset, outputDir, dirs_exist_ok = True)
 
 
-def generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, assetDir ):
+def generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, assetDir, public=False ):
 
     if baseFileName is None:
         baseFileName = tmo._id
@@ -109,6 +109,10 @@ def main():
 
     CLI.add_argument(
     "--browserSync", action='store_true'
+    )
+
+    CLI.add_argument(
+    "--public", action='store_true'
     )
 
     CLI.add_argument(
@@ -198,8 +202,9 @@ def processMultipleTMIDs(args):
 
     rootTMYamlFile = args.rootTMYaml
     TMIDs = args.TMID
+    public =  args.public
 
-    tmoRoot = ThreatModel(rootTMYamlFile)
+    tmoRoot = ThreatModel(rootTMYamlFile, public=public)
 
     #Default value when --TMID is omitted in args
     if TMIDs == None:
@@ -227,6 +232,7 @@ def processSingleTMID(tmoRoot, TMID, args):
     baseFileName = args.baseFileName
     rewriteYAMLDev = args.rewriteYAMLDev
     assetDir = args.assetDir
+    public=args.public
 
 
 
@@ -241,7 +247,7 @@ def processSingleTMID(tmoRoot, TMID, args):
         tmo = tmo.getChildrenTMbyID(idPathPart)
         
 
-    generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, assetDir )
+    generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, assetDir, public )
     return
 
 def postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileName, mdReport, assetDir):
