@@ -11,6 +11,7 @@ from mako.exceptions import RichTraceback
 from mako.lookup import TemplateLookup
 from mako.template import Template
 import markdown
+import importlib_resources
 
 from r3threatmodeling import createThreatPlantUMLDiagrams, createSecObjTreePUMLDiagrams, createSecObjectivesPlantUML, report_generator
 
@@ -24,7 +25,6 @@ import shutil
 
 def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=True, browserSync=False, public=False):
     print(f"FULL BUILD on {outputDir}")
-    os.makedirs(outputDir, exist_ok=True)
 
     if assetDir:
         shutil.copytree(assetDir[0], outputDir, dirs_exist_ok=True)
@@ -65,9 +65,15 @@ def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=Tru
     os.system(PUMLCommand)
 
     print("Generating PDF from html version")
-    PDF_command =f"docker run -it --init --cap-add=SYS_ADMIN  -v ./scripts:/home/pptruser/scripts -v \
-          ./{outputDir}/:/home/pptruser/{outputDir} --rm ghcr.io/puppeteer/puppeteer:latest node scripts/pdfScript.js \
-            file:///home/pptruser/{outputDir}/{tmID}.html {outputDir}/{tmID}.pdf"
+
+    os.makedirs(  "build/scripts", exist_ok=True)
+    PDFscript = importlib_resources.files('r3threatmodeling').joinpath('scripts/pdfScript.js')
+    shutil.copy(PDFscript, 'build/scripts/pdfScript.js')
+
+    PDF_command =f"docker run -it --init --cap-add=SYS_ADMIN  -v ./build/scripts:/home/pptruser/scripts -v \
+./{outputDir}/:/home/pptruser/{outputDir} --rm ghcr.io/puppeteer/puppeteer:latest node scripts/pdfScript.js \
+file:///home/pptruser/{outputDir}/{tmID}.html {outputDir}/{tmID}.pdf"
+    print(f"Executing command: {PDF_command}")
     os.system(PDF_command)
 
 def main():

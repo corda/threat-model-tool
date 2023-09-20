@@ -82,7 +82,7 @@
                 "../Corda5ThreatModels/threatModels/C5/C5.yaml",
                 "--browserSync",
                 "--outputDir",
-                "build",
+                "build/C5",
                 "--template",
                 "TM_templateFull",
                 "--formatYAML",

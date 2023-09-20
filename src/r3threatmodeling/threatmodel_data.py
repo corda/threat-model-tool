@@ -383,11 +383,11 @@ class Threat(BaseThreatModelObject):
 
 
     def threatGeneratedTitle(self):
-        assetDesc = " in "
+        assetDesc = " in: "
         if hasattr(self, 'assets'):
             if len(self.assets) > 0:
                 for asset in self.assets:
-                    assetDesc+= asset.title + ", "
+                    assetDesc+= f"{asset.type} {asset.title}, "
                 return self.threatType + assetDesc[:-2]
             else:
                 return self.threatType
