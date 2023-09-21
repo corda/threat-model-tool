@@ -96,7 +96,7 @@ def main():
     )
 
     CLI.add_argument(
-    "--public", action='store_true'
+    "--visibility", default="full", choices=["full", "public"]
     )
 
 
