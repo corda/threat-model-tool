@@ -64,6 +64,7 @@ def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=Tru
     print(f" executing: {PUMLCommand}")
     os.system(PUMLCommand)
 
+    """
     print("Generating PDF from html version")
 
     os.makedirs(  "build/scripts", exist_ok=True)
@@ -75,7 +76,8 @@ def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=Tru
 file:///home/pptruser/{outputDir}/{tmID}.html {outputDir}/{tmID}.pdf"
     print(f"Executing command: {PDF_command}")
     os.system(PDF_command)
-
+    """
+    
 def main():
     CLI=argparse.ArgumentParser()
 
