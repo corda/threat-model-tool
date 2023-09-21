@@ -36,8 +36,8 @@
     <td><a href="${tmOutputDir}/${tmName}.html">${tmName}</a></td>
     <td><a href="${tmOutputDir}/${tmPDF}">${tmPDF}</a></td>
     <td><a href="https://github.com/corda/threat-modeling/blob/master/threatModels/${tm['name']}">Source (yaml)</a></td>
-    <td><a href="${tmOutputDir}/SecurityGuide.html">Security hardening guide (${tmName})</a></td>
-    <td><a href="${tmOutputDir}/KeysSummary.html">Keys summary (${tmName})</a></td>
+    <td><a href="${tmOutputDir}/HardeningGuide.html">Security hardening guide (${tmName})</a></td>
+    <td><a href="${tmOutputDir}/KeySummary.html">Keys summary (${tmName})</a></td>
     </tr>
 % endfor
 </tbody>
