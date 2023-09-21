@@ -154,7 +154,7 @@ def main():
     browserSync = args.browserSync
     assetDir = args.assetDir
     rootTMYaml = args.rootTMYaml
-    public = args.public
+    public = True if args.visibility == "public" else False
     generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData, browserSync, public = public)
 
 
