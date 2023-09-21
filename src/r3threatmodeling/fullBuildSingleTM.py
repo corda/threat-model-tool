@@ -45,7 +45,7 @@ def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=Tru
     threatTree_outputDir = outputDir+'/img/threatTree'
     os.makedirs(threatTree_outputDir, exist_ok=True)
     createThreatPlantUMLDiagrams.generate(tmo, threatTree_outputDir)
-    PUMLCommand = f"docker run --rm -v `realpath {threatTree_outputDir}`:/data plantuml/plantuml *.puml -svg -v"
+    PUMLCommand = f"docker run --rm -v {os.path.realpath(threatTree_outputDir)}:/data plantuml/plantuml *.puml -svg -v"
     print(f" executing: {PUMLCommand}")
     os.system(PUMLCommand)
     
@@ -53,14 +53,14 @@ def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=Tru
     secObjectives_outputDir = outputDir+'/img/secObjectives'
     os.makedirs(secObjectives_outputDir, exist_ok=True)
     createSecObjTreePUMLDiagrams.generate(tmo, secObjectives_outputDir)
-    PUMLCommand = f"docker run --rm -v `realpath {secObjectives_outputDir}`:/data plantuml/plantuml *.puml -svg -v"
+    PUMLCommand = f"docker run --rm -v {os.path.realpath(secObjectives_outputDir)}:/data plantuml/plantuml *.puml -svg -v"
     print(f" executing: {PUMLCommand}")
     os.system(PUMLCommand)
 
     img_outputDir = outputDir+'/img'
     os.makedirs(img_outputDir, exist_ok=True)
     createSecObjectivesPlantUML.generate(tmo, img_outputDir)
-    PUMLCommand = f"docker run --rm -v `realpath {img_outputDir}`:/data plantuml/plantuml *.puml -svg -v"
+    PUMLCommand = f"docker run --rm -v {os.path.realpath(img_outputDir)}:/data plantuml/plantuml *.puml -svg -v"
     print(f" executing: {PUMLCommand}")
     os.system(PUMLCommand)
 
@@ -70,8 +70,8 @@ def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=Tru
     PDFscript = importlib_resources.files('r3threatmodeling').joinpath('scripts/pdfScript.js')
     shutil.copy(PDFscript, 'build/scripts/pdfScript.js')
 
-    PDF_command =f"docker run -it --init --cap-add=SYS_ADMIN  -v ./build/scripts:/home/pptruser/scripts -v \
-./{outputDir}/:/home/pptruser/{outputDir} --rm ghcr.io/puppeteer/puppeteer:latest node scripts/pdfScript.js \
+    PDF_command =f"docker run -it --init --cap-add=SYS_ADMIN  -v {os.path.realpath('build/scripts')}:/home/pptruser/scripts -v \
+{os.path.realpath(outputDir)}/:/home/pptruser/{outputDir} --rm ghcr.io/puppeteer/puppeteer:latest node scripts/pdfScript.js \
 file:///home/pptruser/{outputDir}/{tmID}.html {outputDir}/{tmID}.pdf"
     print(f"Executing command: {PDF_command}")
     os.system(PDF_command)
