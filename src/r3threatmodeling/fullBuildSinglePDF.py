@@ -24,8 +24,8 @@ def generatePDF(rootTMYaml, outputDir, outputName = None):
 
 
     PDF_command =f"docker run -it --init --cap-add=SYS_ADMIN  -v {os.path.realpath('build/scripts')}:/home/pptruser/scripts -v \
-{os.path.realpath(outputDir)}/:/home/pptruser/{outputDir} --rm ghcr.io/puppeteer/puppeteer:latest node scripts/pdfScript.js \
-file:///home/pptruser/{outputDir}/{tmID}.html {outputDir}/{outputName}.pdf"
+{os.path.realpath(outputDir)}/:/home/pptruser/{outputDir} --rm ghcr.io/puppeteer/puppeteer:latest \"node scripts/pdfScript.js \
+file:///home/pptruser/{outputDir}/{tmID}.html {outputDir}/{outputName}.pdf && pwd && find .\""
     print(f"Executing command: {PDF_command}")
     os.system(PDF_command)
 
