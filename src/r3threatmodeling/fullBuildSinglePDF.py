@@ -23,7 +23,7 @@ def generatePDF(rootTMYaml, outputDir, outputName = None):
     shutil.copy(PDFscript, 'build/scripts/pdfScript.js')
 
 
-    PDF_command =f"docker run -it --init -v {os.path.realpath('build/scripts')}:/home/pptruser/scripts -v \
+    PDF_command =f"docker run --init -v {os.path.realpath('build/scripts')}:/home/pptruser/scripts -v \
 {os.path.realpath(outputDir)}/:/home/pptruser/{outputDir} --rm ghcr.io/puppeteer/puppeteer:latest node scripts/pdfScript.js \
 file:///home/pptruser/{outputDir}/{tmID}.html {outputDir}/{outputName}.pdf"
     print(f"Executing command: {PDF_command}")

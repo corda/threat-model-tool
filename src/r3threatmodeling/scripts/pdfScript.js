@@ -4,7 +4,7 @@ const { url } = require('inspector');
 
 async function printPDF(aurl) {
   const browser = await puppeteer.launch({
-    headless: true, args: [
+    headless: "new", args: [
       '--no-sandbox',
       '--disable-setuid-sandbox'
     ]
