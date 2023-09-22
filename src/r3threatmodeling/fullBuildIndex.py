@@ -13,7 +13,7 @@ from mako.lookup import TemplateLookup
 from mako.template import Template
 import markdown
 
-from r3threatmodeling import fullBuildSingleTM
+from r3threatmodeling import fullBuildSingleTM, report_generator
 from .threatmodel_data import *
 from markdown import Markdown
 from .template_utils import *
@@ -110,6 +110,7 @@ def main():
 
     print(tm_list)        
     print("gen!!")
+    report_generator.prepare_output_directory(outputDir)
     generateIndexPage(tm_list, args.versions, outputDir)
 
 
