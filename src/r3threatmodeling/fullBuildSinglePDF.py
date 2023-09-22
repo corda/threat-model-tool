@@ -22,10 +22,14 @@ def generatePDF(rootTMYaml, outputDir, outputName = None):
     PDFscript = importlib_resources.files('r3threatmodeling').joinpath('scripts/pdfScript.js')
     shutil.copy(PDFscript, 'build/scripts/pdfScript.js')
 
+    os.system(f"touch {outputDir}/{outputName}.pdf")
+    os.system(f"chmod 666 {outputDir}/{outputName}.pdf")
 
-    PDF_command =f"docker run --init -v {os.path.realpath('build/scripts')}:/home/pptruser/scripts -v \
-{os.path.realpath(outputDir)}/:/home/pptruser/{outputDir} --rm ghcr.io/puppeteer/puppeteer:latest node scripts/pdfScript.js \
-file:///home/pptruser/{outputDir}/{tmID}.html {outputDir}/{outputName}.pdf"
+    userDir ="/home/pptruser"
+
+    PDF_command =f"docker run --init -v {os.path.realpath('build/scripts')}:{userDir}/scripts -v \
+{os.path.realpath(outputDir)}/:{userDir}/{outputDir} --rm ghcr.io/puppeteer/puppeteer:latest node scripts/pdfScript.js \
+file://{userDir}/{outputDir}/{tmID}.html {outputDir}/{outputName}.pdf"
     print(f"Executing command: {PDF_command}")
     os.system(PDF_command)
 
