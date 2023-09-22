@@ -72,7 +72,7 @@
             ]
         },
         {
-            "name": "public fullBuild (html and diagrams/images)",
+            "name": "public fullBuild C5 (html and diagrams/images)",
             "type": "python",
             "request": "launch",
             "module": "r3threatmodeling.fullBuildSingleTM",
@@ -93,7 +93,7 @@
         },
 
         {
-            "name": "private fullBuild (html and diagrams/images)",
+            "name": "private C5 fullBuild (html and diagrams/images)",
             "type": "python",
             "request": "launch",
             "module": "r3threatmodeling.fullBuildSingleTM",
@@ -108,7 +108,8 @@
                 "TM_templateFull",
                 "--formatYAML",
                 "--assetDir",
-                "../Corda5ThreatModels/threatModels/assets"
+                "../Corda5ThreatModels/threatModels/assets",
+                "--generatePDF"
             ]
         },
 

@@ -13,7 +13,7 @@ from mako.template import Template
 import markdown
 import importlib_resources
 
-from r3threatmodeling import createThreatPlantUMLDiagrams, createSecObjTreePUMLDiagrams, createSecObjectivesPlantUML, report_generator
+from r3threatmodeling import fullBuildSinglePDF, createThreatPlantUMLDiagrams, createSecObjTreePUMLDiagrams, createSecObjectivesPlantUML, report_generator
 
 from .threatmodel_data import *
 from markdown import Markdown
@@ -23,7 +23,7 @@ from pathlib import Path
 import shutil
 
 
-def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=True, browserSync=False, public=False):
+def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=True, browserSync=False, public=False, generatePDF=False):
     print(f"FULL BUILD on {outputDir}")
 
     if assetDir:
@@ -64,6 +64,10 @@ def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=Tru
     print(f" executing: {PUMLCommand}")
     os.system(PUMLCommand)
 
+
+
+    if generatePDF:
+        fullBuildSinglePDF.generatePDF(rootTMYaml, outputDir, outputName = None)
     """
     print("Generating PDF from html version")
 
@@ -96,6 +100,11 @@ def main():
     CLI.add_argument(
     "--browserSync", action='store_true'
     )
+
+    CLI.add_argument(
+    "--generatePDF", action='store_true'
+    )
+
 
     CLI.add_argument(
     "--visibility", default="full", choices=["full", "public"]
@@ -156,11 +165,9 @@ def main():
     browserSync = args.browserSync
     assetDir = args.assetDir
     rootTMYaml = args.rootTMYaml
+    generatePDF = args.generatePDF
     public = True if args.visibility == "public" else False
-    generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData, browserSync, public = public)
-
-
-
+    generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData, browserSync, public = public, generatePDF=generatePDF)
 
 if __name__ == "__main__":
     main()
