@@ -200,7 +200,21 @@ class TMCVSS(CVSS3):
 
 class SecurityObjective(BaseThreatModelObject):
 
-    treeImage = True
+    _treeImage = True
+
+
+    @property
+    def treeImage(self):
+        # if there are not direct threats do not show the empty tree
+        for threat in self.getRoot().getAllDown('threats'):
+            for impactedSecObj in threat.impactedSecObjs:
+                if impactedSecObj.id == self.id: 
+                     return self._treeImage
+        return False
+    
+    @treeImage.setter
+    def treeImage(self, treeImage):
+        self._treeImage = treeImage
     
     def __init__(self):
         return

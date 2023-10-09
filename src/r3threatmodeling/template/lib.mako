@@ -117,7 +117,7 @@ ${MERMAID_AT_HEAD}
 ${makeMarkdownLinkedHeader(2, "Executive Summary", skipTOC = False)}
 
 ## <% unmitigatedYesOperational = tmo.getThreatsByFullyMitigatedAndOperational(False, True)%>
-<% unmitigatedNoOperatinoal = tmo.getThreatsByFullyMitigatedAndOperational(False, False)%> ##TODO change search to not fully mitigated threats (configure flag correctly on threats yaml)
+<% unmitigatedNoOperatinoal = tmo.getThreatsByFullyMitigatedAndOperational(False, False)%>
 ## <% mitigated  = tmo.getThreatsByFullyMitigated (True)%>
 ## <% unmitigated  = tmo.getThreatsByFullyMitigated (False)%>
 > This section contains an executive summary of the threats and thier mitigation status

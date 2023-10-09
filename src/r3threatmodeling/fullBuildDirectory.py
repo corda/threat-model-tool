@@ -110,6 +110,9 @@ def main():
 
     CLI.add_argument('--baseFileName', default=None, required=False)
 
+    CLI.add_argument("--generatePDF", action='store_true')
+
+
     args = CLI.parse_args()
     outputDir = args.outputDir
     watchFiles = args.watchFiles
@@ -119,6 +122,7 @@ def main():
     ancestorData = args.ancestorData
     browserSync = args.browserSync
     assetDir = args.assetDir
+    generatePDF = args.generatePDF
 
     TMDir = args.TMDirectory
 
@@ -147,7 +151,7 @@ def main():
     for tm in tm_list:
         rootTMYaml = tm['path']
         TMoutputDir = outputDir + "/" + tm['name']
-        fullBuildSingleTM.generateSingleTM(open(rootTMYaml), TMoutputDir, assetDir, template, ancestorData, browserSync)
+        fullBuildSingleTM.generateSingleTM(open(rootTMYaml), TMoutputDir, assetDir, template, ancestorData, browserSync , generatePDF=generatePDF)
 
 
 if __name__ == "__main__":

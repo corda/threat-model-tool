@@ -26,6 +26,8 @@ import shutil
 def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=True, browserSync=False, public=False, generatePDF=False):
     print(f"FULL BUILD on {outputDir}")
 
+    os.makedirs(outputDir, exist_ok=True)
+
     if assetDir:
         shutil.copytree(assetDir[0], outputDir, dirs_exist_ok=True)
 
