@@ -475,13 +475,13 @@ ${makeMarkdownLinkedHeader(3, 'References')}
 %endfor
 %endif
 
+% if hasattr(tmo, "securityObjectives"):
+  % if len(tmo.securityObjectives) == 0:
+
+## No Security Objectives defined in this scope
+  % else:
 ${makeMarkdownLinkedHeader(3, 'Security Objectives')}
 
-%if hasattr(tmo, "securityObjectives"):
-
-  % if len(tmo.securityObjectives) == 0:
-No Security Objectives defined in this scope
-  % else:
   **Summary list:**
 ${renderTextSecurityObjectivesTree(tmo.securityObjectives)}
   **Diagram:**
@@ -493,19 +493,18 @@ ${lib.renderSecurityObjective(securityObjective)}
 
     % endfor
   % endif
+% endif ##secObj attr
 
-% if ancestorData and tmo.parent != None:
-  % if len(tmo.parent.securityObjectives) == 0:
-No other Security Objective inherited
+  % if ancestorData and tmo.parent != None:  ##ancestorData
+${makeMarkdownLinkedHeader(3, 'Security Objectives inherited from other threat models')}
+    % if len(tmo.parent.securityObjectives) == 0:
+No Security Objective inherited
   % else:
-${makeMarkdownLinkedHeader(4, 'Security Objectives inherited from other threat models')}
     % for securityObjective in tmo.parent.securityObjectives:
 ${lib.renderSecurityObjective(securityObjective)}
-
     % endfor
-  % endif
-% endif ##ancestorData
-%endif
+    % endif ## len(tmo.parent.securityObjectives) == 0:
+  % endif ##ancestorData
 
 
 % if len(tmo.getDescendants()) > 0:
@@ -583,7 +582,7 @@ ${lib.renderAsset(asset)}
 
 
 
-% if hasattr (tmo, 'analysis'):
+% if hasattr (tmo, 'analysis') and len(tmo.analysis.strip()) > 5: #somethine like TODO will be hidden 
 ${PAGEBREAK}
 <hr>
 ${makeMarkdownLinkedHeader(2, tmo.title + ' Analysis')}
