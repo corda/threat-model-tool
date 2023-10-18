@@ -23,7 +23,7 @@ from pathlib import Path
 import shutil
 
 
-def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=True, browserSync=False, public=False, generatePDF=False):
+def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=True, browserSync=False, public=False, generatePDF=False, pdfHeaderNote=None):
     print(f"FULL BUILD on {outputDir}")
 
     os.makedirs(outputDir, exist_ok=True)
@@ -69,7 +69,7 @@ def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=Tru
 
 
     if generatePDF:
-        fullBuildSinglePDF.generatePDF(rootTMYaml, outputDir, outputName = None)
+        fullBuildSinglePDF.generatePDF(rootTMYaml, outputDir, outputName = None, headerNote=pdfHeaderNote)
     """
     print("Generating PDF from html version")
 
@@ -148,6 +148,12 @@ def main():
     CLI.add_argument(
     "--assetDir",
     nargs="+", 
+    required=False
+    )
+
+    CLI.add_argument(
+    "--pdfHeaderNote",
+    default="Private and confidential", 
     required=False
     )
 

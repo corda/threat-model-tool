@@ -2,7 +2,7 @@ const puppeteer = require('puppeteer')
 const fs = require('fs');
 const { url } = require('inspector');
 
-async function printPDF(aurl) {
+async function printPDF(aurl, headerNote) {
   const browser = await puppeteer.launch({
     headless: "new", args: [
       '--no-sandbox',
@@ -28,7 +28,7 @@ async function printPDF(aurl) {
       `,
       headerTemplate: `
       <div style="color: lightgray; border-top: solid lightgray 0px; font-size: 10px; padding-top: 5px; text-align: center; width: 100%;">
-      <span> R3 property - private and confidential</span>
+      <span> ` + headerNote +`</span>
       </div>
     `,
       format: 'A4',
@@ -55,10 +55,11 @@ async function main(argv){
   aurl = argv[2]
   fileName = argv[3]
   // timeGen = argv[4]
+  headerNote = argv[4]
   console.log("URL: " + aurl)
   console.log("fileName: " + fileName)
-
-  data = await printPDF(aurl);
+  console.log("headerNote: " + headerNote)
+  data = await printPDF(aurl, headerNote);
 
   fs.writeFileSync(fileName, data);
 }

@@ -104,6 +104,12 @@ def main():
     required=False
     )
 
+    CLI.add_argument(
+    "--pdfHeaderNote",
+    default="Private and confidential", 
+    required=False
+    )
+
     CLI.add_argument('--ancestorData', action='store_true')
     CLI.add_argument('--no-ancestorData', dest='ancestorData', action='store_false')
     CLI.set_defaults(ancestorData=True)
@@ -123,6 +129,7 @@ def main():
     browserSync = args.browserSync
     assetDir = args.assetDir
     generatePDF = args.generatePDF
+    pdfHeaderNote = args.pdfHeaderNote
 
     TMDir = args.TMDirectory
 
@@ -151,7 +158,7 @@ def main():
     for tm in tm_list:
         rootTMYaml = tm['path']
         TMoutputDir = outputDir + "/" + tm['name']
-        fullBuildSingleTM.generateSingleTM(open(rootTMYaml), TMoutputDir, assetDir, template, ancestorData, browserSync , generatePDF=generatePDF)
+        fullBuildSingleTM.generateSingleTM(open(rootTMYaml), TMoutputDir, assetDir, template, ancestorData, browserSync , generatePDF=generatePDF, pdfHeaderNote=pdfHeaderNote)
 
 
 if __name__ == "__main__":

@@ -311,19 +311,19 @@ ${countermeasure.description}</dd>
 <dd markdown="block">
 <strong>Countermeasure implemented?</strong> ${trueorFalseMark(countermeasure.inPlace)} \
  <strong>Public and disclosable?</strong> ${trueorFalseMark(countermeasure.public)} \
-% if countermeasure.operational:
- <strong>Is operational?</strong>${ "<span style=\"color:green;\">&#10004;</span>"}
- %if hasattr(countermeasure, "operator"):
-    (operated by ${countermeasure.operator})
- %endif
-% endif
-</dd>
+% if countermeasure.operational: 
+ <strong>Is operational?</strong>${ "<span style=\"color:green;\">&#10004;</span>"} \
+ %if hasattr(countermeasure, "operator"): 
+    (operated by ${countermeasure.operator}) 
+ %endif 
+% endif 
+</dd> \
 
 % endfor
-</dl>
-% else:
+</dl> \
+% else: 
 *No countermeasure listed*
-% endif
+% endif 
 </%def>
 
 <%def name="renderSecurityObjective(securityObjective: SecurityObjective)">
@@ -344,7 +344,6 @@ ${countermeasure.description}</dd>
 % endfor
 % endif
 % if securityObjective.treeImage:
-**Tree of attacks impacting ${securityObjective.title} **
 <img src="img/secObjectives/${securityObjective._id}.svg"/>
 % endif
 
@@ -462,10 +461,12 @@ ${executiveSummary(tmo)}
 ${PAGEBREAK}
 ${threatsSummary(tmo)}
 % endif
+% if hasattr(tmo.scope, "description") and tmo.scope.description: 
 ${makeMarkdownLinkedHeader(2, tmo.title +  ' - scope of analysis')}
 
 ${makeMarkdownLinkedHeader(3, 'Overview')}
 ${tmo.scope.description} 
+% endif
 ##@James: removed 'fmt' description ... was it to fix multiline RFIs ?
 
 %if hasattr(tmo.scope, "references"):
@@ -516,14 +517,14 @@ ${lib.renderSecurityObjective(securityObjective)}
 % endfor
 % endif
 
-%if hasattr(tmo.scope, "diagram"):
+%if hasattr(tmo.scope, "diagram") and tmo.scope.diagram:
 ${makeMarkdownLinkedHeader(3, 'Diagrams')}
 ${tmo.scope.diagram}
 %endif 
 
 
 
-> **Note** This section contains the list of attackers, personas, roles and potential threat agents considered to be within the scope of analysis.
+## > **Note** This section contains the list of attackers, personas, roles and potential threat agents considered to be within the scope of analysis.
 ###  Defined in this threat model 
 
 % if len(tmo.attackers) > 0:
@@ -564,7 +565,7 @@ ${makeMarkdownLinkedHeader(3, 'Assumptions')}
 
 
 
-
+% if len(tmo.assets) > 0:
 ${PAGEBREAK}
 ${makeMarkdownLinkedHeader(3, 'Assets')}
 
@@ -580,9 +581,9 @@ ${makeMarkdownLinkedHeader(4, 'Details')}
 ${lib.renderAsset(asset)} 
 % endfor
 
+% endif
 
-
-% if hasattr (tmo, 'analysis') and len(tmo.analysis.strip()) > 5: #somethine like TODO will be hidden 
+% if hasattr (tmo, 'analysis') and tmo.analysis and len(tmo.analysis.strip()) > 5: #something like TODO will be hidden 
 ${PAGEBREAK}
 <hr>
 ${makeMarkdownLinkedHeader(2, tmo.title + ' Analysis')}
@@ -594,22 +595,20 @@ ${makeMarkdownLinkedHeader(2, tmo.title + ' Analysis')}
 ${tmo.analysis}  
 % endif
 
+%if len(tmo.threats) > 0:
+
 ${PAGEBREAK}
 <hr>
 ${makeMarkdownLinkedHeader(2, tmo.title +' Threats')}
 
 > **Note** This section contains the threat and mitigations identified during the analysis phase.
 
-%if len(tmo.threats) < 1:
-  **No threat identified or listed **
-%else:
 
 % for i , threat in enumerate(tmo.threats):
 %if i > 1:
-<hr>
+<hr> \
 %endif
 ${lib.renderThreat(threat)}
-
 % if (i!=len(tmo.threats)-1):
 ${PAGEBREAK}
  % endif
