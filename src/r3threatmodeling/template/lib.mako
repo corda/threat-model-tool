@@ -244,7 +244,7 @@ ${makeMarkdownLinkedHeader(3, title)}
 % endif
 
 % if hasattr(threat, "attackers") and threat.attackers:
-  <dt>Attackers/threat agents:</dt>
+  <dt>Threat actors:</dt>
 
 % for attacker in threat.attackers:
 <dd markdown="block"> - <code><a href="#${attacker.id}">${attacker._id}</a></code>\
@@ -363,7 +363,7 @@ ${countermeasure.description}</dd>
 <% R=attacker.reference%>
 <dt>Reference:</dt><dd>${R|h}</dd>
 %endif
-<dt>In Scope:</dt><dd>${"Yes" if attacker.inScope else "No"}</dd>
+<dt>In Scope as threat actor:</dt><dd>${"Yes" if attacker.inScope else "No"}</dd>
 </dl>
 
 %if hasattr(attacker, "icon"): 
@@ -461,7 +461,8 @@ ${executiveSummary(tmo)}
 ${PAGEBREAK}
 ${threatsSummary(tmo)}
 % endif
-% if hasattr(tmo.scope, "description") and tmo.scope.description: 
+% if hasattr(tmo.scope, "description") and tmo.scope.description is not None: 
+${PAGEBREAK}
 ${makeMarkdownLinkedHeader(2, tmo.title +  ' - scope of analysis')}
 
 ${makeMarkdownLinkedHeader(3, 'Overview')}
@@ -528,10 +529,14 @@ ${tmo.scope.diagram}
 ###  Defined in this threat model 
 
 % if len(tmo.attackers) > 0:
-## No attackers defined in this scope
+## No actors defined in this scope
 ## % else:
 ${PAGEBREAK}
-${makeMarkdownLinkedHeader(3, 'Attackers')}
+${makeMarkdownLinkedHeader(3, 'Actors')}
+
+> Actors, agents, users and attackers may be used as synonymous. 
+> If the analysis considers attacks and threats from a specific actor then it is considered *in scope*.
+
 % for attacker in tmo.attackers:
 ${lib.renderAttacker(attacker)}
 
@@ -540,10 +545,10 @@ ${lib.renderAttacker(attacker)}
 
 % if ancestorData and tmo.parent != None:
 % if len(tmo.parent.getAllAttackers()) > 0:
-## No other attackers inherited
+## No other actors inherited
 ## % else:
 
-${makeMarkdownLinkedHeader(3, 'Attackers inherited from other threat models')}
+${makeMarkdownLinkedHeader(3, 'Actors inherited from other threat models')}
 
 % for attacker in tmo.parent.getAllAttackers():
 ${lib.renderAttacker(attacker)}
