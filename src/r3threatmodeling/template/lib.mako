@@ -355,8 +355,10 @@ ${countermeasure.description}</dd>
 
 <%def name="renderAttacker(attacker: Attacker)">
 <% INDENT = "&nbsp;&nbsp;&nbsp;&nbsp;"%>
-<a id="${attacker.id}"></a>
-**`${attacker.id}`** (from ${attacker.parent.id} scope) <br>
+
+<a id="${attacker._id}"></a>
+${makeMarkdownLinkedHeader(5, f"{attacker.title} (ID: <code>{attacker._id}</code>)" , skipTOC = True )} 
+
 <dl markdown="block">
 <dt>Description:</dt><dd markdown="block">${attacker.description}</dd>
 %if hasattr(attacker, "reference"): 
