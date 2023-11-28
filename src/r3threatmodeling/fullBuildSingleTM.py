@@ -100,7 +100,7 @@ def main():
     )
 
     CLI.add_argument(
-    "--browserSync", action='store_true'
+    "--browserSync", action='store_false'
     )
 
     CLI.add_argument(

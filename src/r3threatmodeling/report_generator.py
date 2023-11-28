@@ -282,12 +282,12 @@ def postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileNa
         document.write("<script async src='http://HOST:3000/browser-sync/browser-sync-client.js?v=2.27.10'><\/script>".replace("HOST", location.hostname));//]]></script>
     </body> """)
         
-    mermaid_script = """
-<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-<script>mermaid.initialize({startOnLoad:true, securityLevel: 'loose'});
-</script>
-"""
-    htmlReport=htmlReport.replace("</body>",    mermaid_script + "</body>")    
+#     mermaid_script = """
+# <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+# <script>mermaid.initialize({startOnLoad:true, securityLevel: 'loose'});
+# </script>
+# """
+#     htmlReport=htmlReport.replace("</body>",    mermaid_script + "</body>")    
 
 
     outMDPath = os.path.join(outputDir, mdOutFileName)

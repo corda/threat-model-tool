@@ -10,8 +10,16 @@ async function printPDF(aurl, headerNote) {
     ]
   });
   const page = await browser.newPage();
-  await page.goto(aurl, 
-  {waitUntil: 'networkidle0'});
+  let status = await page.goto(aurl, 
+  {waitUntil: 'networkidle0'
+});
+
+  status = status.status();
+  if (status != 404) {
+      console.log(`HTTP response status code: ` +status );
+  };
+
+
   const pdf = await page.pdf(
     
     // {
