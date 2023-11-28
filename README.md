@@ -3,15 +3,15 @@
 ## Development setup
 Run from [github.com:corda/threat-model-tool](https://github.com/corda/threat-model-tool) checkout directory:
 ```bash
-python setup.py develop
+pip3 install develop
 ```
 
 Run from the [github.com:corda/threat-modeling.git](https://github.com/corda/threat-modeling) checkout directory:
 ```bash
-pip install -e ../threat-model-tool
+pip3 install -e ../threat-model-tool
 ```
 
-## Crete a distribution 
+## Create a distribution 
 
 ```bash
 python3 -m pip install --upgrade build
