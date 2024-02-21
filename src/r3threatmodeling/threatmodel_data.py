@@ -327,6 +327,8 @@ class Threat(BaseThreatModelObject):
 
     @property
     def ticketLink(self):
+        # if self.public:
+        #     return None
         return self._ticketLink
     
     @ticketLink.setter
@@ -451,7 +453,12 @@ class Threat(BaseThreatModelObject):
         dict.setdefault('fullyMitigated', False)
 
         for k, v in dict.items():
-            if k == "countermeasures":
+            if k == "ticketLink":
+                if public:
+                    pass
+                else:
+                    setattr(self, k, v)
+            elif k == "countermeasures":
                 for cmData in v:
                     if public and 'public' in cmData and cmData['public'] == False:
                         pass

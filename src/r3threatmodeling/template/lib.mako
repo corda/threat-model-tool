@@ -136,7 +136,7 @@ There are **${len(unmitigatedNoOperatinoal)}** unmitigated threats without propo
 <tr markdown="block">
 </td><td>
 <a href="#${createTitleAnchorHash(title)}">${threat.id}</a> 
-% if  hasattr(threat, 'ticketLink'):
+% if hasattr(threat, 'ticketLink'):
 <br/>
 <a href="${html.escape(threat.ticketLink)}"> Ticket link  </a> 
 % else:
