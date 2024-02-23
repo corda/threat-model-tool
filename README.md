@@ -218,7 +218,7 @@ This abstraction of hierarchy and the use if the ``specifies`` keyword of asset 
 
 ![](docs/img/Pasted%20image%2020230629134214.png)
 
-**versioning feature**
+**Versioning feature**
 
 It is possible to tell via YAML to what versions a specific asset, threat or countermeasure it belongs, for example:
 ```yaml
@@ -228,4 +228,4 @@ It is possible to tell via YAML to what versions a specific asset, threat or cou
 This information will be used in two ways:
 
 1. The ``appliesToVersions`` information will be displayed in the report
-2. By adding the parameters "--versionsFilter" "5.0,5.1" to the report generator, the report will not show the assets, threat and countermeasures that do not match the list of versions provided as parameter. See [https://pypi.org/project/semantic-version/]() for more info on the versions format
+2. By adding the parameters ``"--versionsFilter" "5.0,5.1"`` to the report generator, the report will not show the assets, threat and countermeasures that do not match the list of versions provided as parameter. See [https://pypi.org/project/semantic-version/]() for more info on the versions format
