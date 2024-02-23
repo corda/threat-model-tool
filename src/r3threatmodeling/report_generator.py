@@ -108,6 +108,12 @@ def main():
     )
 
     CLI.add_argument(
+    "--versionsFilter", 
+    default = None,
+    required=False
+    )
+
+    CLI.add_argument(
     "--browserSync", action='store_true'
     )
 
@@ -204,7 +210,7 @@ def processMultipleTMIDs(args):
     TMIDs = args.TMID
     public =  args.public
 
-    tmoRoot = ThreatModel(rootTMYamlFile, public=public)
+    tmoRoot = ThreatModel(rootTMYamlFile, public=public, versionsFilterStr=args.versionsFilter)
 
     #Default value when --TMID is omitted in args
     if TMIDs == None:

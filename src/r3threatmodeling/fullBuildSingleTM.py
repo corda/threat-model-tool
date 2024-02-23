@@ -23,7 +23,8 @@ from pathlib import Path
 import shutil
 
 
-def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=True, browserSync=False, public=False, generatePDF=False, pdfHeaderNote=None):
+def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=True,
+                      browserSync=False, public=False, generatePDF=False, pdfHeaderNote=None, versionsFilterStr=None):
     print(f"FULL BUILD on {outputDir}")
 
     os.makedirs(outputDir, exist_ok=True)
@@ -31,7 +32,7 @@ def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=Tru
     if assetDir:
         shutil.copytree(assetDir[0], outputDir, dirs_exist_ok=True)
 
-    tmo = ThreatModel(rootTMYaml, public=public)
+    tmo = ThreatModel(rootTMYaml, public=public, versionsFilterStr=versionsFilterStr)
     tmID = tmo.id
     tmTitle = tmo.title
 
@@ -157,6 +158,12 @@ def main():
     required=False
     )
 
+    CLI.add_argument(
+    "--versionsFilter", 
+    default = None,
+    required=False
+    )
+
     CLI.add_argument('--ancestorData', action='store_true')
     CLI.add_argument('--no-ancestorData', dest='ancestorData', action='store_false')
     CLI.set_defaults(ancestorData=True)
@@ -175,7 +182,8 @@ def main():
     rootTMYaml = args.rootTMYaml
     generatePDF = args.generatePDF
     public = True if args.visibility == "public" else False
-    generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData, browserSync, public = public, generatePDF=generatePDF)
+    versionsFilterStr = args.versionsFilter
+    generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData, browserSync, public = public, generatePDF=generatePDF, versionsFilterStr=versionsFilterStr)
 
 if __name__ == "__main__":
     main()

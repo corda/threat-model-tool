@@ -15,8 +15,10 @@ import re
 from io import StringIO
 import html
 import copy
+import semantic_version
 from cvss import CVSS3
 
+ANY_VERSION_MATCHER = semantic_version.Spec(">0.0.0")
 
 def matchesAllPros(object, **kwargs):
     for key, value in kwargs.items():
@@ -32,6 +34,20 @@ class BaseThreatModelObject:
 
     originDict= None
 
+    def matchesVersion(self, appliesToVersion):
+        if not self.versionsFilter:
+            return True
+        return not not list(semantic_version.SimpleSpec(appliesToVersion).filter(self.versionsFilter))
+
+    def filterOutForPublicOrVersions(self, public, dict):
+        return self.filterOutForPublic(public, dict) or self.filterOutForVersions(dict)
+
+    def filterOutForVersions(self, dict):
+        return 'appliesToVersions' in dict and not self.matchesVersion(dict['appliesToVersions'])
+
+    def filterOutForPublic(self, public, dict):
+        return public and 'public' in dict and dict['public'] == False
+    
     def update(self, dict):
         try: 
             self.originDict.update(dict)
@@ -59,7 +75,16 @@ class BaseThreatModelObject:
         self._id = id
 
     isReference = False 
-      
+    
+
+    @property
+    def versionsFilter(self):
+        if not hasattr(self, '_versionsFilter'):
+            return self.getRoot().versionsFilter ##TODO check this function
+        else:
+            return self._versionsFilter
+
+
     @property
     def title(self):
         if not hasattr(self, '_title'):
@@ -460,7 +485,7 @@ class Threat(BaseThreatModelObject):
                     setattr(self, k, v)
             elif k == "countermeasures":
                 for cmData in v:
-                    if public and 'public' in cmData and cmData['public'] == False:
+                    if self.filterOutForPublicOrVersions(public, cmData):
                         pass
                     else:
                         if "ID" in cmData:
@@ -605,7 +630,12 @@ class ThreatModel(BaseThreatModelObject):
         return os.path.dirname(self.fileName)+ "/assets"
     def __init__(self):
         return
-    def __init__(self, fileIn, parent = None, public=False):
+    def __init__(self, fileIn, parent = None, public=False, versionsFilterStr = None):
+
+        if versionsFilterStr == None:      
+            self._versionsFilter = None
+        else:
+            self._versionsFilter = list(semantic_version.Version.coerce(v) for v in versionsFilterStr.split(","))
 
         self.fileName = fileIn.name
 
@@ -651,8 +681,11 @@ class ThreatModel(BaseThreatModelObject):
                 try:
                     if scope_v is not None:
                         for assetDict in scope_v:
-                            asset = Asset(assetDict, self)
-                            self.assets.append(asset)               
+                            if self.filterOutForPublicOrVersions(public, assetDict):
+                                pass
+                            else:
+                                asset = Asset(assetDict, self)
+                                self.assets.append(asset)               
                 except:
                     raise
         
@@ -684,7 +717,7 @@ class ThreatModel(BaseThreatModelObject):
                 if  tmDict["threats"] != None:
                     for threatDict in tmDict["threats"]:
                         print("Parsing threat: "+ threatDict['ID'])
-                        if public and 'public' in threatDict and threatDict['public'] == False:
+                        if self.filterOutForPublicOrVersions(public, threatDict):
                             pass
                         else:
                             threat = Threat(threatDict, self, public=public)
@@ -694,7 +727,7 @@ class ThreatModel(BaseThreatModelObject):
                 for childrenDict in tmDict['children']:
                     childrenFilename = os.path.dirname(fileIn.name) + os.path.sep + childrenDict['ID'] + os.path.sep + childrenDict['ID'] +".yaml"
                     childTM = ThreatModel(open( childrenFilename),
-                        parent = self, public=public)
+                        parent = self, public=public, versionsFilterStr=versionsFilterStr)
 
             elif "gantt"  == k:
                 self.gantt=tmDict['gantt']
@@ -704,6 +737,9 @@ class ThreatModel(BaseThreatModelObject):
                     setattr(self, k, v)
                 except:
                     raise BaseException(f"cannot set attribute {k} on {self.__class__}: {self.id} ")
+
+
+
 
     def printAsText(self):
         return "\nID: " + self._id + " \nDescription: " + self.description 

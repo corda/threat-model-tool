@@ -230,6 +230,10 @@ ${makeMarkdownLinkedHeader(3, title)}
 
 
 <dl markdown="block">
+%if hasattr(threat, "appliesToVersions"):
+<dt>Applies To Versions</dt>
+<dd markdown="block">${html.escape(threat.appliesToVersions)}</dd>
+%endif
 % if hasattr(threat, "assets") and threat.assets:
 
 <dt>Assets (IDs) involved in this threat:</dt>
@@ -302,6 +306,10 @@ ${makeMarkdownLinkedHeader(4, 'Counter-measures for `'+threat._id + '`', True )}
 % else:
 **Reference to `${countermeasure.id}` ${countermeasure.title}**<br/>
 % endif
+%if hasattr(countermeasure, "appliesToVersions"):
+<dt>Applies To Versions</dt>
+<dd markdown="block">${html.escape(countermeasure.appliesToVersions)}</dd>
+%endif
 <dd markdown="block">
 ${countermeasure.description}</dd>
 
@@ -394,6 +402,10 @@ f"{asset.title} ({asset.type} {inScopeStr} - ID: <code>{asset._id}</code>)"
  <img src="${asset.icon}"/><br/>
 %endif
 ${asset.description}
+%if hasattr(asset, "appliesToVersions"):
+<dt>Applies To Versions</dt>
+<dd markdown="block">${html.escape(asset.appliesToVersions)}</dd>
+%endif
 % if hasattr(asset, 'properties'):
 <dt markdown="block">Other properties</dt>
 <dd markdown="block">

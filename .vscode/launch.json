@@ -114,6 +114,29 @@
         },
 
         {
+            "name": "VERSIONS FILTER '5.0,5.1' private C5 fullBuild ",
+            "type": "python",
+            "request": "launch",
+            "module": "r3threatmodeling.fullBuildSingleTM",
+            "justMyCode": false,
+            "args": [
+                "--rootTMYaml",
+                "../Corda5ThreatModels/threatModels/C5/C5.yaml",
+                "--browserSync",
+                "--outputDir",
+                "../Corda5ThreatModels/build/generated_reports/fullC5",
+                "--template",
+                "TM_templateFull",
+                "--formatYAML",
+                "--assetDir",
+                "../Corda5ThreatModels/threatModels/assets",
+                "--generatePDF",
+                "--versionsFilter","5.0,5.1"
+
+            ]
+        },
+
+        {
             "name": "Python: Directory fullBuild (html and diagrams/images)",
             "type": "python",
             "request": "launch",

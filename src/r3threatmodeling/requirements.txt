@@ -11,3 +11,4 @@ ruamel.yaml
 watchdog
 markdown-include
 importlib_resources
+semantic-version
