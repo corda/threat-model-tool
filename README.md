@@ -220,7 +220,7 @@ This abstraction of hierarchy and the use if the ``specifies`` keyword of asset 
 
 **Versioning feature**
 
-It is possible to tell via YAML to what versions a specific asset, threat or countermeasure it belongs, for example:
+It is possible to tell via YAML to what versions a specific asset, threat or countermeasure belongs, for example:
 ```yaml
     - ID: DF_BOOTSTRAP_TO_DB
       appliesToVersions: ">=5.0"

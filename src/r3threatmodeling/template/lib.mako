@@ -461,6 +461,10 @@ Last update: ${datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 Authors: ${tmo.authors}
 % endif 
 
+% if hasattr(tmo, 'versionsFilterStr'):
+Versions in scope: ${tmo.versionsFilterStr}
+% endif 
+
 % if toc:
 ${PAGEBREAK}
 ${makeMarkdownLinkedHeader(2, 'Table of contents', skipTOC = True)}

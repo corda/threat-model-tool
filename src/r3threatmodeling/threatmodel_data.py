@@ -636,7 +636,7 @@ class ThreatModel(BaseThreatModelObject):
             self._versionsFilter = None
         else:
             self._versionsFilter = list(semantic_version.Version.coerce(v) for v in versionsFilterStr.split(","))
-
+            self.versionsFilterStr = versionsFilterStr #Populate for template only
         self.fileName = fileIn.name
 
         print ("processing:" + fileIn.name)

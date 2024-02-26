@@ -124,14 +124,14 @@
                 "../Corda5ThreatModels/threatModels/C5/C5.yaml",
                 "--browserSync",
                 "--outputDir",
-                "../Corda5ThreatModels/build/generated_reports/fullC5",
+                "build/C5",
                 "--template",
                 "TM_templateFull",
                 "--formatYAML",
                 "--assetDir",
                 "../Corda5ThreatModels/threatModels/assets",
                 "--generatePDF",
-                "--versionsFilter","5.0,5.1"
+                "--versionsFilter","5.0,5.1,5.2"
 
             ]
         },
