@@ -229,3 +229,48 @@ This information will be used in two ways:
 
 1. The ``appliesToVersions`` information will be displayed in the report
 2. By adding the parameters ``"--versionsFilter" "5.0,5.1"`` to the report generator, the report will not show the assets, threat and countermeasures that do not match the list of versions provided as parameter. See [https://pypi.org/project/semantic-version/]() for more info on the versions format
+
+### Operation hardening guide
+
+The template system also creates a Security Hardening Guideline. It collects all the operational countermeasures `operational: true` grouping it by operator `operator: ADMIN`.
+An operational countermeasure is something an operator (same as threat model defined actors/attackers) needs to do to prevent a threat; it is not a enabled by default/coded feature (`operational: false`).
+
+To make the *Operation hardening guide* readable the title and description of an operational countermeasure should precisely answer to the question "what the operator needs to do (and why, how ...)" instead of a desired state of things or other phrasing.
+
+For example, this phrasing may be not optimal to generate the most useful Hardening guide
+```yaml
+ threats:
+   - ID: ACCIDENTAL_DATA_LOSS
+    title: Data from the main DataBase is lost ...
+    [...]
+    countermeasures:
+      - ID: DATA_BACKUP
+        title: Data backup allows to restore the production system...
+        description: |
+          To restore data after an incident Backups allows...
+        operational: false
+        operator: INFRASTRUCTURE_OPERATOR
+        inPlace: true
+        public: true
+
+ ```
+
+ We can rephrase it in as way `title:` and `description:` refers to a precise action: 
+
+
+ ```yaml
+ threats:
+   - ID: ACCIDENTAL_DATA_LOSS
+    title: Data from the main DataBase is lost ...
+    [...]
+    countermeasures:
+      - ID: DATA_BACKUP
+        title: Perform data backup 
+        description: |
+          The infrastructure operator performs regular backup in an separate network and those backup are secured with encryption....
+        operational: false
+        operator: INFRASTRUCTURE_OPERATOR
+        inPlace: true
+        public: true
+
+ ```

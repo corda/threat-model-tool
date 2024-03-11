@@ -7,7 +7,7 @@
 
 <% dataModel = tmo.getOperationalGuideData() %> 
  
-${makeMarkdownLinkedHeader(1, 'Corda NextGen operational security hardening guides', skipTOC = False)}
+${makeMarkdownLinkedHeader(1, 'Operational security hardening guides', skipTOC = False)}
 
 % if printTOC:
 __TOC_PLACEHOLDER__

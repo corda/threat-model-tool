@@ -246,7 +246,7 @@ def processSingleTMID(tmoRoot, TMID, args):
     if tmoRoot._id == rootID:
         tmo = tmoRoot
     else:
-        raise Exception('root id: '+ rootID +' not recognized, should be : '+tmoRoot._id)
+        raise Exception('parameter root id: '+ rootID +' not recognized, should be : '+tmoRoot._id)
 
         
     for idPathPart in TMID.split('.')[1:]:

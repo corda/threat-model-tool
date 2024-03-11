@@ -778,6 +778,13 @@ class ThreatModel(BaseThreatModelObject):
         return res
 
 
+    # def getOperationalGuideData(self):
+
+    #     #TODO group threats by attack vector (represented by dataflow)
+    #     guideData = {}
+    #     return guideData
+
+        
     def getOperationalGuideData(self):
 
         guideData = {}
