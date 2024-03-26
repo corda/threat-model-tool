@@ -113,8 +113,8 @@ ${MERMAID_AT_HEAD}
 ## <!-- mermaid end. comment needed to it covert to HTML-->
 ## </%def>
 
-<%def name="executiveSummary(tmo)">
-${makeMarkdownLinkedHeader(2, "Executive Summary", skipTOC = False)}
+<%def name="executiveSummary(tmo, headerLevel=1)">
+${makeMarkdownLinkedHeader(headerLevel+1, "Executive Summary", skipTOC = False)}
 
 ## <% unmitigatedYesOperational = tmo.getThreatsByFullyMitigatedAndOperational(False, True)%>
 <% unmitigatedNoOperatinoal = tmo.getThreatsByFullyMitigatedAndOperational(False, False)%>
@@ -135,7 +135,7 @@ There are **${len(unmitigatedNoOperatinoal)}** unmitigated threats without propo
 <% title = "`("+threat._id + ")` " + threat.title %>\
 <tr markdown="block">
 </td><td>
-<a href="#${createTitleAnchorHash(title)}">${threat.id}</a> 
+<a href="#${createTitleAnchorHash(title)}">${threat.parent._id}.<br/>${threat._id}</a> 
 % if hasattr(threat, 'ticketLink'):
 <br/>
 <a href="${html.escape(threat.ticketLink)}"> Ticket link  </a> 
@@ -158,8 +158,8 @@ Yes
 
 </%def>
 
-<%def name="threatsSummary(tmo)">
-${makeMarkdownLinkedHeader(2, "Threats Summary", skipTOC = False)}
+<%def name="threatsSummary(tmo, headerLevel=1)">
+${makeMarkdownLinkedHeader(headerLevel+1, "Threats Summary", skipTOC = False)}
 
 <% unmitigatedYesOperational = tmo.getThreatsByFullyMitigatedAndOperational(False, True)%>
 <% unmitigatedNoOperational = tmo.getThreatsByFullyMitigatedAndOperational(False, False)%>
@@ -181,7 +181,7 @@ by default, and  **${len(unmitigatedNoOperational)}** are unmitigated without pr
 <% title = "`("+threat._id + ")` " + threat.title %>\
 <tr markdown="block">
 </td><td>
-<a href="#${createTitleAnchorHash(title)}">${threat.id}</a> 
+<a href="#${createTitleAnchorHash(title)}">${threat.parent._id}.<br/>${threat._id}</a> 
 % if  hasattr(threat, 'ticketLink'):
 <br/>
 <a href="${html.escape(threat.ticketLink)}"> Ticket link  </a> 
@@ -215,12 +215,12 @@ No \
 
 </%def>
 
-<%def name="renderThreat(threat)">
+<%def name="renderThreat(threat, headerLevel=1)">
 
 ## ${H2} Threat ID: ${threat._id}
 ## ${threat.threatDesc()}
 <% title = "`("+threat._id + ")` " + threat.title %>
-${makeMarkdownLinkedHeader(3, title)}
+${makeMarkdownLinkedHeader(headerLevel+2, title)}
 <a href=""></a>
 <div style="text-align: center;">
 ## ${renderMermaidThreatTree(threat)}
@@ -293,7 +293,7 @@ ${makeMarkdownLinkedHeader(3, title)}
   <dt><strong>Ticket link:</strong><a href="${html.escape(threat.ticketLink)}"> ${html.escape(threat.ticketLink)}  </a> </dt><dd markdown="block">   </dd>
 % endif
 % if len(threat.countermeasures) > 0:
-${makeMarkdownLinkedHeader(4, 'Counter-measures for `'+threat._id + '`', True )}
+${makeMarkdownLinkedHeader(headerLevel+3, 'Counter-measures for `'+threat._id + '`', True )}
 <dl markdown="block">
 % for countermeasure in threat.countermeasures:
     ##  - ID: T3.C1
@@ -361,11 +361,11 @@ ${countermeasure.description}</dd>
 </%def>
 
 
-<%def name="renderAttacker(attacker: Attacker)">
+<%def name="renderAttacker(attacker: Attacker, headerLevel=1)">
 <% INDENT = "&nbsp;&nbsp;&nbsp;&nbsp;"%>
 
 <a id="${attacker._id}"></a>
-${makeMarkdownLinkedHeader(5, f"{attacker.title} (ID: <code>{attacker._id}</code>)" , skipTOC = True )} 
+${makeMarkdownLinkedHeader(headerLevel+4, f"{attacker.title} (ID: <code>{attacker._id}</code>)" , skipTOC = True )} 
 
 <dl markdown="block">
 <dt>Description:</dt><dd markdown="block">${attacker.description}</dd>
@@ -386,7 +386,7 @@ ${makeMarkdownLinkedHeader(5, f"{attacker.title} (ID: <code>{attacker._id}</code
 </%def>
 
 
-<%def name="renderAsset(asset: Asset)">
+<%def name="renderAsset(asset: Asset, headerLevel=1)">
 <hr/>
 <%
   inScopeStr = "not in scope"
@@ -394,7 +394,7 @@ ${makeMarkdownLinkedHeader(5, f"{attacker.title} (ID: <code>{attacker._id}</code
     inScopeStr = "in scope"
 %>
 <a id="${asset.id}"></a>
-${makeMarkdownLinkedHeader(5, 
+${makeMarkdownLinkedHeader(headerLevel+4, 
 f"{asset.title} ({asset.type} {inScopeStr} - ID: <code>{asset._id}</code>)"
  , skipTOC = True )} 
 <dl markdown="block">
@@ -439,7 +439,7 @@ ${asset.propertiesHTML()}
 </%def>
 
 
-<%def name="renderTMReportPart(tmo: ThreatModel, ancestorData: Boolean,  toc = False, summary=False)">
+<%def name="renderTMReportPart(tmo: ThreatModel, ancestorData: Boolean,  toc = False, summary=False, headerLevel=1)">
 ##namespace trick :(
 <% lib = self %> 
 
@@ -447,7 +447,7 @@ ${asset.propertiesHTML()}
 
 
 ##TITLE
-${makeMarkdownLinkedHeader(1, tmo.title + ' Threat Model', skipTOC = False)}
+${makeMarkdownLinkedHeader(headerLevel, tmo.title, skipTOC = False)}
 
 % if hasattr(tmo, 'version'):
 Version: ${tmo.version}
@@ -467,7 +467,7 @@ Versions in scope: ${tmo.versionsFilterStr}
 
 % if toc:
 ${PAGEBREAK}
-${makeMarkdownLinkedHeader(2, 'Table of contents', skipTOC = True)}
+${makeMarkdownLinkedHeader(headerLevel+1, 'Table of contents', skipTOC = True)}
 __TOC_PLACEHOLDER__
 ${PAGEBREAK}
 
@@ -481,15 +481,15 @@ ${threatsSummary(tmo)}
 % endif
 % if hasattr(tmo.scope, "description") and tmo.scope.description is not None: 
 ${PAGEBREAK}
-${makeMarkdownLinkedHeader(2, tmo.title +  ' - scope of analysis')}
+${makeMarkdownLinkedHeader(headerLevel+1, tmo.title +  ' - scope of analysis')}
 
-${makeMarkdownLinkedHeader(3, 'Overview')}
+${makeMarkdownLinkedHeader(headerLevel+2, 'Overview')}
 ${tmo.scope.description} 
 % endif
 ##@James: removed 'fmt' description ... was it to fix multiline RFIs ?
 
 %if hasattr(tmo.scope, "references"):
-${makeMarkdownLinkedHeader(3, 'References')}
+${makeMarkdownLinkedHeader(headerLevel+2, 'References')}
 % for ref in tmo.scope.references:
 - ${ref}
 %endfor
@@ -500,7 +500,7 @@ ${makeMarkdownLinkedHeader(3, 'References')}
 
 ## No Security Objectives defined in this scope
   % else:
-${makeMarkdownLinkedHeader(3, 'Security Objectives')}
+${makeMarkdownLinkedHeader(headerLevel+2, 'Security Objectives')}
 
   **Summary list:**
 ${renderTextSecurityObjectivesTree(tmo.securityObjectives)}
@@ -516,7 +516,7 @@ ${lib.renderSecurityObjective(securityObjective)}
 % endif ##secObj attr
 
   % if ancestorData and tmo.parent != None:  ##ancestorData
-${makeMarkdownLinkedHeader(3, 'Security Objectives inherited from other threat models')}
+${makeMarkdownLinkedHeader(headerLevel+2, 'Security Objectives inherited from other threat models')}
     % if len(tmo.parent.securityObjectives) == 0:
 No Security Objective inherited
   % else:
@@ -529,7 +529,7 @@ ${lib.renderSecurityObjective(securityObjective)}
 
 % if len(tmo.getDescendants()) > 0:
 
-  ${makeMarkdownLinkedHeader(3, 'Linked threat Models', skipTOC = False)}
+  ${makeMarkdownLinkedHeader(headerLevel+2, 'Linked threat Models', skipTOC = False)}
 
 % for ltm in tmo.getDescendants():
   - **${ltm.title}** (ID: ${ltm.id})
@@ -537,7 +537,7 @@ ${lib.renderSecurityObjective(securityObjective)}
 % endif
 
 %if hasattr(tmo.scope, "diagram") and tmo.scope.diagram:
-${makeMarkdownLinkedHeader(3, 'Diagrams')}
+${makeMarkdownLinkedHeader(headerLevel+2, 'Diagrams')}
 ${tmo.scope.diagram}
 %endif 
 
@@ -550,7 +550,7 @@ ${tmo.scope.diagram}
 ## No actors defined in this scope
 ## % else:
 ${PAGEBREAK}
-${makeMarkdownLinkedHeader(3, 'Actors')}
+${makeMarkdownLinkedHeader(headerLevel+2, 'Actors')}
 
 > Actors, agents, users and attackers may be used as synonymous. 
 > If the analysis considers attacks and threats from a specific actor then it is considered *in scope*.
@@ -566,7 +566,7 @@ ${lib.renderAttacker(attacker)}
 ## No other actors inherited
 ## % else:
 
-${makeMarkdownLinkedHeader(3, 'Actors inherited from other threat models')}
+${makeMarkdownLinkedHeader(headerLevel+2, 'Actors inherited from other threat models')}
 
 % for attacker in tmo.parent.getAllAttackers():
 ${lib.renderAttacker(attacker)}
@@ -576,7 +576,7 @@ ${lib.renderAttacker(attacker)}
 % endif ##ancestorData
 
 %if len(tmo.assumptions) > 0:
-${makeMarkdownLinkedHeader(3, 'Assumptions')}
+${makeMarkdownLinkedHeader(headerLevel+2, 'Assumptions')}
 % for assumption in tmo.assumptions:
 
 <dl markdown="block">
@@ -590,15 +590,15 @@ ${makeMarkdownLinkedHeader(3, 'Assumptions')}
 
 % if len(tmo.assets) > 0:
 ${PAGEBREAK}
-${makeMarkdownLinkedHeader(3, 'Assets')}
+${makeMarkdownLinkedHeader(headerLevel+2, 'Assets')}
 
-${makeMarkdownLinkedHeader(4, 'Summary Table')}
+${makeMarkdownLinkedHeader(headerLevel+3, 'Summary Table')}
 
 ${lib.renderAssetTable(tmo.assets)}
 
 
 
-${makeMarkdownLinkedHeader(4, 'Details')}
+${makeMarkdownLinkedHeader(headerLevel+3, 'Details')}
 
 % for asset in tmo.assets:
 ${lib.renderAsset(asset)} 
@@ -609,7 +609,7 @@ ${lib.renderAsset(asset)}
 % if hasattr (tmo, 'analysis') and tmo.analysis and len(tmo.analysis.strip()) > 5: #something like TODO will be hidden 
 ${PAGEBREAK}
 <hr>
-${makeMarkdownLinkedHeader(2, tmo.title + ' Analysis')}
+${makeMarkdownLinkedHeader(headerLevel+1, tmo.title + ' Analysis')}
 
 > **Note** This section documents the work performed to identify threats and thier mitigations.#
 > It may contains notes from the analysis sessions.
@@ -622,7 +622,7 @@ ${tmo.analysis}
 
 ${PAGEBREAK}
 <hr>
-${makeMarkdownLinkedHeader(2, tmo.title +' Threats')}
+${makeMarkdownLinkedHeader(headerLevel+1, tmo.title +' Threats')}
 
 > **Note** This section contains the threat and mitigations identified during the analysis phase.
 
@@ -631,7 +631,7 @@ ${makeMarkdownLinkedHeader(2, tmo.title +' Threats')}
 %if i > 1:
 <hr> \
 %endif
-${lib.renderThreat(threat)}
+${lib.renderThreat(threat, headerLevel)}
 % if (i!=len(tmo.threats)-1):
 ${PAGEBREAK}
  % endif

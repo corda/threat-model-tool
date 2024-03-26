@@ -6,10 +6,10 @@
 <%namespace name="lib" file="lib.mako"/> 
 
 
-${lib.renderTMReportPart(tmo, ancestorData, toc=True, summary=True, )}
+${lib.renderTMReportPart(tmo, ancestorData, toc=False, summary=True, )}
 
 % for descendantTM in tmo.getDescendants():
-  ${lib.renderTMReportPart(descendantTM, ancestorData=False)}
+  ${lib.renderTMReportPart(descendantTM, ancestorData=False, headerLevel=2)}
 % endfor
 
 ${makeMarkdownLinkedHeader(2, 'Requests For Information')}
@@ -17,12 +17,12 @@ ${makeMarkdownLinkedHeader(2, 'Requests For Information')}
 __RFI_PLACEHOLDER__
 
 ${PAGEBREAK}
-${makeMarkdownLinkedHeader(2, 'Annex 1 Operational Hardening')}
-<%include file="operationalHardeningGuide.mako" args="printTOC=False"/>
+
+<%include file="operationalHardeningGuide.mako" args="printTOC=False, headerLevel=2"/>
 
 ${PAGEBREAK}
-${makeMarkdownLinkedHeader(2, 'Annex 2: Key Summary')}
-<%include file="keysSummary.mako" args="printTOC=False"/>
+
+<%include file="keysSummary.mako" args="printTOC=False, headerLevel=2"/>
 
 
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import shutil  
 import pathlib
 from tokenize import String
 import argparse
@@ -27,8 +28,8 @@ def dir_path(path):
     else:
         raise argparse.ArgumentTypeError(f"--TMDirectory:{path} is not a valid path")
 
-def generateIndexPage(tm_list, outputDir):
-    template = "index_tm_list"
+def generateIndexPage(tm_list, outputDir, template = "index_tm_list" ):
+    # template = "index_tm_list"
     try:
         mdTemplate = Template(
             filename =  os.path.join(os.path.dirname(__file__),
@@ -40,7 +41,7 @@ def generateIndexPage(tm_list, outputDir):
                 ))
         
         outText = mdTemplate.render(tm_list=tm_list, outputDir=outputDir)
-        outputFilename = outMDPath = os.path.join(outputDir, "index.html")  
+        outputFilename = outMDPath = os.path.join(outputDir, "index.md")  
         with open(outputFilename, 'w') as f:
             print(f"OUTPUT: {f.name}") 
             f.write(outText)
@@ -60,6 +61,17 @@ def main():
     "--TMDirectory",
     default = ".",  
     type=dir_path,
+    required=False
+    )
+
+    CLI.add_argument(
+    "--templateSiteFolderSRC",
+    type=dir_path,
+    required=False
+    )
+
+    CLI.add_argument(
+    "--templateSiteFolderDST",
     required=False
     )
 
@@ -118,10 +130,17 @@ def main():
 
     CLI.add_argument("--generatePDF", action='store_true')
 
+    CLI.add_argument('--MKDocsSiteDir',  required=False)
+    CLI.add_argument('--MKDocsDir',  required=False)
 
     args = CLI.parse_args()
     outputDir = args.outputDir
+    templateSiteFolderSRC = args.templateSiteFolderSRC
+    templateSiteFolderDST = args.templateSiteFolderDST
     watchFiles = args.watchFiles
+
+    MKDocsSiteDir = args.MKDocsSiteDir
+    MKDocsDir = args.MKDocsDir
 
 
     template = args.template
@@ -132,6 +151,11 @@ def main():
     pdfHeaderNote = args.pdfHeaderNote
 
     TMDir = args.TMDirectory
+
+    os.makedirs(outputDir, exist_ok=True)
+    os.makedirs(templateSiteFolderDST, exist_ok=True)
+    if templateSiteFolderSRC and templateSiteFolderDST:
+        shutil.copytree(templateSiteFolderSRC, templateSiteFolderDST, dirs_exist_ok=True)
 
     tm_list = [{'name':f.stem, 'path':str(f)} for f in pathlib.Path(TMDir).glob("*/*.yaml") if pathlib.Path(f).parent.name == pathlib.Path(f).stem]
 
@@ -153,12 +177,24 @@ def main():
 
     print(tm_list)        
     
-    generateIndexPage(tm_list, outputDir)
+    generateIndexPage(tm_list, outputDir, template="index_MKDOCS")
 
     for tm in tm_list:
         rootTMYaml = tm['path']
         TMoutputDir = outputDir + "/" + tm['name']
-        fullBuildSingleTM.generateSingleTM(open(rootTMYaml), TMoutputDir, assetDir, template, ancestorData, browserSync , generatePDF=generatePDF, pdfHeaderNote=pdfHeaderNote)
+
+        fullBuildSingleTM.generateSingleTM(open(rootTMYaml), TMoutputDir, assetDir, template, ancestorData, browserSync , generatePDF=generatePDF, pdfHeaderNote=pdfHeaderNote, public=True)
+
+        # fullBuildSingleTM.generateSingleTM(open(rootTMYaml), TMoutputDir + "/full", assetDir, template, ancestorData, browserSync , generatePDF=generatePDF, pdfHeaderNote=pdfHeaderNote, public=False)
+
+    if MKDocsSiteDir:
+        os.makedirs(MKDocsSiteDir, exist_ok=True)
+        oldwd = os.getcwd()
+        os.chdir(MKDocsDir)
+        os.system(f"mkdocs build --clean --site-dir={MKDocsSiteDir}")
+        os.chdir(oldwd)
+
+
 
 
 if __name__ == "__main__":

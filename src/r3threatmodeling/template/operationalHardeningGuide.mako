@@ -1,13 +1,13 @@
 <%! import html %>
 <%! from r3threatmodeling.template_utils import createTitleAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
-<%page args="printTOC=True"/>
+<%page args="printTOC=True, headerLevel=1"/>
 <% PAGEBREAK = """<div class="pagebreak"></div>"""%>
 <% H6 = "######" %>
 <%namespace name="lib" file="lib.mako"/> 
 
 <% dataModel = tmo.getOperationalGuideData() %> 
- 
-${makeMarkdownLinkedHeader(1, 'Operational security hardening guides', skipTOC = False)}
+
+${makeMarkdownLinkedHeader(headerLevel, 'Operational security hardening guides', skipTOC = False)}
 
 % if printTOC:
 __TOC_PLACEHOLDER__
@@ -23,11 +23,11 @@ if operatorObj:
     operatorName = operatorObj.title
 %>
 
-${makeMarkdownLinkedHeader(1, 'Operational guide for ' + operatorName, skipTOC = False)}
+${makeMarkdownLinkedHeader(headerLevel +1, 'Operational guide for ' + operatorName, skipTOC = False)}
 
 % for countermeasure in countermeasures:
 
-${makeMarkdownLinkedHeader(2, countermeasure.title.capitalize())}
+${makeMarkdownLinkedHeader(headerLevel+2, countermeasure.title.capitalize())}
 
 **ID:** `${countermeasure.id}`
 

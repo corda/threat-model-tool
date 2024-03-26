@@ -33,8 +33,8 @@ def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=Tru
         shutil.copytree(assetDir[0], outputDir, dirs_exist_ok=True)
 
     tmo = ThreatModel(rootTMYaml, public=public, versionsFilterStr=versionsFilterStr)
-    tmID = tmo.id
-    tmTitle = tmo.title
+    # tmID = tmo.id
+    # tmTitle = tmo.title
 
     report_generator.generate(tmo, template, ancestorData, outputDir, browserSync, None, assetDir)
 
