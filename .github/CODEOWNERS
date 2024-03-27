@@ -1,3 +1,3 @@
-Jenkinsfile        @corda/blt
-.ci/*              @corda/blt
-.github/*          @corda/blt
+Jenkinsfile        @corda/infrastructure-release
+.ci/*              @corda/infrastructure-release
+.github/*          @corda/infrastructure-release
