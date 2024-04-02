@@ -310,6 +310,8 @@ class Countermeasure(BaseThreatModelObject):
 
         if "inPlace" not in dict.keys():
             raise BaseException(f"Countermeasure {self.id} needs an 'inPlace' attribute True or False")
+        if "public" not in dict.keys():
+            raise BaseException(f"Countermeasure {self.id} needs an 'public' attribute True or False")
 
         for k, v in dict.items():
             setattr(self, k, v)

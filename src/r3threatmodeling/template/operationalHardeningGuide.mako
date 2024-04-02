@@ -25,28 +25,38 @@ if operatorObj:
 
 ${makeMarkdownLinkedHeader(headerLevel +1, 'Operational guide for ' + operatorName, skipTOC = False)}
 
-% for countermeasure in countermeasures:
 
-${makeMarkdownLinkedHeader(headerLevel+2, countermeasure.title.capitalize())}
+<table markdown="block" style="print-color-adjust: exact; -webkit-print-color-adjust: exact;">
+  <tr>
+    <th>Seq</th><th>Countermeasure</th>
+  </tr>
+% for i, countermeasure in enumerate(countermeasures):
+<tr markdown="block">
+<td>${i+1}</td>
+<td markdown="block">
 
-**ID:** `${countermeasure.id}`
 
-**Mitigates:** ${countermeasure.parent.title}
+**Title (ID):** ${countermeasure.title} (`${countermeasure._id}`)
 
- %if hasattr(countermeasure, "operator"):
-**Operated by: **${countermeasure.operator}
- %endif
+**Mitigates:** <a href="#${countermeasure.parent.id}">${countermeasure.parent.title}</a>
 
+##  %if hasattr(countermeasure, "operator"):
+## **Operated by: **${countermeasure.operator}
+##  %endif
+**Description:**
 % if  hasattr(threat, 'conditional'):
 **Valid when:** ${threat.conditional}
 
 % endif
-
+<br/>
 ${countermeasure.description}
-
+</td>
+</tr>
 % endfor # coutnermeasures
 
-% endfor # oeprator
+</table>
+
+% endfor # operator
 
 
 

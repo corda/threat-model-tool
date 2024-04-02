@@ -22,6 +22,10 @@ ${PAGEBREAK}
 
 ${PAGEBREAK}
 
+<%include file="testingGuide.mako" args="printTOC=False, headerLevel=2"/>
+
+${PAGEBREAK}
+
 <%include file="keysSummary.mako" args="printTOC=False, headerLevel=2"/>
 
 

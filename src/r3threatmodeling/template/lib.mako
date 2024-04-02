@@ -216,12 +216,11 @@ No \
 </%def>
 
 <%def name="renderThreat(threat, headerLevel=1)">
-
+<a id="${threat.id}"></a>
 ## ${H2} Threat ID: ${threat._id}
 ## ${threat.threatDesc()}
 <% title = "`("+threat._id + ")` " + threat.title %>
 ${makeMarkdownLinkedHeader(headerLevel+2, title)}
-<a href=""></a>
 <div style="text-align: center;">
 ## ${renderMermaidThreatTree(threat)}
 <img src="img/threatTree/${threat._id}.svg"/>
