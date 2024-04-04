@@ -3,7 +3,17 @@
 <% PAGEBREAK = """<div class="pagebreak"></div>"""%>
 <%namespace name="lib" file="lib.mako"/> 
 
-# Threat Model Repository from Security Reseach at R3
+# Threat Models
+
+% for tm in tm_list:
+    <%
+        tmTitle = tm['title']
+        tmName = tm['name']
+        tmID   = tm['ID']
+    %>
+<a href="${tmID}/${tmID}.html">${tmTitle}</a>
+##   (${tmTitle})[${tmID}/${tmID}.html]
+% endfor
 
 ## WARNING: this content is R3 private and confidential
 

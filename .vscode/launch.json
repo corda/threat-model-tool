@@ -139,7 +139,7 @@
         },
 
         {
-            "name": "Python: Directory fullBuild (html and diagrams/images)",
+            "name": "Python: Directory fullBuild MKDOCS (html and diagrams/images)",
             "type": "python",
             "request": "launch",
             "module": "r3threatmodeling.fullBuildDirectory",
@@ -154,7 +154,11 @@
                 "TM_templateFull",
                 "--formatYAML",
                 "--assetDir",
-                "../Corda5ThreatModels/threatModels/assets"
+                "../Corda5ThreatModels/threatModels/assets",
+                "--templateSiteFolderSRC", "../Corda5ThreatModels/security_site/mkdocs",
+                "--templateSiteFolderDST", "build/mkdocs/",
+                "--MKDocsSiteDir", "public",
+                "--MKDocsDir", "build/mkdocs"
             ]
         },
 

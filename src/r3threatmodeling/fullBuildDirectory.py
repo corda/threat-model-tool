@@ -28,7 +28,7 @@ def dir_path(path):
     else:
         raise argparse.ArgumentTypeError(f"--TMDirectory:{path} is not a valid path")
 
-def generateIndexPage(tm_list, outputDir, template = "index_tm_list" ):
+def generateFromTMLIst(tm_list, outputDir, outFile , template = "index_tm_list"):
     # template = "index_tm_list"
     try:
         mdTemplate = Template(
@@ -41,7 +41,7 @@ def generateIndexPage(tm_list, outputDir, template = "index_tm_list" ):
                 ))
         
         outText = mdTemplate.render(tm_list=tm_list, outputDir=outputDir)
-        outputFilename = outMDPath = os.path.join(outputDir, "index.md")  
+        outputFilename = outMDPath = os.path.join(outputDir, outFile)  
         with open(outputFilename, 'w') as f:
             print(f"OUTPUT: {f.name}") 
             f.write(outText)
@@ -136,6 +136,7 @@ def main():
     args = CLI.parse_args()
     outputDir = args.outputDir
     templateSiteFolderSRC = args.templateSiteFolderSRC
+    templateSiteFolderInitFromModule = os.path.join(os.path.dirname(__file__),'MKDOCS_init/')
     templateSiteFolderDST = args.templateSiteFolderDST
     watchFiles = args.watchFiles
 
@@ -154,6 +155,10 @@ def main():
 
     os.makedirs(outputDir, exist_ok=True)
     os.makedirs(templateSiteFolderDST, exist_ok=True)
+
+    if templateSiteFolderDST:
+        shutil.copytree(templateSiteFolderInitFromModule, templateSiteFolderDST, dirs_exist_ok=True)
+
     if templateSiteFolderSRC and templateSiteFolderDST:
         shutil.copytree(templateSiteFolderSRC, templateSiteFolderDST, dirs_exist_ok=True)
 
@@ -173,11 +178,13 @@ def main():
         pdfname = f'{title} Threat Model-{version}.pdf'
         pdfname = re.sub('[^\w_.)(_-]', '_', pdfname)   # replace invalid chars with underscore
         
-        tm_list.append({'name': name, 'path': path, 'title': title, 'pdf':pdfname})
+        tm_list.append({'name': name,'ID': tm['ID'], 'path': path, 'title': title, 'pdf':pdfname})
 
     print(tm_list)        
+
+    generateFromTMLIst(tm_list, outputDir+"/../", outFile="mkdocs.yml", template="conf_MKDOCS")
     
-    generateIndexPage(tm_list, outputDir, template="index_MKDOCS")
+    generateFromTMLIst(tm_list, outputDir, outFile="index.md", template="index_MKDOCS")
 
     for tm in tm_list:
         rootTMYaml = tm['path']
