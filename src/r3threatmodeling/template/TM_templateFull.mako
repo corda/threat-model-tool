@@ -12,10 +12,6 @@ ${lib.renderTMReportPart(tmo, ancestorData, toc=True, summary=True, )}
   ${lib.renderTMReportPart(descendantTM, ancestorData=False)}
 % endfor
 
-${makeMarkdownLinkedHeader(2, 'Requests For Information')}
-
-__RFI_PLACEHOLDER__
-
 ${PAGEBREAK}
 ${makeMarkdownLinkedHeader(2, 'Annex 1 Operational Hardening')}
 <%include file="operationalHardeningGuide.mako" args="printTOC=False"/>

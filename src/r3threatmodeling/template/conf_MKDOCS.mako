@@ -17,7 +17,7 @@ nav:
 
 theme:
   name: readthedocs
-  navigation_depth: 3
+  navigation_depth: 4
   # features:
   #   - navigation.tabs
 markdown_extensions:
