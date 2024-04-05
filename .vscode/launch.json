@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+    
 
         {
             "name": "Python: Module createtickets",
@@ -138,7 +139,7 @@
         },
 
         {
-            "name": "Python: Directory fullBuild (html and diagrams/images)",
+            "name": "Python: Directory fullBuild MKDOCS (html and diagrams/images)",
             "type": "python",
             "request": "launch",
             "module": "r3threatmodeling.fullBuildDirectory",
@@ -153,7 +154,11 @@
                 "TM_templateFull",
                 "--formatYAML",
                 "--assetDir",
-                "../Corda5ThreatModels/threatModels/assets"
+                "../Corda5ThreatModels/threatModels/assets",
+                "--templateSiteFolderSRC", "../Corda5ThreatModels/security_site/mkdocs",
+                "--templateSiteFolderDST", "build/mkdocs/",
+                "--MKDocsSiteDir", "public",
+                "--MKDocsDir", "build/mkdocs"
             ]
         },
 
