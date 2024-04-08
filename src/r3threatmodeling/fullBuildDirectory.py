@@ -136,7 +136,7 @@ def main():
     args = CLI.parse_args()
     outputDir = args.outputDir
     templateSiteFolderSRC = args.templateSiteFolderSRC
-    templateSiteFolderInitFromModule = os.path.join(os.path.dirname(__file__),'MKDOCS_init/')
+    templateSiteFolderInitFromModule = os.path.join(os.path.dirname(__file__), 'assets/MKDOCS_init/')
     templateSiteFolderDST = args.templateSiteFolderDST
     watchFiles = args.watchFiles
 
