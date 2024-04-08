@@ -130,6 +130,8 @@ def main():
 
     CLI.add_argument("--generatePDF", action='store_true')
 
+    CLI.add_argument("--visibility", default="full", choices=["full", "public"])
+
     CLI.add_argument('--MKDocsSiteDir',  required=False)
     CLI.add_argument('--MKDocsDir',  required=False)
 
@@ -150,6 +152,7 @@ def main():
     assetDir = args.assetDir
     generatePDF = args.generatePDF
     pdfHeaderNote = args.pdfHeaderNote
+    public = True if args.visibility == "public" else False
 
     TMDir = args.TMDirectory
 
@@ -189,8 +192,8 @@ def main():
     for tm in tm_list:
         rootTMYaml = tm['path']
         TMoutputDir = outputDir + "/" + tm['name']
-
-        fullBuildSingleTM.generateSingleTM(open(rootTMYaml), TMoutputDir, assetDir, template, ancestorData, browserSync , generatePDF=generatePDF, pdfHeaderNote=pdfHeaderNote, public=True)
+        
+        fullBuildSingleTM.generateSingleTM(open(rootTMYaml), TMoutputDir, assetDir, template, ancestorData, browserSync , generatePDF=generatePDF, pdfHeaderNote=pdfHeaderNote, public=public)
 
         # fullBuildSingleTM.generateSingleTM(open(rootTMYaml), TMoutputDir + "/full", assetDir, template, ancestorData, browserSync , generatePDF=generatePDF, pdfHeaderNote=pdfHeaderNote, public=False)
 
