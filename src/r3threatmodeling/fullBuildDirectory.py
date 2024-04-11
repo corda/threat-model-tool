@@ -157,9 +157,9 @@ def main():
     TMDir = args.TMDirectory
 
     os.makedirs(outputDir, exist_ok=True)
-    os.makedirs(templateSiteFolderDST, exist_ok=True)
-
+    
     if templateSiteFolderDST:
+        os.makedirs(templateSiteFolderDST, exist_ok=True)
         shutil.copytree(templateSiteFolderInitFromModule, templateSiteFolderDST, dirs_exist_ok=True)
 
     if templateSiteFolderSRC and templateSiteFolderDST:
