@@ -185,9 +185,7 @@ def main():
 
     print(tm_list)        
 
-    generateFromTMLIst(tm_list, outputDir+"/../", outFile="mkdocs.yml", template="conf_MKDOCS")
-    
-    generateFromTMLIst(tm_list, outputDir, outFile="index.md", template="index_MKDOCS")
+
 
     for tm in tm_list:
         rootTMYaml = tm['path']
@@ -198,10 +196,16 @@ def main():
         # fullBuildSingleTM.generateSingleTM(open(rootTMYaml), TMoutputDir + "/full", assetDir, template, ancestorData, browserSync , generatePDF=generatePDF, pdfHeaderNote=pdfHeaderNote, public=False)
 
     if MKDocsSiteDir:
+
         os.makedirs(MKDocsSiteDir, exist_ok=True)
+        os.makedirs(MKDocsDir, exist_ok=True)
+
+        generateFromTMLIst(tm_list, MKDocsDir, outFile="mkdocs.yml", template="conf_MKDOCS")    
+        generateFromTMLIst(tm_list, outputDir, outFile="index.md", template="index_MKDOCS")
+
         oldwd = os.getcwd()
         os.chdir(MKDocsDir)
-        os.system(f"mkdocs build --clean --site-dir={MKDocsSiteDir}")
+        os.system(f"mkdocs build --clean --config-file mkdocs.yml --site-dir={MKDocsSiteDir}")
         os.chdir(oldwd)
 
 
