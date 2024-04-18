@@ -129,7 +129,7 @@ def main():
     CLI.add_argument('--baseFileName', default=None, required=False)
 
     CLI.add_argument("--generatePDF", action='store_true')
-    CLL.add_argument("--pdfArtifactLink", required=False)
+    CLI.add_argument("--pdfArtifactLink", required=False)
 
     CLI.add_argument("--visibility", default="full", choices=["full", "public"])
 
