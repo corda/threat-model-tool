@@ -28,7 +28,7 @@ def dir_path(path):
     else:
         raise argparse.ArgumentTypeError(f"--TMDirectory:{path} is not a valid path")
 
-def generateFromTMLIst(tm_list, outputDir, outFile , template = "index_tm_list"):
+def generateFromTMLIst(tm_list, outputDir, outFile , template = "index_tm_list", pdfArtifactLink=None):
     # template = "index_tm_list"
     try:
         mdTemplate = Template(
@@ -40,7 +40,7 @@ def generateFromTMLIst(tm_list, outputDir, outFile , template = "index_tm_list")
                                 , output_encoding='utf-8', preprocessor=[lambda x: x.replace("\r\n", "\n")]
                 ))
         
-        outText = mdTemplate.render(tm_list=tm_list, outputDir=outputDir)
+        outText = mdTemplate.render(tm_list=tm_list, mainLinks=[], outputDir=outputDir)
         outputFilename = outMDPath = os.path.join(outputDir, outFile)  
         with open(outputFilename, 'w') as f:
             print(f"OUTPUT: {f.name}") 
@@ -153,6 +153,7 @@ def main():
     assetDir = args.assetDir
     generatePDF = args.generatePDF
     pdfHeaderNote = args.pdfHeaderNote
+    pdfArtifactLink = args.pdfArtifactLink
     public = True if args.visibility == "public" else False
 
     TMDir = args.TMDirectory
@@ -202,7 +203,11 @@ def main():
         os.makedirs(MKDocsDir, exist_ok=True)
 
         generateFromTMLIst(tm_list, MKDocsDir, outFile="mkdocs.yml", template="conf_MKDOCS")    
-        generateFromTMLIst(tm_list, outputDir, outFile="index.md", template="index_MKDOCS")
+        generateFromTMLIst(tm_list, outputDir, outFile="index.md", template="index_MKDOCS", pdfArtifactLink=None)
+
+        if pdfArtifactLink:
+            #unzip
+            pass
 
         oldwd = os.getcwd()
         os.chdir(MKDocsDir)
