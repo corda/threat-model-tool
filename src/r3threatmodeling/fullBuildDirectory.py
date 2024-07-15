@@ -170,7 +170,8 @@ def main():
     tm_list = [{'name':f.stem, 'path':str(f)} for f in pathlib.Path(TMDir).glob("*/*.yaml") if pathlib.Path(f).parent.name == pathlib.Path(f).stem]
 
     tm_list = []#{'name':f.stem, 'path':str(f)} 
-    for f in pathlib.Path(TMDir).glob("*/*.yaml"):
+    # for f in pathlib.Path(TMDir).glob("*/*.yaml"):
+    for f in sorted(pathlib.Path(TMDir).glob("*/*.yaml"), key=lambda f: f.name):
       if pathlib.Path(f).parent.name == pathlib.Path(f).stem:
         #tm_list
         path = str(f)
