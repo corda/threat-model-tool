@@ -133,8 +133,7 @@ There are **${len(unmitigatedNoOperatinoal)}** unmitigated threats without propo
 <tr><th>Threat ID</th><th>CVSS</th><th>Always valid</th></tr>
 % for i , threat in enumerate(unmitigatedNoOperatinoal):
 <% title = "`("+threat._id + ")` " + threat.title %>\
-<tr markdown="block">
-</td><td>
+<tr markdown="block"></td><td>
 <a href="#${createTitleAnchorHash(title)}">${threat.parent._id}.<br/>${threat._id}</a> 
 % if hasattr(threat, 'ticketLink'):
 <br/>
@@ -216,14 +215,23 @@ No \
 </%def>
 
 <%def name="renderThreat(threat, headerLevel=1)">
+
+
+
 <a id="${threat.id}"></a>
 ## ${H2} Threat ID: ${threat._id}
 ## ${threat.threatDesc()}
 <% title = "`("+threat._id + ")` " + threat.title %>
 ${makeMarkdownLinkedHeader(headerLevel+2, title)}
+
+<div ${"class='proposal'" if hasattr(threat, 'proposal') else "class='current'"}>
+${"From proposal: " + threat.proposal if hasattr(threat, 'proposal') else ""}
+
 <div style="text-align: center;">
+
 ## ${renderMermaidThreatTree(threat)}
 <img src="img/threatTree/${threat._id}.svg"/>
+
 </div>
 
 
@@ -292,7 +300,7 @@ ${makeMarkdownLinkedHeader(headerLevel+2, title)}
   <dt><strong>Ticket link:</strong><a href="${html.escape(threat.ticketLink)}"> ${html.escape(threat.ticketLink)}  </a> </dt><dd markdown="block">   </dd>
 % endif
 % if len(threat.countermeasures) > 0:
-${makeMarkdownLinkedHeader(headerLevel+3, 'Counter-measures for `'+threat._id + '`', True )}
+${makeMarkdownLinkedHeader(headerLevel+3, 'Counter-measures for <code>'+threat._id + '</code>', True , useHTMLTag=True)}
 <dl markdown="block">
 % for countermeasure in threat.countermeasures:
     ##  - ID: T3.C1
@@ -301,9 +309,9 @@ ${makeMarkdownLinkedHeader(headerLevel+3, 'Counter-measures for `'+threat._id + 
     ##     public: true
     
 % if not countermeasure.isReference :
-**`${countermeasure._id}` ${countermeasure.title}**<br/>
+<strong> <code>${countermeasure._id}</code> ${countermeasure.title}</strong><br/>
 % else:
-**Reference to `${countermeasure.id}` ${countermeasure.title}**<br/>
+<strong>Reference to <code>${countermeasure.id}</code> ${countermeasure.title}</strong><br/>
 % endif
 %if hasattr(countermeasure, "appliesToVersions"):
 <dt>Applies To Versions</dt>
@@ -329,8 +337,11 @@ ${countermeasure.description}</dd>
 % endfor
 </dl> \
 % else: 
-*No countermeasure listed*
+<i>No countermeasure listed</i>
 % endif 
+
+</div> 
+
 </%def>
 
 <%def name="renderSecurityObjective(securityObjective: SecurityObjective)">
@@ -357,6 +368,8 @@ ${countermeasure.description}</dd>
 
 </dl>
 <hr/>
+
+
 </%def>
 
 
@@ -387,6 +400,11 @@ ${makeMarkdownLinkedHeader(headerLevel+4, f"{attacker.title} (ID: <code>{attacke
 
 <%def name="renderAsset(asset: Asset, headerLevel=1)">
 <hr/>
+
+<div ${"class='proposal'" if hasattr(asset, 'proposal') else "class='current'"}>
+
+${"From proposal: " + asset.proposal if hasattr(asset, 'proposal') else ""}
+
 <%
   inScopeStr = "not in scope"
   if asset.inScope:
@@ -395,7 +413,7 @@ ${makeMarkdownLinkedHeader(headerLevel+4, f"{attacker.title} (ID: <code>{attacke
 <a id="${asset.id}"></a>
 ${makeMarkdownLinkedHeader(headerLevel+4, 
 f"{asset.title} ({asset.type} {inScopeStr} - ID: <code>{asset._id}</code>)"
- , skipTOC = True )} 
+ , skipTOC = True , useHTMLTag= True)} 
 <dl markdown="block">
 %if hasattr(asset, "icon"): 
  <img src="${asset.icon}"/><br/>
@@ -421,6 +439,9 @@ ${asset.propertiesHTML()}
 <dd markdown="block"> ${specifiedAsset.title}  (<a href="#${specifiedAsset.id}">${specifiedAsset._id}</a>) </dd>
 %endif
 </dl>
+
+</div>
+
 </%def>
 
 <%def name="renderAssetTable(assets: [Assets])">

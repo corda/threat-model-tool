@@ -67,8 +67,12 @@ def getShortDescForMermaid(attack, strSize):
 def markdown_to_text(text):
     return __md.convert(text)
 
-def makeMarkdownLinkedHeader(level, title, skipTOC = False):
-    code=  "<a name='"+createTitleAnchorHash(title) + "'></a>\n" + level * "#" + " " + title.rstrip()
+def makeMarkdownLinkedHeader(level, title, skipTOC = False, useHTMLTag = False):
+    code = ""
+    if not useHTMLTag:
+        code=  "<a name='"+createTitleAnchorHash(title) + "'></a>\n" + level * "#" + " " + title.rstrip()
+    else:
+        code=  "<a name='"+createTitleAnchorHash(title) + "'></a>\n" + f"<H{level}>" + title.rstrip() + f"</H{level}>"
     if skipTOC:
         code += " <div class='" + SKIP_TOC + "'></div>"
     return "\n" + code + "\n"

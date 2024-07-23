@@ -23,8 +23,8 @@ theme:
 markdown_extensions:
   # - toc:
   #     baselevel: 1
-
   - md_in_html
+  
 # plugins:
   # - mkdocstrings:
   #     handlers:
@@ -42,3 +42,5 @@ markdown_extensions:
 
 extra_css:
   - css/mkdocs.css
+  - css/threatmodel.css
+  
