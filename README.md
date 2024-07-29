@@ -280,4 +280,4 @@ For example, this phrasing may be not optimal to generate the most useful Harden
 It is possible to add a yaml attribute `proposal: PROPOSAL_NAME` to the main yaml threat model file, to specific `assets` and `threats` sub-elements.
 The HTML and MKDOCS version of the report will apply a special css class to the div elements involved tp highlight the proposal nature.
 It also will indicate in the summary the fact that a specific threat/vulnerability is in a proposal state.
-In free text sections like `scope.description` it is possible to add <div class='proposal'>TEXT</div> as well.
+In free text sections like `scope.description` it is possible to add `<div class='proposal'>TEXT</div> as well.`
