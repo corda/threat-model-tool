@@ -131,6 +131,15 @@ class BaseThreatModelObject:
         else:
             return self.parent.getAllUp(attrName) + getattr(self, attrName)
 
+    def getFirstUp(self, attrName):
+        if self.parent is None:
+            if hasattr(self, attrName):
+                return getattr(self, attrName)
+            else:
+                return None
+        else:
+            return self.parent.getFirstUp(attrName)
+        
     def getAllDown(self, attrName):
         ret = getattr(self, attrName, [])
         for c in self.childrenTM:
@@ -479,6 +488,10 @@ class Threat(BaseThreatModelObject):
         dict.setdefault('CVSS', {'base':'TODO CVSS', 'vector':''})
         dict.setdefault('fullyMitigated', False)
 
+        # parentProposal = self.getFirstUp('proposal')
+        # if parentProposal:
+        #     self.proposal = parentProposal
+            
         for k, v in dict.items():
             if k == "ticketLink":
                 if public:

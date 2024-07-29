@@ -135,6 +135,11 @@ There are **${len(unmitigatedNoOperatinoal)}** unmitigated threats without propo
 <% title = "`("+threat._id + ")` " + threat.title %>\
 <tr markdown="block"></td><td>
 <a href="#${createTitleAnchorHash(title)}">${threat.parent._id}.<br/>${threat._id}</a> 
+% if  hasattr(threat, 'proposal') or hasattr(threat.threatModel, 'proposal'):
+<br/>
+<b>PROPOSAL (TBC) </b> 
+% else:
+% endif
 % if hasattr(threat, 'ticketLink'):
 <br/>
 <a href="${html.escape(threat.ticketLink)}"> Ticket link  </a> 
@@ -181,6 +186,12 @@ by default, and  **${len(unmitigatedNoOperational)}** are unmitigated without pr
 <tr markdown="block">
 </td><td>
 <a href="#${createTitleAnchorHash(title)}">${threat.parent._id}.<br/>${threat._id}</a> 
+% if  hasattr(threat, 'proposal') or hasattr(threat.threatModel, 'proposal'):
+<br/>
+<b>FROM PROPOSAL / TBC</b> 
+% else:
+% endif
+
 % if  hasattr(threat, 'ticketLink'):
 <br/>
 <a href="${html.escape(threat.ticketLink)}"> Ticket link  </a> 
@@ -216,15 +227,17 @@ No \
 
 <%def name="renderThreat(threat, headerLevel=1)">
 
+<div markdown="1" ${"class='proposal'" if hasattr(threat, 'proposal') else "class='current'"}>
 
 
 <a id="${threat.id}"></a>
 ## ${H2} Threat ID: ${threat._id}
 ## ${threat.threatDesc()}
+
 <% title = "`("+threat._id + ")` " + threat.title %>
+
 ${makeMarkdownLinkedHeader(headerLevel+2, title)}
 
-<div ${"class='proposal'" if hasattr(threat, 'proposal') else "class='current'"}>
 ${"From proposal: " + threat.proposal if hasattr(threat, 'proposal') else ""}
 
 <div style="text-align: center;">
@@ -339,7 +352,7 @@ ${countermeasure.description}</dd>
 % else: 
 <i>No countermeasure listed</i>
 % endif 
-
+## threat div end
 </div> 
 
 </%def>
@@ -462,6 +475,11 @@ ${asset.propertiesHTML()}
 <%def name="renderTMReportPart(tmo: ThreatModel, ancestorData: Boolean,  toc = False, summary=False, headerLevel=1)">
 ##namespace trick :(
 <% lib = self %> 
+
+<div markdown="block" ${"class='proposal'" if hasattr(tmo, 'proposal') else "class='current'"}>
+
+${"From proposal: " + tmo.proposal if hasattr(tmo, 'proposal') else ""}
+
 
 <% PAGEBREAK = """<div class="pagebreak"></div>"""%>
 
@@ -667,5 +685,7 @@ ${PAGEBREAK}
 
  ${tmo.history}
 % endif 
+
+</div>
 
 </%def>
