@@ -250,6 +250,7 @@ ${"From proposal: " + threat.proposal if hasattr(threat, 'proposal') else ""}
 
 
 <dl markdown="block">
+
 %if hasattr(threat, "appliesToVersions"):
 <dt>Applies To Versions</dt>
 <dd markdown="block">${html.escape(threat.appliesToVersions)}</dd>
@@ -290,6 +291,12 @@ ${"From proposal: " + threat.proposal if hasattr(threat, 'proposal') else ""}
 % if hasattr(threat, "impactDesc") or  hasattr(threat, "impactedSecObjs") :
 <dt>Impact</dt><dd markdown="block">${threat.impact_desc}</dd>
 % endif
+
+%if hasattr(threat, "attackType"):
+<dt>Attack type</dt>
+<dd markdown="block">${threat.attackType}</dd>
+%endif
+
 
 % if threat.cvssObject:
 <% cvssObject = threat.cvssObject%>
@@ -332,6 +339,10 @@ ${makeMarkdownLinkedHeader(headerLevel+3, 'Counter-measures for <code>'+threat._
 %endif
 <dd markdown="block">
 ${countermeasure.description}</dd>
+
+%if hasattr(countermeasure, "mitigationType"):
+<dd markdown="block"><strong>Mitigation type:</strong>$ {countermeasure.mitigationType}</dd>
+%endif
 
 
 ##*Is this countermeasure implemented and in place?* ${ "Yes" if countermeasure.inPlace else "No" }
