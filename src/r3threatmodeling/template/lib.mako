@@ -341,7 +341,7 @@ ${makeMarkdownLinkedHeader(headerLevel+3, 'Counter-measures for <code>'+threat._
 ${countermeasure.description}</dd>
 
 %if hasattr(countermeasure, "mitigationType"):
-<dd markdown="block"><strong>Mitigation type:</strong>$ {countermeasure.mitigationType}</dd>
+<dd markdown="block"><strong>Mitigation type:</strong>${countermeasure.mitigationType}</dd>
 %endif
 
 
