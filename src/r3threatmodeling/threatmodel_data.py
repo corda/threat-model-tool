@@ -236,6 +236,10 @@ class SecurityObjective(BaseThreatModelObject):
 
     _treeImage = True
 
+    priority = "High"
+
+    inScope = True
+
 
     @property
     def treeImage(self):

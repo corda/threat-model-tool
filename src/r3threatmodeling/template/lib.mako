@@ -371,10 +371,17 @@ ${countermeasure.description}</dd>
 <%def name="renderSecurityObjective(securityObjective: SecurityObjective)">
 
 <dl markdown="block">
-<dt>ID</dt><dd><code><a id="${securityObjective.id}">${securityObjective._id}</a></code></dd>
+<dt>ID</dt><dd><code><a id="${securityObjective.id}">${securityObjective._id}</a></code>
+Priotiry: ${securityObjective.priority}
+%if securityObjective.inScope == False: 
+ (Not in scope)
+%endif
+
+</dd>
 %if hasattr(securityObjective, "icon"): 
  <img src="${securityObjective.icon}"/><br/>
 %endif
+
 <dt markdown="block">Title</dt>
 <dd markdown="block">${securityObjective.title}</dd>
 <dt markdown="block">Description</dt>
