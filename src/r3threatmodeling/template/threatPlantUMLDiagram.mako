@@ -20,7 +20,7 @@ ${PlantUML_AT_HEAD}\
 "${threat._id}" [ fillcolor="#F8CECC", style=filled, shape=polygon, color="#B85450"
     label= 
     <<table border="0" cellborder="0" cellspacing="0">
-     <tr><td align="center"><b>Threat</b><br/> ${wrapText(threat.threatGeneratedTitle())}</td></tr>
+     <tr><td align="center"><b>Threat</b><br/> ${wrapText(threat.title)}</td></tr>
 ## % if hasattr(threat, 'impactDesc'):\
      <tr><td align="center"><b>Impact</b><br/>${wrapText(valueOr(threat, 'impactDesc', ""))}</td></tr>   
 ## % else:\
