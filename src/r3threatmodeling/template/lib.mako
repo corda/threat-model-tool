@@ -371,7 +371,8 @@ ${countermeasure.description}</dd>
 <%def name="renderSecurityObjective(securityObjective: SecurityObjective)">
 
 <dl markdown="block">
-<dt>ID</dt><dd><code><a id="${securityObjective.id}">${securityObjective._id}</a></code>
+<dt>ID</dt><dd>
+<code><a  id="${securityObjective.id}" href="#${securityObjective.id}">${securityObjective._id}</a></code>
 Priotiry: ${securityObjective.priority}
 %if securityObjective.inScope == False: 
  (Not in scope)
