@@ -65,7 +65,8 @@ ${MERMAID_AT_HEAD}
 **${subgraphName}**
 
   % endif
-  - **${so._id}**: ${so.title} <>
+  - <a href="#${so.id}"> **${so._id}**: ${so.title} </a>
+
   ## %if so.contributesTo:
 
   ##     Contributes to:
@@ -372,38 +373,38 @@ ${countermeasure.description}</dd>
 
 
 <% title =  securityObjective.title + " `("+securityObjective._id + ")`" %>
-<a  id="${securityObjective.id}" href="#${securityObjective.id}"> **${title}** </a>
+<a  id="${securityObjective.id}" href="#${securityObjective.id}"> **${title}** </a> 
 ${"From proposal: " + securityObjective.proposal if hasattr(securityObjective, 'proposal') else ""}
 
-<dl markdown="block">
-## <dt>ID</dt><dd>
-## <code><a  id="${securityObjective.id}" href="#${securityObjective.id}">${securityObjective._id}</a></code>
-Priotiry: ${securityObjective.priority}
+
 %if securityObjective.inScope == False: 
  (Not in scope)
 %endif
 
-</dd>
 %if hasattr(securityObjective, "icon"): 
  <img src="${securityObjective.icon}"/><br/>
 %endif
 
-<dt markdown="block">Title</dt>
-<dd markdown="block">${securityObjective.title}</dd>
-<dt markdown="block">Description</dt>
-<dd markdown="block">${securityObjective.description}</dd>
+
+${securityObjective.description}
+**Priotiry:** ${securityObjective.priority}
+
 % if securityObjective.contributesTo:
+**Contributes to:**
+
+
 % for secObjectiveContributed in securityObjective.contributesTo:
-  <dt markdown="block"> Contributes to:</dt>
-  <dd markdown="block">${secObjectiveContributed.contributedToMDText()}</dd>
+  - ${secObjectiveContributed.contributedToMDText()}
 % endfor
 % endif
 % if securityObjective.treeImage:
+
+**Attack tree:**
+
 <img src="img/secObjectives/${securityObjective._id}.svg"/>
 % endif
 
 
-</dl>
 <hr/>
 
 

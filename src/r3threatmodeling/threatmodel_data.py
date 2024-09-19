@@ -292,7 +292,7 @@ class SecurityObjective(BaseThreatModelObject):
         return  f"<code><a href=\"#{self.id}\">{self._id}</a></code>"
     
     def contributedToMDText(self):
-        return  f"Contributes to <code><a href=\"#{self.id}\">{self._id}</a></code> *({self.title})*"
+        return  f"<code><a href=\"#{self.id}\">{self._id}</a></code> *({self.title})*"
     
     def printAsText(self):
         return "\nID: " + self.id + " \nDescription: " + self.description 
