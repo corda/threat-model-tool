@@ -65,7 +65,7 @@ ${MERMAID_AT_HEAD}
 **${subgraphName}**
 
   % endif
-  - **${so._id}**: ${so.title}
+  - **${so._id}**: ${so.title} <>
   ## %if so.contributesTo:
 
   ##     Contributes to:
@@ -234,7 +234,7 @@ No \
 ## ${H2} Threat ID: ${threat._id}
 ## ${threat.threatDesc()}
 
-<% title = "`("+threat._id + ")` " + threat.title %>
+<% title =  threat.title + " `("+threat._id + ")`" %>
 
 ${makeMarkdownLinkedHeader(headerLevel+2, title)}
 
@@ -370,9 +370,14 @@ ${countermeasure.description}</dd>
 
 <%def name="renderSecurityObjective(securityObjective: SecurityObjective)">
 
+
+<% title =  securityObjective.title + " `("+securityObjective._id + ")`" %>
+<a  id="${securityObjective.id}" href="#${securityObjective.id}"> **${title}** </a>
+${"From proposal: " + securityObjective.proposal if hasattr(securityObjective, 'proposal') else ""}
+
 <dl markdown="block">
-<dt>ID</dt><dd>
-<code><a  id="${securityObjective.id}" href="#${securityObjective.id}">${securityObjective._id}</a></code>
+## <dt>ID</dt><dd>
+## <code><a  id="${securityObjective.id}" href="#${securityObjective.id}">${securityObjective._id}</a></code>
 Priotiry: ${securityObjective.priority}
 %if securityObjective.inScope == False: 
  (Not in scope)
