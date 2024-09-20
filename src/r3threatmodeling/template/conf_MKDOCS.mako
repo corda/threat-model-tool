@@ -43,4 +43,7 @@ markdown_extensions:
 extra_css:
   - css/mkdocs.css
   - css/threatmodel.css
+
+extra_javascript:
+  - js/tm.js
   
