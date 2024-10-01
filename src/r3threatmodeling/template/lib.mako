@@ -65,7 +65,7 @@ ${MERMAID_AT_HEAD}
 **${subgraphName}**
 
   % endif
-  - <a href="#${so.id}"> **${so._id}**: ${so.title} </a>
+  - <a href="#${so.id}">${so.title}</a>
 
   ## %if so.contributesTo:
 
@@ -369,11 +369,13 @@ ${countermeasure.description}</dd>
 
 </%def>
 
-<%def name="renderSecurityObjective(securityObjective: SecurityObjective)">
+<%def name="renderSecurityObjective(securityObjective: SecurityObjective, headerLevel=1)">
 
 
-<% title =  securityObjective.title + " `("+securityObjective._id + ")`" %>
-<a  id="${securityObjective.id}" href="#${securityObjective.id}"> **${title}** </a> 
+<% title =  f"{securityObjective.title} (<code>{securityObjective._id}</code>)" %>
+
+<a id="${securityObjective.id}"></a>
+${makeMarkdownLinkedHeader(headerLevel+4, f"{title}", skipTOC = True )} 
 ${"From proposal: " + securityObjective.proposal if hasattr(securityObjective, 'proposal') else ""}
 
 
@@ -387,7 +389,7 @@ ${"From proposal: " + securityObjective.proposal if hasattr(securityObjective, '
 
 
 ${securityObjective.description}
-**Priotiry:** ${securityObjective.priority}
+**Priority:** ${securityObjective.priority}
 
 % if securityObjective.contributesTo:
 **Contributes to:**
@@ -415,7 +417,7 @@ ${securityObjective.description}
 <% INDENT = "&nbsp;&nbsp;&nbsp;&nbsp;"%>
 
 <a id="${attacker._id}"></a>
-${makeMarkdownLinkedHeader(headerLevel+4, f"{attacker.title} (ID: <code>{attacker._id}</code>)" , skipTOC = True )} 
+${makeMarkdownLinkedHeader(headerLevel+4, f"{attacker.title} (<code>{attacker._id}</code>)" , skipTOC = True )} 
 
 <dl markdown="block">
 <dt>Description:</dt><dd markdown="block">${attacker.description}</dd>
