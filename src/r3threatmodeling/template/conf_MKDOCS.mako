@@ -25,7 +25,8 @@ markdown_extensions:
   #     baselevel: 1
   - md_in_html
   
-# plugins:
+plugins:
+  # - mkdocs-nav-enhancements
   # - mkdocstrings:
   #     handlers:
   #       python:
