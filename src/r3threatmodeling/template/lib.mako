@@ -1,7 +1,6 @@
-
 <%! import html %>
 <%! import textwrap %>\
-<%! from r3threatmodeling.template_utils import unmark, mermaid_escape, getShortDescForMermaid, createTitleAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
+<%! from r3threatmodeling.template_utils import unmark, mermaid_escape, getShortDescForMermaid, createTitleAnchorHash, createObjectAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
 
 <%! from cvss import CVSS3 %>
 <%! from datetime import datetime %>
@@ -131,11 +130,11 @@ There are **${len(unmitigatedNoOperatinoal)}** unmitigated threats without propo
 <div markdown="1">
 
 <table markdown="block" style="print-color-adjust: exact; -webkit-print-color-adjust: exact;">
-<tr><th>Threat ID</th><th>CVSS</th><th>Always valid</th></tr>
+<tr><th>Threat ID</th><th>CVSS</th><th>Always valid?</th></tr>
 % for i , threat in enumerate(unmitigatedNoOperatinoal):
 <% title = "`("+threat._id + ")` " + threat.title %>\
 <tr markdown="block"><td>
-<a href="#${createTitleAnchorHash(title)}">${threat.parent._id}.<br/>${threat._id}</a> 
+<a href="#${createObjectAnchorHash(threat)}">${threat.parent._id}.<br/>${threat._id}</a> 
 % if  hasattr(threat, 'proposal') or hasattr(threat.threatModel, 'proposal'):
 <br/>
 <b>PROPOSAL (TBC) </b> 
@@ -186,7 +185,7 @@ by default, and  **${len(unmitigatedNoOperational)}** are unmitigated without pr
 <% title = "`("+threat._id + ")` " + threat.title %>\
 <tr markdown="block">
 <td>
-<a href="#${createTitleAnchorHash(title)}">${threat.parent._id}.<br/>${threat._id}</a> 
+<a href="#${createObjectAnchorHash(threat)}">${threat.parent._id}.<br/>${threat._id}</a> 
 % if  hasattr(threat, 'proposal') or hasattr(threat.threatModel, 'proposal'):
 <br/>
 <b>FROM PROPOSAL / TBC</b> 
@@ -237,7 +236,7 @@ No \
 
 <% title =  threat.title + " `("+threat._id + ")`" %>
 
-${makeMarkdownLinkedHeader(headerLevel+2, title)}
+${makeMarkdownLinkedHeader(headerLevel+2, title, tmObject=threat)}
 
 ${"From proposal: " + threat.proposal if hasattr(threat, 'proposal') else ""}
 
@@ -321,7 +320,7 @@ ${"From proposal: " + threat.proposal if hasattr(threat, 'proposal') else ""}
   <dt><strong>Ticket link:</strong><a href="${html.escape(threat.ticketLink)}"> ${html.escape(threat.ticketLink)}  </a> </dt><dd markdown="block">   </dd>
 % endif
 % if len(threat.countermeasures) > 0:
-${makeMarkdownLinkedHeader(headerLevel+3, 'Counter-measures for <code>'+threat._id + '</code>', True , useHTMLTag=True)}
+${makeMarkdownLinkedHeader(headerLevel+3, 'Counter-measures for <code>'+threat._id + '</code>', True , useHTMLTag=True, tmObject=threat)}
 <dl markdown="block">
 % for countermeasure in threat.countermeasures:
     ##  - ID: T3.C1
@@ -374,8 +373,8 @@ ${countermeasure.description}</dd>
 
 <% title =  f"{securityObjective.title} (<code>{securityObjective._id}</code>)" %>
 
-<a id="${securityObjective.id}"></a>
-${makeMarkdownLinkedHeader(headerLevel+4, f"{title}", skipTOC = True )} 
+
+${makeMarkdownLinkedHeader(headerLevel+4, f"{title}", skipTOC = True, tmObject = securityObjective )} 
 ${"From proposal: " + securityObjective.proposal if hasattr(securityObjective, 'proposal') else ""}
 
 
@@ -417,7 +416,7 @@ ${securityObjective.description}
 <% INDENT = "&nbsp;&nbsp;&nbsp;&nbsp;"%>
 
 <a id="${attacker._id}"></a>
-${makeMarkdownLinkedHeader(headerLevel+4, f"{attacker.title} (<code>{attacker._id}</code>)" , skipTOC = True )} 
+${makeMarkdownLinkedHeader(headerLevel+4, f"{attacker.title} (<code>{attacker._id}</code>)" , skipTOC = True, tmObject=attacker )} 
 
 <dl markdown="block">
 <dt>Description:</dt><dd markdown="block">${attacker.description}</dd>
@@ -453,7 +452,7 @@ ${"From proposal: " + asset.proposal if hasattr(asset, 'proposal') else ""}
 <a id="${asset.id}"></a>
 ${makeMarkdownLinkedHeader(headerLevel+4, 
 f"{asset.title} ({asset.type} {inScopeStr} - ID: <code>{asset._id}</code>)"
- , skipTOC = True , useHTMLTag= True)} 
+ , skipTOC = True , useHTMLTag= True, tmObject=asset)} 
 <dl markdown="block">
 %if hasattr(asset, "icon"): 
  <img src="${asset.icon}"/><br/>
@@ -512,7 +511,7 @@ ${"From proposal: " + tmo.proposal if hasattr(tmo, 'proposal') else ""}
 
 
 ##TITLE
-${makeMarkdownLinkedHeader(headerLevel, tmo.title, skipTOC = False)}
+${makeMarkdownLinkedHeader(headerLevel, tmo.title, skipTOC = False, tmObject=tmo)}
 
 % if hasattr(tmo, 'version'):
 Version: ${tmo.version}
@@ -546,7 +545,7 @@ ${threatsSummary(tmo)}
 % endif
 % if hasattr(tmo.scope, "description") and tmo.scope.description is not None: 
 ${PAGEBREAK}
-${makeMarkdownLinkedHeader(headerLevel+1, tmo.title +  ' - scope of analysis')}
+${makeMarkdownLinkedHeader(headerLevel+1, tmo.title +  ' - scope of analysis', tmObject=tmo)}
 
 ${makeMarkdownLinkedHeader(headerLevel+2, 'Overview')}
 ${tmo.scope.description} 
@@ -674,7 +673,7 @@ ${lib.renderAsset(asset)}
 % if hasattr (tmo, 'analysis') and tmo.analysis and len(tmo.analysis.strip()) > 5: #something like TODO will be hidden 
 ${PAGEBREAK}
 <hr>
-${makeMarkdownLinkedHeader(headerLevel+1, tmo.title + ' Analysis')}
+${makeMarkdownLinkedHeader(headerLevel+1, tmo.title + ' Analysis', tmObject=tmo)}
 
 > **Note** This section documents the work performed to identify threats and thier mitigations.#
 > It may contains notes from the analysis sessions.
@@ -687,7 +686,7 @@ ${tmo.analysis}
 
 ${PAGEBREAK}
 <hr>
-${makeMarkdownLinkedHeader(headerLevel+1, tmo.title +' Threats')}
+${makeMarkdownLinkedHeader(headerLevel+1, tmo.title +' Threats', tmObject=tmo)}
 
 > **Note** This section contains the threat and mitigations identified during the analysis phase.
 

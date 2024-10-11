@@ -58,6 +58,7 @@ class BaseThreatModelObject:
     def id(self):
         if not hasattr(self, '_id'):
             return None
+        
         if self.parent is not None:
             try:
                 lid = self.parent.id + "." + self._id
@@ -66,6 +67,10 @@ class BaseThreatModelObject:
                 return self.parent._id + "." + self._id
             return lid
         else:
+            #if isinstance(self, SecurityObjective):
+            #    prefix='SO'
+            #elif isinstance(self, SecurityObjective):
+            #    prefix=''
             return self._id
     @id.setter
     def id(self, id):

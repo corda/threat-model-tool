@@ -2,6 +2,9 @@ import re
 import html
 from markdown import Markdown
 from io import StringIO
+from .threatmodel_data import *
+
+#from r3threatmodeling.template_utils import BaseThreatModelObject
 
 def unmark_element(element, stream=None):
     if stream is None:
@@ -67,16 +70,24 @@ def getShortDescForMermaid(attack, strSize):
 def markdown_to_text(text):
     return __md.convert(text)
 
-def makeMarkdownLinkedHeader(level, title, skipTOC = False, useHTMLTag = False):
-    code = ""
-    if not useHTMLTag:
-        code=  "<a name='"+createTitleAnchorHash(title) + "'></a>\n" + level * "#" + " " + title.rstrip()
+def makeMarkdownLinkedHeader(level, title, skipTOC = False, useHTMLTag = False, tmObject = None):
+    
+    if isinstance(tmObject, BaseThreatModelObject):
+        ahref=createObjectAnchorHash(tmObject)
+        title=title or tmObject.title
     else:
-        code=  "<a name='"+createTitleAnchorHash(title) + "'></a>\n" + f"<H{level}>" + title.rstrip() + f"</H{level}>"
+        ahref=createTitleAnchorHash(title)
+
+    if not useHTMLTag:
+        code=  "<a name='"+ahref + "'></a>\n" + level * "#" + " " + title.rstrip()
+    else:
+        code=  "<a name='"+ahref + "'></a>\n" + f"<H{level}>" + title.rstrip() + f"</H{level}>"
     if skipTOC:
         code += " <div class='" + SKIP_TOC + "'></div>"
     return "\n" + code + "\n"
     
+def createObjectAnchorHash(tmObject):
+    return tmObject.id
 
 def createTitleAnchorHash(title):
     hash = title.lower().rstrip().replace(' ','-').replace(':','').replace(',','').replace("`","").replace("'","")
