@@ -134,7 +134,7 @@ There are **${len(unmitigatedNoOperatinoal)}** unmitigated threats without propo
 <tr><th>Threat ID</th><th>CVSS</th><th>Always valid</th></tr>
 % for i , threat in enumerate(unmitigatedNoOperatinoal):
 <% title = "`("+threat._id + ")` " + threat.title %>\
-<tr markdown="block"></td><td>
+<tr markdown="block"><td>
 <a href="#${createTitleAnchorHash(title)}">${threat.parent._id}.<br/>${threat._id}</a> 
 % if  hasattr(threat, 'proposal') or hasattr(threat.threatModel, 'proposal'):
 <br/>
@@ -185,7 +185,7 @@ by default, and  **${len(unmitigatedNoOperational)}** are unmitigated without pr
 % for i , threat in enumerate(unmitigated + mitigated):
 <% title = "`("+threat._id + ")` " + threat.title %>\
 <tr markdown="block">
-</td><td>
+<td>
 <a href="#${createTitleAnchorHash(title)}">${threat.parent._id}.<br/>${threat._id}</a> 
 % if  hasattr(threat, 'proposal') or hasattr(threat.threatModel, 'proposal'):
 <br/>
