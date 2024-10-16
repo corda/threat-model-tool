@@ -89,7 +89,9 @@ def makeMarkdownLinkedHeader(level, title, skipTOC = False, useHTMLTag = False, 
 
     #
     # Create a 'clean' version of the title for the TOC
-    # specify this title using the "data-toc-label" attribute (requires the attr_list plugin)
+    # specify this title using the "data-toc-label" attribute 
+    # (requires the attr_list markdown extension)
+    #
     # i.e. <h2 data-toc-label='Alternate title for TOC'>Heading Title</h2>    
     #
     toc_title = CLEAN_RE.sub('', title).rstrip()
