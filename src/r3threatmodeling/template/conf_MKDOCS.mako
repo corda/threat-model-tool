@@ -17,13 +17,15 @@ nav:
 
 theme:
   name: readthedocs
-  navigation_depth: 4
+  #navigation_depth: 4
   # features:
   #   - navigation.tabs
 markdown_extensions:
-  # - toc:
-  #     baselevel: 1
+  - toc:
+      baselevel: 1
+      toc_depth: 5
   - md_in_html
+  - attr_list
   
 plugins:
   # - mkdocs-nav-enhancements

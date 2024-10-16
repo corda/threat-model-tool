@@ -70,6 +70,15 @@ def getShortDescForMermaid(attack, strSize):
 def markdown_to_text(text):
     return __md.convert(text)
 
+
+
+#
+# useHTMLTag = True will hide the header from MKDocs TOC
+# skipTOC    = unsure if this has any effect!
+# tmObject   = threat model object to use as basis for ID
+#
+CLEAN_RE = re.compile(r'[\<\>\)\(]+.*$')
+
 def makeMarkdownLinkedHeader(level, title, skipTOC = False, useHTMLTag = False, tmObject = None):
     
     if isinstance(tmObject, BaseThreatModelObject):
@@ -78,17 +87,29 @@ def makeMarkdownLinkedHeader(level, title, skipTOC = False, useHTMLTag = False, 
     else:
         ahref=createTitleAnchorHash(title)
 
-    if not useHTMLTag:
-        code=  "<a name='"+ahref + "'></a>\n" + level * "#" + " " + title.rstrip()
+    #
+    # Create a 'clean' version of the title for the TOC
+    # specify this title using the "data-toc-label" attribute (requires the attr_list plugin)
+    # i.e. <h2 data-toc-label='Alternate title for TOC'>Heading Title</h2>    
+    #
+    toc_title = CLEAN_RE.sub('', title).rstrip()
+
+    if not useHTMLTag and not tmObject:
+        code=  "<a name='"+ahref + "'></a>\n\n" + level * "#" + " " + title.rstrip()
+        code += f" {{: data-toc-label='{toc_title}'}}"
     else:
-        code=  "<a name='"+ahref + "'></a>\n" + f"<H{level}>" + title.rstrip() + f"</H{level}>"
+        code=  "<a name='"+ahref + "'></a>\n\n" + f"<H{level} id='{ahref}' data-toc-label='{toc_title}'>" + title.rstrip() + f"</H{level}>"
+    
     if skipTOC:
         code += " <div class='" + SKIP_TOC + "'></div>"
+
     return "\n" + code + "\n"
     
 def createObjectAnchorHash(tmObject):
     return tmObject.id
 
+TAG_RE = re.compile(r'<[^>]+>')
 def createTitleAnchorHash(title):
     hash = title.lower().rstrip().replace(' ','-').replace(':','').replace(',','').replace("`","").replace("'","")
+    hash = TAG_RE.sub('', hash)
     return hash
