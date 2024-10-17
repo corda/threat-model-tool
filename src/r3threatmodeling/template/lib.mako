@@ -373,7 +373,7 @@ ${countermeasure.description}</dd>
 
 <% title =  f"{securityObjective.title} (<code>{securityObjective._id}</code>)" %>
 
-${makeMarkdownLinkedHeader(headerLevel+3, f"{title}", useHTMLTag=True, skipTOC = True, tmObject = securityObjective )} 
+${makeMarkdownLinkedHeader(headerLevel+3, f"{title}", useHTMLTag=True, skipTOC = False, tmObject = securityObjective )} 
 ${"From proposal: " + securityObjective.proposal if hasattr(securityObjective, 'proposal') else ""}
 
 
