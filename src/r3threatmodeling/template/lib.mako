@@ -57,11 +57,11 @@ ${MERMAID_AT_HEAD}
 
 <%def name="renderTextSecurityObjectivesTree(securityObjectives: [])">
 <% subgraphName = "no" %>
-% for so in sorted(securityObjectives, key=lambda obj: obj.title):
+% for so in securityObjectives:
   % if subgraphName != so.group:
 ## ${'end' if subgraphName != "no" else ''}
 <% subgraphName = so.group %>
-**${subgraphName}**
+**${subgraphName}:**
 
   % endif
   - <a href="#${so.id}">${so.title}</a>
@@ -567,7 +567,6 @@ ${makeMarkdownLinkedHeader(headerLevel+2, 'References')}
   % else:
 ${makeMarkdownLinkedHeader(headerLevel+2, 'Security Objectives')}
 
-  **Summary list:**
 ${renderTextSecurityObjectivesTree(tmo.securityObjectives)}
   **Diagram:**
   <img src="img/secObjectives.svg"/>
