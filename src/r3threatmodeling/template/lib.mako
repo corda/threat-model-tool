@@ -57,7 +57,7 @@ ${MERMAID_AT_HEAD}
 
 <%def name="renderTextSecurityObjectivesTree(securityObjectives: [])">
 <% subgraphName = "no" %>
-% for so in securityObjectives:
+% for so in sorted(securityObjectives, key=lambda obj: obj.title):
   % if subgraphName != so.group:
 ## ${'end' if subgraphName != "no" else ''}
 <% subgraphName = so.group %>
@@ -573,7 +573,7 @@ ${renderTextSecurityObjectivesTree(tmo.securityObjectives)}
   <img src="img/secObjectives.svg"/>
 ## ${renderMermaidSecurityObjectivesTree(tmo.securityObjectives)}
   **Details:**
-    % for securityObjective in tmo.securityObjectives:
+    % for securityObjective in sorted(tmo.securityObjectives, key=lambda obj: obj.title):
 ${lib.renderSecurityObjective(securityObjective)}
 
     % endfor

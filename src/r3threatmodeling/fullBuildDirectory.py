@@ -28,7 +28,7 @@ def dir_path(path):
     else:
         raise argparse.ArgumentTypeError(f"--TMDirectory:{path} is not a valid path")
 
-def generateFromTMLIst(tm_list, outputDir, outFile , template = "index_tm_list", pdfArtifactLink=None):
+def generateFromTMList(tm_list, outputDir, outFile , template = "index_tm_list", pdfArtifactLink=None):
     # template = "index_tm_list"
     try:
         mdTemplate = Template(
@@ -203,8 +203,8 @@ def main():
         os.makedirs(MKDocsSiteDir, exist_ok=True)
         os.makedirs(MKDocsDir, exist_ok=True)
 
-        generateFromTMLIst(tm_list, MKDocsDir, outFile="mkdocs.yml", template="conf_MKDOCS")    
-        generateFromTMLIst(tm_list, outputDir, outFile="index.md", template="index_MKDOCS", pdfArtifactLink=None)
+        generateFromTMList(tm_list, MKDocsDir, outFile="mkdocs.yml", template="conf_MKDOCS")    
+        generateFromTMList(tm_list, outputDir, outFile="index.md", template="index_MKDOCS", pdfArtifactLink=None)
 
         if pdfArtifactLink:
             #unzip

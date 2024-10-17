@@ -44,6 +44,17 @@ def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=Tru
         if os.path.isdir(asset_path):
             shutil.copytree(asset_path, outputDir, dirs_exist_ok=True)
 
+    # print(f"Generate structurizr diagrams")
+    # os.makedirs(img_outputDir, exist_ok=True)
+    # createSecObjectivesPlantUML.generate(tmo, img_outputDir)
+    # dockerCommand = f"docker run -it --rm -v {os.path.realpath(img_outputDir)}:/data structurizr/cli export -workspace -format plantuml"
+    # # docker run -it --rm -v $PWD:/usr/local/structurizr structurizr/cli:2024.09.19
+    # # latest structurizr/cli version could be: 2024.09.19
+
+    # print(f" executing: {dockerCommand}")
+    # os.system(dockerCommand)
+
+
     print(f"Generate plant uml diagrams")
     threatTree_outputDir = outputDir+'/img/threatTree'
     os.makedirs(threatTree_outputDir, exist_ok=True)
