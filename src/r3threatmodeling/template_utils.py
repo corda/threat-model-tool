@@ -98,9 +98,9 @@ def makeMarkdownLinkedHeader(level, title, skipTOC = False, useHTMLTag = False, 
 
     if not useHTMLTag and not tmObject:
         code=  "<a name='"+ahref + "'></a>\n\n" + level * "#" + " " + title.rstrip()
-        code += f" {{: data-toc-label='{toc_title}'}}"
+        code += f" {{: data-toc-label=\"{toc_title}\"}}"
     else:
-        code=  "<a name='"+ahref + "'></a>\n\n" + f"<H{level} id='{ahref}' data-toc-label='{toc_title}'>" + title.rstrip() + f"</H{level}>"
+        code=  "<a name='"+ahref + "'></a>\n\n" + f"<H{level} id=\"{ahref}\" data-toc-label=\"{toc_title}\">" + title.rstrip() + f"</H{level}>"
     
     if skipTOC:
         code += " <div class='" + SKIP_TOC + "'></div>"

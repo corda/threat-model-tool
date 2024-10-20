@@ -120,7 +120,7 @@ ${makeMarkdownLinkedHeader(headerLevel+1, "Executive Summary", skipTOC = False)}
 <% unmitigatedNoOperatinoal = tmo.getThreatsByFullyMitigatedAndOperational(False, False)%>
 ## <% mitigated  = tmo.getThreatsByFullyMitigated (True)%>
 ## <% unmitigated  = tmo.getThreatsByFullyMitigated (False)%>
-> This section contains an executive summary of the threats and thier mitigation status
+> This section contains an executive summary of the threats and their mitigation status
 
 %if len(unmitigatedNoOperatinoal) < 1:
   **No unmitigated threats without operational countermeasures were identified**
@@ -145,9 +145,8 @@ There are **${len(unmitigatedNoOperatinoal)}** unmitigated threats without propo
 <a href="${html.escape(threat.ticketLink)}"> Ticket link  </a> 
 % else:
 % endif
-</td>
 </td><td style="background-color: ${threat.getSmartScoreColor()}; " > <span markdown="block" style="font-weight:bold; color:white;"><strong>${threat.getSmartScoreDesc()}</strong></span> </td>
-</td><td  style="text-align: center ">
+<td  style="text-align: center ">
 % if  hasattr(threat, 'conditional'):
 No
 % else:
@@ -159,7 +158,7 @@ Yes
 </table>
 
 % endif
-
+</div>
 </%def>
 
 <%def name="threatsSummary(tmo, headerLevel=1)">
@@ -169,7 +168,7 @@ ${makeMarkdownLinkedHeader(headerLevel+1, "Threats Summary", skipTOC = False)}
 <% unmitigatedNoOperational = tmo.getThreatsByFullyMitigatedAndOperational(False, False)%>
 <% mitigated  = tmo.getThreatsByFullyMitigated (True)%>
 <% unmitigated  = tmo.getThreatsByFullyMitigated (False)%>
-> This section contains an executive summary of the threats and thier mitigation status
+> This section contains an executive summary of the threats and their mitigation status
 
 %if len(mitigated) < 1 and len(unmitigated) < 1:
   **No threat identified or listed **
@@ -197,9 +196,8 @@ by default, and  **${len(unmitigatedNoOperational)}** are unmitigated without pr
 <a href="${html.escape(threat.ticketLink)}"> Ticket link  </a> 
 % else:
 % endif
-</td>
 </td><td style="background-color: ${threat.getSmartScoreColor()}; " > <span markdown="block" style="font-weight:bold; color:white;"><strong>${threat.getSmartScoreDesc()}</strong></span> </td>
-</td><td>
+<td>
 % if  hasattr(threat, 'conditional'):
 ${threat.conditional}
 % else:
@@ -220,8 +218,8 @@ No \
 </tr>
 %endfor
 </table>
-
 % endif
+</div>
 
 </%def>
 
@@ -333,14 +331,14 @@ ${makeMarkdownLinkedHeader(headerLevel+3, 'Counter-measures for <code>'+threat._
 % else:
 <strong>Reference to <code>${countermeasure.id}</code> ${countermeasure.title}</strong><br/>
 % endif
-%if hasattr(countermeasure, "appliesToVersions"):
+% if hasattr(countermeasure, "appliesToVersions"):
 <dt>Applies To Versions</dt>
 <dd markdown="block">${html.escape(countermeasure.appliesToVersions)}</dd>
-%endif
+% endif
 <dd markdown="block">
 ${countermeasure.description}</dd>
 
-%if hasattr(countermeasure, "mitigationType"):
+% if hasattr(countermeasure, "mitigationType"):
 <dd markdown="block"><strong>Mitigation type:</strong>${countermeasure.mitigationType}</dd>
 %endif
 
@@ -352,9 +350,9 @@ ${countermeasure.description}</dd>
  <strong>Public and disclosable?</strong> ${trueorFalseMark(countermeasure.public)} \
 % if countermeasure.operational: 
  <strong>Is operational?</strong>${ "<span style=\"color:green;\">&#10004;</span>"} \
- %if hasattr(countermeasure, "operator"): 
+ % if hasattr(countermeasure, "operator"): 
     (operated by ${countermeasure.operator}) 
- %endif 
+ % endif 
 % endif 
 </dd> \
 
@@ -364,7 +362,8 @@ ${countermeasure.description}</dd>
 <i>No countermeasure listed</i>
 % endif 
 ## threat div end
-</div> 
+
+</div>
 
 </%def>
 
@@ -488,9 +487,9 @@ ${asset.propertiesHTML()}
 <table markdown="block">
 <tr><th>Title(ID)</th><th>Type</th><th>In Scope</th></tr>
 %for asset in sorted(assets, key=lambda a: a.inScope, reverse=True):
-<tr markdown="block"><td markdown="block">${asset.title}<br/><code><strong markdown="block">${asset._id}</code>
+<tr markdown="block"><td markdown="block">${asset.title}<br/><code><strong markdown="block">${asset._id}</strong></code>
 </td><td>${asset.type}</td>
-</td><td>${"&#x2714;&#xFE0F;" if asset._inScope else "&#x274C;"}</td>
+<td>${"&#x2714;&#xFE0F;" if asset._inScope else "&#x274C;"}</td>
 </tr>
 %endfor
 </table>
@@ -673,7 +672,7 @@ ${lib.renderAsset(asset)}
 
 % if hasattr (tmo, 'analysis') and tmo.analysis and len(tmo.analysis.strip()) > 5: #something like TODO will be hidden 
 ${PAGEBREAK}
-<hr>
+<hr/>
 ${makeMarkdownLinkedHeader(headerLevel+1, tmo.title + ' Analysis', tmObject=None)}
 
 > **Note** This section documents the work performed to identify threats and thier mitigations.#
@@ -686,7 +685,7 @@ ${tmo.analysis}
 %if len(tmo.threats) > 0:
 
 ${PAGEBREAK}
-<hr>
+<hr/>
 ${makeMarkdownLinkedHeader(headerLevel+1, tmo.title +' Threats', tmObject=None)}
 
 > **Note** This section contains the threat and mitigations identified during the analysis phase.
@@ -694,7 +693,7 @@ ${makeMarkdownLinkedHeader(headerLevel+1, tmo.title +' Threats', tmObject=None)}
 
 % for i , threat in enumerate(tmo.threats):
 %if i > 1:
-<hr> \
+<hr/> \
 %endif
 ${lib.renderThreat(threat, headerLevel)}
 % if (i!=len(tmo.threats)-1):
