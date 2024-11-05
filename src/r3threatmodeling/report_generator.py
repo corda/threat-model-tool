@@ -262,7 +262,7 @@ def postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileNa
     mermaidHtmlTags = mdReport.replace(#FIX mermaid diagrams for html
                 PRE_MERMAID, "<div class=mermaid>").replace(AFTER_MERMAID,"</div>")
 
-    htmlReport = markdown.markdown(mermaidHtmlTags, extensions=['md_in_html'])
+    htmlReport = markdown.markdown(mermaidHtmlTags, extensions=['md_in_html', 'attr_list'])
 
     baseHTML = """<!DOCTYPE html>
         <html>
