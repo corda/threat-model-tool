@@ -143,6 +143,9 @@ There are **${len(unmitigatedNoOperatinoal)}** unmitigated threats without propo
 % if hasattr(threat, 'ticketLink'):
 <br/>
 <a href="${html.escape(threat.ticketLink)}"> Ticket link  </a> 
+##   % if hasattr(threat, 'ticketInfo'):
+## ${ticketInfo}
+##   % endif
 % else:
 % endif
 </td><td style="background-color: ${threat.getSmartScoreColor()}; " > <span markdown="block" style="font-weight:bold; color:white;"><strong>${threat.getSmartScoreDesc()}</strong></span> </td>
