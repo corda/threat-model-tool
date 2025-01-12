@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from lib2to3.pygram import pattern_symbols
-from pathvalidate import sanitize_filename
+# from lib2to3.pygram import pattern_symbols
+# from pathvalidate import sanitize_filename
 import os
 from tokenize import String
 import yaml
