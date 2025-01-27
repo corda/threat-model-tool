@@ -409,7 +409,10 @@ class Threat(BaseThreatModelObject):
             # ret = ret + "<br/> "
             secObj: SecurityObjective 
             for secObj in self.impactedSecObjs:
-                ret += secObj.linkedImpactMDText()
+                try:
+                    ret += secObj.linkedImpactMDText() + "<br/> "
+                except:
+                    raise BaseException(f"Problem in impactedSecObj definition reference in {secObj.id} " )  
 
         return ret
 
@@ -626,6 +629,12 @@ class Asset(BaseThreatModelObject):
     
 
 class Attacker(BaseThreatModelObject):
+    def __init__(self, dict, parent):
+        super().__init__(dict, parent)
+        if not hasattr(self, 'title'):
+            raise BaseException(f"Attacker {self.id} must have a title")
+        for k, v in dict.items():
+            setattr(self, k, v)
     pass
 class Assumption(BaseThreatModelObject):
     pass
@@ -705,6 +714,8 @@ class ThreatModel(BaseThreatModelObject):
                 try:
                     if scope_v is not None:
                         for assetDict in scope_v:
+                            if assetDict  is None:
+                                raise BaseException(f"Asset is 'None' in {self.id}")
                             if self.filterOutForPublicOrVersions(public, assetDict):
                                 pass
                             else:
