@@ -535,7 +535,9 @@ Versions in scope: ${tmo.versionsFilterStr}
 % if toc:
 ${PAGEBREAK}
 ${makeMarkdownLinkedHeader(headerLevel+1, 'Table of contents', skipTOC = True)}
+<div markdown="block">
 __TOC_PLACEHOLDER__
+</div>
 ${PAGEBREAK}
 
 % endif
