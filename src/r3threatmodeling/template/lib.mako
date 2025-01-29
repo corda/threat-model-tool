@@ -286,8 +286,6 @@ ${"From proposal: " + threat.proposal if hasattr(threat, 'proposal') else ""}
   <dt>Threat condition:</dt><dd markdown="block">${threat.conditional}</dd>
 % endif
 
-<% H6 = "######" %>
-
 <dt>Threat Description</dt><dd markdown="block">${threat.attack}</dd>
 % if hasattr(threat, "impactDesc") or  hasattr(threat, "impactedSecObjs") :
 <dt>Impact</dt><dd markdown="block">${threat.impact_desc}</dd>
@@ -321,7 +319,7 @@ ${"From proposal: " + threat.proposal if hasattr(threat, 'proposal') else ""}
   <dt><strong>Ticket link:</strong><a href="${html.escape(threat.ticketLink)}"> ${html.escape(threat.ticketLink)}  </a> </dt><dd markdown="block">   </dd>
 % endif
 % if len(threat.countermeasures) > 0:
-${makeMarkdownLinkedHeader(headerLevel+3, 'Counter-measures for <code>'+threat._id + '</code>', True , useMarkDownHeaders=True, tmObject=None)}
+${makeMarkdownLinkedHeader(headerLevel+3, 'Counter-measures for <code>'+threat._id + '</code>', True , tmObject=None)}
 <dl markdown="block">
 % for countermeasure in threat.countermeasures:
     ##  - ID: T3.C1
@@ -375,7 +373,7 @@ ${countermeasure.description}</dd>
 
 <% title =  f"{securityObjective.title} (<code>{securityObjective._id}</code>)" %>
 
-${makeMarkdownLinkedHeader(headerLevel+3, f"{title}", useMarkDownHeaders=True, skipTOC = False, tmObject = securityObjective )} 
+${makeMarkdownLinkedHeader(headerLevel+3, f"{title}", skipTOC = False, tmObject = securityObjective )} 
 ${"From proposal: " + securityObjective.proposal if hasattr(securityObjective, 'proposal') else ""}
 
 
@@ -442,7 +440,7 @@ ${makeMarkdownLinkedHeader(headerLevel+4, f"{attacker.title} (<code>{attacker._i
 <%def name="renderAsset(asset: Asset, headerLevel=1)">
 <hr/>
 
-<div ${"class='proposal'" if hasattr(asset, 'proposal') else "class='current'"}>
+<div markdown="1" ${"class='proposal'" if hasattr(asset, 'proposal') else "class='current'"}>
 
 ${"From proposal: " + asset.proposal if hasattr(asset, 'proposal') else ""}
 
@@ -455,7 +453,7 @@ ${"From proposal: " + asset.proposal if hasattr(asset, 'proposal') else ""}
 ## <a id="${asset.id}"></a>
 
 ${makeMarkdownLinkedHeader(headerLevel+4, 
-f"{asset.title} ({asset.type} {inScopeStr} - ID: <code>{asset._id}</code>)", skipTOC = True , useMarkDownHeaders= True, tmObject=asset)} 
+f"{asset.title} ({asset.type} {inScopeStr} - ID: <code>{asset._id}</code>)", skipTOC = True , tmObject=asset)} 
 <dl markdown="block">
 %if hasattr(asset, "icon"): 
  <img src="${asset.icon}"/><br/>

@@ -81,15 +81,8 @@ def markdown_to_text(text):
 #
 CLEAN_RE = re.compile(r'[\<\>\)\(]+.*$')
 
-def makeMarkdownLinkedHeader(level, title, skipTOC = False, 
-                             useMarkDownHeaders = False,
-                             tmObject = None):
-    
-    ##sorry about this, useMarkDownHeaders 
-    ## still need to be optional 
-    ## for some MKDOCS calls
-    if globaUseMarkDownHeaders:
-        useMarkDownHeaders = True
+def makeMarkdownLinkedHeader(level, title, skipTOC = False, tmObject = None):
+    useMarkDownHeaders = globaUseMarkDownHeaders
     
     if isinstance(tmObject, BaseThreatModelObject):
         ahref=createObjectAnchorHash(tmObject)
