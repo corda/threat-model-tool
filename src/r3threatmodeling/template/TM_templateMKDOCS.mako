@@ -1,6 +1,7 @@
 <%! import html %>
-<%! from r3threatmodeling.template_utils import createTitleAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
-
+<%! from r3threatmodeling.template_utils import globaUseMarkDownHeaders, createTitleAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
+## False enables MKDOCS title metadata {}
+<%! globaUseMarkDownHeaders = False %>
 <% PAGEBREAK = """<div class="pagebreak"></div>"""%>
 
 <%namespace name="lib" file="lib.mako"/> 

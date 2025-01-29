@@ -1,12 +1,14 @@
 <%! import html %>
-<%! from r3threatmodeling.template_utils import createTitleAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
+<%! from r3threatmodeling.template_utils import globaUseMarkDownHeaders, createTitleAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
+## False enables MKDOCS title metadata {}
+<%! globaUseMarkDownHeaders = True %> 
 
 <% PAGEBREAK = """<div class="pagebreak"></div>"""%>
 
 <%namespace name="lib" file="lib.mako"/> 
 
 
-${lib.renderTMReportPart(tmo, ancestorData, toc=True, summary=True, )}
+${lib.renderTMReportPart(tmo, ancestorData, toc = True, summary=True, )}
 
 % for descendantTM in tmo.getDescendants():
   ${lib.renderTMReportPart(descendantTM, ancestorData=False)}

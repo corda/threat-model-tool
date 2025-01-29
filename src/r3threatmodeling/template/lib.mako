@@ -321,7 +321,7 @@ ${"From proposal: " + threat.proposal if hasattr(threat, 'proposal') else ""}
   <dt><strong>Ticket link:</strong><a href="${html.escape(threat.ticketLink)}"> ${html.escape(threat.ticketLink)}  </a> </dt><dd markdown="block">   </dd>
 % endif
 % if len(threat.countermeasures) > 0:
-${makeMarkdownLinkedHeader(headerLevel+3, 'Counter-measures for <code>'+threat._id + '</code>', True , useHTMLTag=True, tmObject=None)}
+${makeMarkdownLinkedHeader(headerLevel+3, 'Counter-measures for <code>'+threat._id + '</code>', True , useMarkDownHeaders=True, tmObject=None)}
 <dl markdown="block">
 % for countermeasure in threat.countermeasures:
     ##  - ID: T3.C1
@@ -375,7 +375,7 @@ ${countermeasure.description}</dd>
 
 <% title =  f"{securityObjective.title} (<code>{securityObjective._id}</code>)" %>
 
-${makeMarkdownLinkedHeader(headerLevel+3, f"{title}", useHTMLTag=True, skipTOC = False, tmObject = securityObjective )} 
+${makeMarkdownLinkedHeader(headerLevel+3, f"{title}", useMarkDownHeaders=True, skipTOC = False, tmObject = securityObjective )} 
 ${"From proposal: " + securityObjective.proposal if hasattr(securityObjective, 'proposal') else ""}
 
 
@@ -455,7 +455,7 @@ ${"From proposal: " + asset.proposal if hasattr(asset, 'proposal') else ""}
 ## <a id="${asset.id}"></a>
 
 ${makeMarkdownLinkedHeader(headerLevel+4, 
-f"{asset.title} ({asset.type} {inScopeStr} - ID: <code>{asset._id}</code>)", skipTOC = True , useHTMLTag= True, tmObject=asset)} 
+f"{asset.title} ({asset.type} {inScopeStr} - ID: <code>{asset._id}</code>)", skipTOC = True , useMarkDownHeaders= True, tmObject=asset)} 
 <dl markdown="block">
 %if hasattr(asset, "icon"): 
  <img src="${asset.icon}"/><br/>
@@ -535,11 +535,10 @@ Versions in scope: ${tmo.versionsFilterStr}
 % if toc:
 ${PAGEBREAK}
 ${makeMarkdownLinkedHeader(headerLevel+1, 'Table of contents', skipTOC = True)}
-<div markdown="block">
+<div markdown="1">
 __TOC_PLACEHOLDER__
 </div>
 ${PAGEBREAK}
-
 % endif
 
 % if summary:

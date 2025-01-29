@@ -6,6 +6,8 @@ from .threatmodel_data import *
 
 #from r3threatmodeling.template_utils import BaseThreatModelObject
 
+globaUseMarkDownHeaders = True ## for MKDOCS metadata headers
+
 def unmark_element(element, stream=None):
     if stream is None:
         stream = StringIO()
@@ -73,13 +75,21 @@ def markdown_to_text(text):
 
 
 #
-# useHTMLTag = True will hide the header from MKDocs TOC
+# useMarkDownHeaders = True will hide the header from MKDocs TOC
 # skipTOC    = unsure if this has any effect!
 # tmObject   = threat model object to use as basis for ID
 #
 CLEAN_RE = re.compile(r'[\<\>\)\(]+.*$')
 
-def makeMarkdownLinkedHeader(level, title, skipTOC = False, useHTMLTag = False, tmObject = None):
+def makeMarkdownLinkedHeader(level, title, skipTOC = False, 
+                             useMarkDownHeaders = False,
+                             tmObject = None):
+    
+    ##sorry about this, useMarkDownHeaders 
+    ## still need to be optional 
+    ## for some MKDOCS calls
+    if globaUseMarkDownHeaders:
+        useMarkDownHeaders = True
     
     if isinstance(tmObject, BaseThreatModelObject):
         ahref=createObjectAnchorHash(tmObject)
@@ -96,12 +106,16 @@ def makeMarkdownLinkedHeader(level, title, skipTOC = False, useHTMLTag = False, 
     #
     toc_title = CLEAN_RE.sub('', title).rstrip()
 
-    if not useHTMLTag and not tmObject:
+    if not useMarkDownHeaders and not tmObject:
         code=  "<a name='"+ahref + "'></a>\n\n" + level * "#" + " " + title.rstrip()
         code += f" {{: data-toc-label=\"{toc_title}\"}}"
     else:
-        code=  "<a name='"+ahref + "'></a>\n\n" + f"<H{level} id=\"{ahref}\" data-toc-label=\"{toc_title}\">" + title.rstrip() + f"</H{level}>"
-    
+        # code=  "<a name='"+ahref + "'></a>\n\n" + f"<H{level} id=\"{ahref}\" >" + title.rstrip() + f"</H{level}>"
+        code = f"""
+<a name='{ahref}'></a>
+{'#' * level} {title.rstrip()}
+"""
+        
     if skipTOC:
         code += " <div class='" + SKIP_TOC + "'></div>"
 
