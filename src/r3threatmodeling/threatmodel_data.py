@@ -627,6 +627,12 @@ class Asset(BaseThreatModelObject):
             raise TypeError('Asset.inScope must be an boolean' + ", found value: " + value + " in " + self.id)
         self._inScope = value
     
+    def __init__(self, dict, parent):
+        super().__init__(dict, parent)
+        if 'inScope' not in dict or not isinstance(dict['inScope'], bool):
+            raise ValueError(f"Asset {self.id} must have a boolean 'inScope' property")
+        for k, v in dict.items():
+            setattr(self, k, v)
 
 class Attacker(BaseThreatModelObject):
     def __init__(self, dict, parent):
