@@ -688,6 +688,11 @@ ${tmo.analysis}
 
 ${PAGEBREAK}
 <hr/>
+${makeMarkdownLinkedHeader(headerLevel+1, tmo.title +' Attack tree', tmObject=None)}
+<img src="img/${tmo._id}_ATTACKTREE.svg"/>
+
+${PAGEBREAK}
+<hr/>
 ${makeMarkdownLinkedHeader(headerLevel+1, tmo.title +' Threats', tmObject=None)}
 
 > **Note** This section contains the threat and mitigations identified during the analysis phase.

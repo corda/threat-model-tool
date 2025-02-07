@@ -23,8 +23,12 @@ from pathlib import Path
 import shutil
 
 
-def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=True,
+def generateSingleTM(rootTMYaml, base_outputDir, assetDir, template, ancestorData=True,
                       browserSync=False, public=False, generatePDF=False, pdfHeaderNote=None, versionsFilterStr=None):
+    
+    tmo = ThreatModel(rootTMYaml, public=public, versionsFilterStr=versionsFilterStr)
+
+    outputDir = os.path.join(base_outputDir, tmo._id)
     print(f"FULL BUILD on {outputDir}")
 
     os.makedirs(outputDir, exist_ok=True)
@@ -32,7 +36,6 @@ def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=Tru
     if assetDir:
         shutil.copytree(assetDir[0], outputDir, dirs_exist_ok=True)
 
-    tmo = ThreatModel(rootTMYaml, public=public, versionsFilterStr=versionsFilterStr)
     # tmID = tmo.id
     # tmTitle = tmo.title
 
@@ -71,6 +74,10 @@ def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=Tru
     print(f" executing: {PUMLCommand}")
     os.system(PUMLCommand)
 
+    print("Generate per TM full attack trees diagrams")
+    TM_AttackTreePlantUMLDiagram.generate_attackTree_for_whole_threat_model(tmo, outputDir)
+    TM_AttackTreePlantUMLDiagram.generateAttachTreePerSingleTM(tmo, base_outputDir)
+
     print(f"Generate Sec Obj attack tree diagrams")
     img_outputDir = outputDir+'/img'
     os.makedirs(img_outputDir, exist_ok=True)
@@ -78,11 +85,6 @@ def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=Tru
     PUMLCommand = f"docker run --rm -v {os.path.realpath(img_outputDir)}:/data plantuml/plantuml:sha-d2b2bcf *.puml -svg -v"
     print(f" executing: {PUMLCommand}")
     os.system(PUMLCommand)
-
-    print("Generate per TM full attack trees diagrams")
-    TM_AttackTreePlantUMLDiagram.generate_attackTree_for_whole_threat_model(tmo, img_outputDir)
-    TM_AttackTreePlantUMLDiagram.generateAttachTreePerSingleTM(tmo, img_outputDir)
-
 
     if generatePDF:
         fullBuildSinglePDF.generatePDF(rootTMYaml, outputDir, outputName = None, headerNote=pdfHeaderNote)
