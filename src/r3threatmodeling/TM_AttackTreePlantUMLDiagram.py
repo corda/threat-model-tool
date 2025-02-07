@@ -36,8 +36,9 @@ def render_plant_uml_threat_tree(threat):
     original Mako template output.
     """
     # Header portion
+    fill_color = "#d3d3d3" if threat.fullyMitigated else "#F8CECC"
     output = f"""\
-{threat._id} [ fillcolor="#F8CECC", style=filled, shape=polygon, color="#B85450"
+{threat._id} [ fillcolor="{fill_color}", style=filled, shape=polygon, color="#B85450"
     label= 
     <<table border="0" cellborder="0" cellspacing="0">
      <tr><td align="center"><b>{threat._id} ATTACK</b> <br/></td></tr>
@@ -50,9 +51,13 @@ def render_plant_uml_threat_tree(threat):
     if hasattr(threat, 'countermeasures') and threat.countermeasures:
         for i, cm in enumerate(threat.countermeasures):
             if cm.description:
+                lineStyle = "solid" if cm.inPlace else "dashed" 
+                fill_color = "#d3d3d3" if cm.inPlace else "#F8CECC"
+                lineColor = "red" if not cm.inPlace else "green"
                 output += f"""\
+
 {threat._id}_countermeasure{i} [
-    fillcolor="{cm.statusColors()['fill']}", style=filled, shape=polygon, 
+    fillcolor="{fill_color}", style=filled, shape=polygon, 
     color="{cm.statusColors()['border']}", 
     label=
     <<table border="0" cellborder="0" cellspacing="0">
@@ -63,7 +68,7 @@ def render_plant_uml_threat_tree(threat):
     </table>>
 ]
 
-{threat._id}_countermeasure{i} -> {threat._id} [label = " mitigates"]
+{threat._id}_countermeasure{i} -> {threat._id} [label = " mitigates", style="{lineStyle}", color="{lineColor}", penwidth=3]\n' ]
 
 """
 
@@ -132,8 +137,9 @@ def generate_plantuml_for_threat_model(tmo):
     """)
 
     # The main ThreatModel node
+    fillcolor = "#d3d3d3" if tmo.fullyMitigated else "#bae9ff"
     diagram += f'''
-"{tmo._id}" [fillcolor="#bae9ff", style=filled, shape=ellipse, color="#2bbcff",
+"{tmo._id}" [fillcolor="{fillcolor}", style=filled, shape=ellipse, color="#2bbcff",
  label=
  <<table border="0" cellborder="0" cellspacing="0">
    <tr><td align="center">
@@ -152,7 +158,8 @@ def generate_plantuml_for_threat_model(tmo):
     diagram += "\n}\n@enduml\n"
     return diagram
 
-def generate_attackTree_for_whole_threat_model(tmo, outputDir):
+def generate_attackTree_for_whole_threat_model(tmo, praram_outputDir):
+    outputDir = os.path.join(praram_outputDir, "img")
     os.makedirs(outputDir, exist_ok=True)
     try:
         # Create some basic PlantUML content about this ThreatModel
@@ -169,12 +176,13 @@ def generate_attackTree_for_whole_threat_model(tmo, outputDir):
         print(tb)
 
 
-def generateAttachTreePerSingleTM(tmo, outputDir):
+def generateAttachTreePerSingleTM(tmo, base_outputDir):
     """
     Generates a PlantUML file for each ThreatModel object (tmo),
     then recurses through any child threat models. This replaces
     the previous Mako-based rendering with a pure Python approach.
     """
+    outputDir = os.path.join(base_outputDir, "img")
     os.makedirs(outputDir, exist_ok=True)
     try:
         # Create some basic PlantUML content about this ThreatModel
@@ -182,14 +190,15 @@ def generateAttachTreePerSingleTM(tmo, outputDir):
         pumlText = generate_plantuml_for_threat_model(tmo)
 
         # Write the output to a .puml file named after the ThreatModel's ID
-        pumlFileName = os.path.join(outputDir, f"{tmo._id}.puml")
+        pumlFileName = os.path.join(outputDir, f"{tmo._id}_ATTACKTREE.puml")
         with open(pumlFileName, "w", encoding="utf-8") as pumlFile:
             pumlFile.write(pumlText)
 
         # Recurse if child ThreatModels exist
         if hasattr(tmo, 'childrenTM'):
             for child in tmo.childrenTM:
-                generateAttachTreePerSingleTM(child, outputDir)
+                parentOutputDir = os.path.join(base_outputDir, tmo._id)
+                generateAttachTreePerSingleTM(child, parentOutputDir)
 
     except Exception:
         tb = traceback.format_exc()
@@ -208,8 +217,9 @@ def generate_plantuml_for_threat_model(tmo):
     """)
 
     # The main ThreatModel node
+    fillcolor = "#bae9ff"
     diagram += f'''
-"{tmo._id}" [fillcolor="#bae9ff", style=filled, shape=ellipse, color="#2bbcff",
+"{tmo._id}" [fillcolor="{fillcolor}", style=filled, shape=ellipse, color="#2bbcff",
  label=
  <<table border="0" cellborder="0" cellspacing="0">
    <tr><td align="center">
@@ -222,7 +232,11 @@ def generate_plantuml_for_threat_model(tmo):
     if hasattr(tmo, 'threats'):
         for threat in tmo.threats:
             diagram += render_plant_uml_threat_tree(threat)
-            diagram += f'"{threat._id}" -> "{tmo._id}" [label=" impacts"]\n'
+            # impactStatus =  "(fully-mitigated)" if threat.fullyMitigated() else "(unmitigated)"
+            lineStyle = "solid" if not threat.fullyMitigated else "dashed"
+            lineColor= "red" if not threat.fullyMitigated else "green"
+            diagram += f'"{threat._id}" -> "{tmo._id}" [label=" impacts ", color="{lineColor}", style="{lineStyle}", penwidth=3]\n' 
+         
 
     # End the diagram
     diagram += "\n}\n@enduml\n"
