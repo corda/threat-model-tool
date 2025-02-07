@@ -13,7 +13,7 @@ from mako.template import Template
 import markdown
 import importlib_resources
 
-from r3threatmodeling import fullBuildSinglePDF, createThreatPlantUMLDiagrams, createSecObjTreePUMLDiagrams, createSecObjectivesPlantUML, report_generator
+from r3threatmodeling import fullBuildSinglePDF, TM_AttackTreePlantUMLDiagram ,createThreatPlantUMLDiagrams, createSecObjTreePUMLDiagrams, createSecObjectivesPlantUML, report_generator
 
 from .threatmodel_data import *
 from markdown import Markdown
@@ -55,7 +55,7 @@ def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=Tru
     # os.system(dockerCommand)
 
 
-    print(f"Generate plant uml diagrams")
+    print(f"Generate plant UML diagrams for every threat")
     threatTree_outputDir = outputDir+'/img/threatTree'
     os.makedirs(threatTree_outputDir, exist_ok=True)
     createThreatPlantUMLDiagrams.generate(tmo, threatTree_outputDir)
@@ -63,7 +63,7 @@ def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=Tru
     print(f" executing: {PUMLCommand}")
     os.system(PUMLCommand)
     
-
+    print(f"Generate Sec Obj hierarchy diagram")
     secObjectives_outputDir = outputDir+'/img/secObjectives'
     os.makedirs(secObjectives_outputDir, exist_ok=True)
     createSecObjTreePUMLDiagrams.generate(tmo, secObjectives_outputDir)
@@ -71,6 +71,7 @@ def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=Tru
     print(f" executing: {PUMLCommand}")
     os.system(PUMLCommand)
 
+    print(f"Generate Sec Obj attack tree diagrams")
     img_outputDir = outputDir+'/img'
     os.makedirs(img_outputDir, exist_ok=True)
     createSecObjectivesPlantUML.generate(tmo, img_outputDir)
@@ -78,6 +79,9 @@ def generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData=Tru
     print(f" executing: {PUMLCommand}")
     os.system(PUMLCommand)
 
+    print("Generate per TM full attack trees diagrams")
+    TM_AttackTreePlantUMLDiagram.generate_attackTree_for_whole_threat_model(tmo, img_outputDir)
+    TM_AttackTreePlantUMLDiagram.generateAttachTreePerSingleTM(tmo, img_outputDir)
 
 
     if generatePDF:

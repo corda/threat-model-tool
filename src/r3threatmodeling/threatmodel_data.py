@@ -853,8 +853,8 @@ class ThreatModel(BaseThreatModelObject):
 
         return guideData
 
-    def getAllThreatsByFullyMitigated(self, fullyMitigated ):
-        return  [t for t in self.getAllThreats() if t.fullyMitigated is fullyMitigated]
+    # def getAllThreatsByFullyMitigated(self, fullyMitigated ):
+    #     return  [t for t in self.getAllThreats() if t.fullyMitigated is fullyMitigated]
 
     def getAssetById(self, id):
         if id is None:
