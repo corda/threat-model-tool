@@ -18,6 +18,8 @@ from .template_utils import *
 
 import textwrap
 
+customRed = "#B85450"
+
 def wrap_text(text, width=80):
     """
     Simple helper to wrap text so it fits neatly in the table cells.
@@ -38,7 +40,7 @@ def render_plant_uml_threat_tree(threat):
     # Header portion
     fill_color = "#d3d3d3" if threat.fullyMitigated else "#F8CECC"
     output = f"""\
-{threat._id} [ fillcolor="{fill_color}", style=filled, shape=polygon, color="#B85450"
+{threat._id} [ fillcolor="{fill_color}", style=filled, shape=polygon, color="{customRed}", penwidth=2
     label= 
     <<table border="0" cellborder="0" cellspacing="0">
      <tr><td align="center"><b>{threat._id} ATTACK</b> <br/></td></tr>
@@ -52,13 +54,15 @@ def render_plant_uml_threat_tree(threat):
         for i, cm in enumerate(threat.countermeasures):
             if cm.description:
                 lineStyle = "solid" if cm.inPlace else "dashed" 
-                fill_color = "#d3d3d3" if cm.inPlace else "#F8CECC"
-                lineColor = "red" if not cm.inPlace else "green"
+                fill_color = cm.statusColors()['fill'] if cm.inPlace else "#F8CECC"
+                lineColor = customRed if not cm.inPlace else "green"
+                borderColor = "green" if cm.inPlace else customRed
                 output += f"""\
-
+                
+                
 {threat._id}_countermeasure{i} [
-    fillcolor="{fill_color}", style=filled, shape=polygon, 
-    color="{cm.statusColors()['border']}", 
+    fillcolor="{fill_color}", style=filled, shape=polygon, penwidth=2,
+    color="{borderColor}", 
     label=
     <<table border="0" cellborder="0" cellspacing="0">
       <tr><td align="left">
@@ -68,7 +72,7 @@ def render_plant_uml_threat_tree(threat):
     </table>>
 ]
 
-{threat._id}_countermeasure{i} -> {threat._id} [label = " mitigates", style="{lineStyle}", color="{lineColor}", penwidth=3]\n' ]
+{threat._id}_countermeasure{i} -> {threat._id} [label = " mitigates", style="{lineStyle}", color="{lineColor}", penwidth=2]\n' ]
 
 """
 
@@ -94,7 +98,7 @@ def generate_attackTree_for_whole_threat_model_recursive(tmo):
 
     # The main ThreatModel node
     diagram += f'''
-"{tmo._id}" [fillcolor="#bae9ff", style=filled, shape=ellipse, color="#2bbcff",
+"{tmo._id}" [fillcolor="#bae9ff", style=filled, shape=ellipse, color="{customRed}",
  label=
  <<table border="0" cellborder="0" cellspacing="0">
    <tr><td align="center">
@@ -139,7 +143,7 @@ def generate_plantuml_for_threat_model(tmo):
     # The main ThreatModel node
     fillcolor = "#d3d3d3" if tmo.fullyMitigated else "#bae9ff"
     diagram += f'''
-"{tmo._id}" [fillcolor="{fillcolor}", style=filled, shape=ellipse, color="#2bbcff",
+"{tmo._id}" [fillcolor="{fillcolor}", style=filled, shape=ellipse, color="red",
  label=
  <<table border="0" cellborder="0" cellspacing="0">
    <tr><td align="center">
@@ -219,7 +223,7 @@ def generate_plantuml_for_threat_model(tmo):
     # The main ThreatModel node
     fillcolor = "#bae9ff"
     diagram += f'''
-"{tmo._id}" [fillcolor="{fillcolor}", style=filled, shape=ellipse, color="#2bbcff",
+"{tmo._id}" [fillcolor="{fillcolor}", style=filled, shape=ellipse, color="{customRed}",
  label=
  <<table border="0" cellborder="0" cellspacing="0">
    <tr><td align="center">
@@ -234,8 +238,8 @@ def generate_plantuml_for_threat_model(tmo):
             diagram += render_plant_uml_threat_tree(threat)
             # impactStatus =  "(fully-mitigated)" if threat.fullyMitigated() else "(unmitigated)"
             lineStyle = "solid" if not threat.fullyMitigated else "dashed"
-            lineColor= "red" if not threat.fullyMitigated else "green"
-            diagram += f'"{threat._id}" -> "{tmo._id}" [label=" impacts ", color="{lineColor}", style="{lineStyle}", penwidth=3]\n' 
+            lineColor= customRed if not threat.fullyMitigated else "green"
+            diagram += f'"{threat._id}" -> "{tmo._id}" [label=" impacts ", color="{lineColor}", style="{lineStyle}", penwidth=2]\n' 
          
 
     # End the diagram
