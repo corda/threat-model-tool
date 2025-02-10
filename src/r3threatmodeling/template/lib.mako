@@ -120,7 +120,7 @@ ${makeMarkdownLinkedHeader(headerLevel+1, "Executive Summary", skipTOC = False)}
 <% unmitigatedNoOperatinoal = tmo.getThreatsByFullyMitigatedAndOperational(False, False)%>
 ## <% mitigated  = tmo.getThreatsByFullyMitigated (True)%>
 ## <% unmitigated  = tmo.getThreatsByFullyMitigated (False)%>
-> This section contains an executive summary of the threats and their mitigation status
+> This section contains an executive summary of the identified threats and their mitigation status
 
 %if len(unmitigatedNoOperatinoal) < 1:
   **No unmitigated threats without operational countermeasures were identified**

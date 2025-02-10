@@ -54,9 +54,10 @@ def render_plant_uml_threat_tree(threat):
         for i, cm in enumerate(threat.countermeasures):
             if cm.description:
                 lineStyle = "solid" if cm.inPlace else "dashed" 
-                fill_color = cm.statusColors()['fill'] if cm.inPlace else "#F8CECC"
+                fill_color = cm.statusColors()['fill'] # if cm.inPlace else "#F8CECC"
                 lineColor = customRed if not cm.inPlace else "green"
-                borderColor = "green" if cm.inPlace else customRed
+                borderColor = cm.statusColors()['border'] #  "green" if cm.inPlace else customRed
+                lineText = "" # "<<not-in-place>>" if not cm.inPlace else " <<in-place>>"
                 output += f"""\
                 
                 
@@ -72,7 +73,7 @@ def render_plant_uml_threat_tree(threat):
     </table>>
 ]
 
-{threat._id}_countermeasure{i} -> {threat._id} [label = " mitigates", style="{lineStyle}", color="{lineColor}", penwidth=2]\n' ]
+{threat._id}_countermeasure{i} -> {threat._id} [label = " {lineText}", style="{lineStyle}", color="{lineColor}", penwidth=2]\n' ]
 
 """
 
@@ -227,7 +228,7 @@ def generate_plantuml_for_threat_model(tmo):
  label=
  <<table border="0" cellborder="0" cellspacing="0">
    <tr><td align="center">
-     <b>{tmo._id}</b><br/>{wrap_text(getattr(tmo, 'description', ''))}
+     <b>{tmo.title}</b><br/>{wrap_text(getattr(tmo, 'description', ''))}
    </td></tr>
  </table>>]
 '''
@@ -239,7 +240,8 @@ def generate_plantuml_for_threat_model(tmo):
             # impactStatus =  "(fully-mitigated)" if threat.fullyMitigated() else "(unmitigated)"
             lineStyle = "solid" if not threat.fullyMitigated else "dashed"
             lineColor= customRed if not threat.fullyMitigated else "green"
-            diagram += f'"{threat._id}" -> "{tmo._id}" [label=" impacts ", color="{lineColor}", style="{lineStyle}", penwidth=2]\n' 
+            lineText = "" #"<<not-fully-mitigated>>" if not threat.fullyMitigated else " <<mitigated>>)"
+            diagram += f'"{threat._id}" -> "{tmo._id}" [label="{lineText} ", color="{lineColor}", style="{lineStyle}", penwidth=2]\n' 
          
 
     # End the diagram
