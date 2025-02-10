@@ -43,8 +43,11 @@ def render_plant_uml_threat_tree(threat):
 {threat._id} [ fillcolor="{fill_color}", style=filled, shape=polygon, color="{customRed}", penwidth=2
     label= 
     <<table border="0" cellborder="0" cellspacing="0">
-     <tr><td align="center"><b>{threat._id} ATTACK</b> <br/></td></tr>
-     <tr><td align="center">{wrap_text(threat.attack)}</td></tr>
+     <tr><td align="left" ><b>{threat.title} Threat </b> 
+     </td>  <td BGCOLOR="{threat.getSmartScoreColor()}">{threat.getSmartScoreDesc()}</td></tr>
+     <tr><td align="center" COLSPAN="2">{wrap_text(threat.attack)}</td></tr>
+
+   
    </table>>
 ];
 """
@@ -57,7 +60,7 @@ def render_plant_uml_threat_tree(threat):
                 fill_color = cm.statusColors()['fill'] # if cm.inPlace else "#F8CECC"
                 lineColor = customRed if not cm.inPlace else "green"
                 borderColor = cm.statusColors()['border'] #  "green" if cm.inPlace else customRed
-                lineText = "" # "<<not-in-place>>" if not cm.inPlace else " <<in-place>>"
+                lineText =  "" if not cm.inPlace else "mitigates"
                 output += f"""\
                 
                 
@@ -67,7 +70,7 @@ def render_plant_uml_threat_tree(threat):
     label=
     <<table border="0" cellborder="0" cellspacing="0">
       <tr><td align="left">
-        <b>{wrap_text(cm.title)} ({cm._id})</b><br/><br/> 
+        <b>{wrap_text(cm.title)}</b><br/><br/> 
         {wrap_text(cm.description)}
       </td></tr>
     </table>>
@@ -240,7 +243,7 @@ def generate_plantuml_for_threat_model(tmo):
             # impactStatus =  "(fully-mitigated)" if threat.fullyMitigated() else "(unmitigated)"
             lineStyle = "solid" if not threat.fullyMitigated else "dashed"
             lineColor= customRed if not threat.fullyMitigated else "green"
-            lineText = "" #"<<not-fully-mitigated>>" if not threat.fullyMitigated else " <<mitigated>>)"
+            lineText = "impacts" if not threat.fullyMitigated else ""
             diagram += f'"{threat._id}" -> "{tmo._id}" [label="{lineText} ", color="{lineColor}", style="{lineStyle}", penwidth=2]\n' 
          
 
