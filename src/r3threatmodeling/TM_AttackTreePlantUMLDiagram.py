@@ -43,7 +43,7 @@ def render_plant_uml_threat_tree(threat):
 {threat._id} [ fillcolor="{fill_color}", style=filled, shape=polygon, color="{customRed}", penwidth=2
     label= 
     <<table border="0" cellborder="0" cellspacing="0">
-     <tr><td align="left" ><b>{threat.title} Threat </b> 
+     <tr><td align="left" ><b>{wrap_text(threat.title)} Threat </b> 
      </td>  <td BGCOLOR="{threat.getSmartScoreColor()}">{threat.getSmartScoreDesc()}</td></tr>
      <tr><td align="center" COLSPAN="2">{wrap_text(threat.attack)}</td></tr>
 
@@ -231,7 +231,7 @@ def generate_plantuml_for_threat_model(tmo):
  label=
  <<table border="0" cellborder="0" cellspacing="0">
    <tr><td align="center">
-     <b>{tmo.title}</b><br/>{wrap_text(getattr(tmo, 'description', ''))}
+     <b>{wrap_text(tmo.title)}</b>
    </td></tr>
  </table>>]
 '''
