@@ -221,7 +221,7 @@ def generate_plantuml_for_threat_model(tmo):
     @startuml
     digraph G {
       rankdir="RL";
-      node [shape=plaintext, fontname="Arial" fontsize="12"];
+      node [shape=plaintext, fontname="Arial" fontsize="12", align="left"];
     """)
 
     # The main ThreatModel node
@@ -230,8 +230,8 @@ def generate_plantuml_for_threat_model(tmo):
 "{tmo._id}" [fillcolor="{fillcolor}", style=filled, shape=ellipse, color="{customRed}",
  label=
  <<table border="0" cellborder="0" cellspacing="0">
-   <tr><td align="center">
-     <b>{wrap_text(tmo.title)}</b>
+   <tr><td align="left">
+     <b>{wrap_text(tmo.title, width=27)}</b>
    </td></tr>
  </table>>]
 '''
