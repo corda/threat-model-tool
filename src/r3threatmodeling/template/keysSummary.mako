@@ -33,7 +33,7 @@ __TOC_PLACEHOLDER__
   <%include file="keyTable.mako" args="assets=certassets"/>
 % endif
 
-<% credassets=tmo.getAssetsByProps(type='credential') + tmo.getAssetsByProps(type='credentials')%>
+<% credassets=tmo.getAssetsByProps(type='credential') + tmo.getAssetsByProps(type='credentials') + tmo.getAssetsByProps(type='secret')%>
 % if credassets:
   ${makeMarkdownLinkedHeader(headerLevel+1, 'Credentials', skipTOC = False)}
   <%include file="keyTable.mako" args="assets=credassets"/>
