@@ -766,9 +766,15 @@ class ThreatModel(BaseThreatModelObject):
                 
             elif "children"  == k:
                 for childrenDict in tmDict['children']:
-                    childrenFilename = os.path.dirname(fileIn.name) + os.path.sep + childrenDict['ID'] + os.path.sep + childrenDict['ID'] +".yaml"
+                    # childrenFilename = ""
+                    try:
+                        childrenFilename = os.path.dirname(fileIn.name) + os.path.sep + childrenDict['ID'] + os.path.sep + childrenDict['ID'] +".yaml"
+                    except Exception as e:
+                        print(f"Error processing child threat model: {e}")
+                        raise BaseException(f"Error processing child threat models (check if children is an array e.g. - ID: ...)")
                     childTM = ThreatModel(open( childrenFilename),
                         parent = self, public=public, versionsFilterStr=versionsFilterStr)
+
 
             elif "gantt"  == k:
                 self.gantt=tmDict['gantt']

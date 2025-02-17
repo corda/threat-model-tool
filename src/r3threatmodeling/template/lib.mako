@@ -450,7 +450,7 @@ ${"From proposal: " + asset.proposal if hasattr(asset, 'proposal') else ""}
     inScopeStr = "in scope"
 %>
 
-## <a id="${asset.id}"></a>
+<a id="${asset.id}"></a>
 
 ${makeMarkdownLinkedHeader(headerLevel+4, 
 f"{asset.title} ({asset.type} {inScopeStr} - ID: <code>{asset._id}</code>)", skipTOC = True , tmObject=asset)} 
