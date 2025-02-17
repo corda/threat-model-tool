@@ -877,13 +877,11 @@ class ThreatModel(BaseThreatModelObject):
         return next((tmo for tmo in self.childrenTM if tmo._id == id), None)
     
     def getDescendants(self):
-        if len(self.childrenTM) == 0:
-            return []
-        else:
-            descendants = list()
-            for child in self.childrenTM:
-                 descendants += child.getDescendants()
-            return self.childrenTM + descendants
+        descendants = []
+        for child in self.childrenTM:
+            descendants.append(child)
+            descendants.extend(child.getDescendants())
+        return descendants
     @property
     def title(self):
         if not hasattr(self, '_title'):
