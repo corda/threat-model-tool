@@ -552,7 +552,6 @@ class Threat(BaseThreatModelObject):
                 if v is not None:
                     for assetData in v:
                         try:
-                            #TODO rename to REFID
                             self.assets.append(tm.getAssetById(assetData["REFID"])) 
                         except:
                             raise BaseException("reference To asset ID, REFID not found  in: "+self.id )
@@ -629,6 +628,9 @@ class Asset(BaseThreatModelObject):
     
     def __init__(self, dict, parent):
         super().__init__(dict, parent)
+        if 'type' not in dict:
+            raise ValueError(f"Asset {self.id} must have a 'type' property")
+            
         if 'inScope' not in dict or not isinstance(dict['inScope'], bool):
             raise ValueError(f"Asset {self.id} must have a boolean 'inScope' property")
         for k, v in dict.items():
