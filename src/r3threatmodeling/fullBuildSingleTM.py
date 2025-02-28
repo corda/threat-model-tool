@@ -76,7 +76,7 @@ def generateSingleTM(rootTMYaml, base_outputDir, assetDir, template, ancestorDat
 
     print("Generate per TM full attack trees diagrams")
     TM_AttackTreePlantUMLDiagram.generate_attackTree_for_whole_threat_model(tmo, outputDir)
-    TM_AttackTreePlantUMLDiagram.generateAttachTreePerSingleTM(tmo, base_outputDir)
+    TM_AttackTreePlantUMLDiagram.generateAttackTreePerSingleTM(tmo, base_outputDir)
 
     print(f"Generate Sec Obj attack tree diagrams")
     img_outputDir = outputDir+'/img'

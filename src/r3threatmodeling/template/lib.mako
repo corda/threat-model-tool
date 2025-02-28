@@ -231,7 +231,7 @@ No \
 <div markdown="1" ${"class='proposal'" if hasattr(threat, 'proposal') else "class='current'"}>
 
 
-## <a id="${threat.id}"></a>
+<a id="${threat._id}"></a>
 ## ${H2} Threat ID: ${threat._id}
 ## ${threat.threatDesc()}
 
@@ -689,6 +689,7 @@ ${tmo.analysis}
 ${PAGEBREAK}
 <hr/>
 ${makeMarkdownLinkedHeader(headerLevel+1, tmo.title +' Attack tree', tmObject=None)}
+## <object type="image/svg+xml" data="img/${tmo._id}_ATTACKTREE.svg"></object>
 <img src="img/${tmo._id}_ATTACKTREE.svg"/>
 
 ${PAGEBREAK}
