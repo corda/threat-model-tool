@@ -689,8 +689,8 @@ ${tmo.analysis}
 ${PAGEBREAK}
 <hr/>
 ${makeMarkdownLinkedHeader(headerLevel+1, tmo.title +' Attack tree', tmObject=None)}
-<object type="image/svg+xml" data="img/${tmo._id}_ATTACKTREE.svg"></object>
-<img src="img/${tmo._id}_ATTACKTREE.svg"/>
+<object type="image/svg+xml" style="width:100%; height:auto;" data="img/${tmo._id}_ATTACKTREE.svg"></object>
+## <img src="img/${tmo._id}_ATTACKTREE.svg"/>
 
 ${PAGEBREAK}
 <hr/>
