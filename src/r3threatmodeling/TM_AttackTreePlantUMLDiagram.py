@@ -41,7 +41,7 @@ def render_plant_uml_threat_tree(threat):
     fill_color = "#d3d3d3" if threat.fullyMitigated else "#F8CECC"
     output = f"""\
 {threat._id} [ fillcolor="{fill_color}", style=filled, shape=polygon, color="{customRed}", penwidth=2,
-    URL="#{threat._id}", 
+    URL="../{threat.getRoot().id}.html#{threat._id}",  target="_top", 
     label= 
     <<table border="0" cellborder="0" cellspacing="0">
      <tr><td align="left"><b>{wrap_text(threat.title)} Threat</b> 
