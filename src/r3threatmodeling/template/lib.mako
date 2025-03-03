@@ -140,7 +140,7 @@ There are **${len(unmitigatedNoOperatinoal)}** unmitigated threats without propo
 <b>PROPOSAL (TBC) </b> 
 % else:
 % endif
-% if hasattr(threat, 'ticketLink'):
+% if hasattr(threat, 'ticketLink') and threat.ticketLink is not None:
 <br/>
 <a href="${html.escape(threat.ticketLink)}"> Ticket link  </a> 
 ##   % if hasattr(threat, 'ticketInfo'):
