@@ -194,7 +194,7 @@ by default, and  **${len(unmitigatedNoOperational)}** are unmitigated without pr
 % else:
 % endif
 
-% if  hasattr(threat, 'ticketLink'):
+% if  hasattr(threat, 'ticketLink') and threat.ticketLink is not None:
 <br/>
 <a href="${html.escape(threat.ticketLink)}"> Ticket link  </a> 
 % else:
@@ -315,7 +315,7 @@ ${"From proposal: " + threat.proposal if hasattr(threat, 'proposal') else ""}
 </dd>
 % endif
 </dl>
-% if hasattr(threat, "ticketLink"):
+% if hasattr(threat, "ticketLink") and threat.ticketLink is not None:
   <dt><strong>Ticket link:</strong><a href="${html.escape(threat.ticketLink)}"> ${html.escape(threat.ticketLink)}  </a> </dt><dd markdown="block">   </dd>
 % endif
 % if len(threat.countermeasures) > 0:
