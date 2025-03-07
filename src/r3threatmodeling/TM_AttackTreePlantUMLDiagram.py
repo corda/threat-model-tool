@@ -20,13 +20,16 @@ import textwrap
 
 customRed = "#B85450"
 
-def wrap_text(text, width=80):
+def wrap_text(text, width=80, limit=560):
     """
     Simple helper to wrap text so it fits neatly in the table cells.
+    Truncates the text if it exceeds the limit and appends '[...]'.
     Also HTML-encodes the text to ensure special characters are properly displayed.
     """
     if not text:
         return ""
+    if len(text) > limit:
+        text = text[:limit] + '[...]'
     escaped_text = html.escape(text)
     wrapped_text = "<br/>".join(textwrap.wrap(escaped_text, width=width))
     return wrapped_text
@@ -40,11 +43,11 @@ def render_plant_uml_threat_tree(threat):
     # Header portion
     fill_color = "#d3d3d3" if threat.fullyMitigated else "#F8CECC"
     output = f"""\
-{threat._id} [ fillcolor="{fill_color}", style=filled, shape=polygon, color="{customRed}", penwidth=2,
+"{threat._id}" [ fillcolor="{fill_color}", style=filled, shape=polygon, color="{customRed}", penwidth=2,
     URL="../{threat.getRoot().id}.html#{threat._id}",  target="_top", 
     label= 
     <<table border="0" cellborder="0" cellspacing="0">
-     <tr><td align="left"><b>{wrap_text(threat.title)} Threat</b> 
+     <tr><td align="left"><b>{wrap_text(threat.title)}</b> 
      </td>  <td BGCOLOR="{threat.getSmartScoreColor()}">{threat.getSmartScoreDesc()}</td></tr>
      <tr><td align="center" COLSPAN="2">{wrap_text(threat.attack)}</td></tr>   
    </table>>
@@ -63,7 +66,7 @@ def render_plant_uml_threat_tree(threat):
                 output += f"""\
                 
                 
-{threat._id}_countermeasure{i} [
+"{threat._id}_countermeasure{i}" [
     fillcolor="{fill_color}", style=filled, shape=polygon, penwidth=2,
     color="{borderColor}", 
     label=
@@ -75,9 +78,7 @@ def render_plant_uml_threat_tree(threat):
     </table>>
 ]
 
-{threat._id}_countermeasure{i} -> {threat._id} [label = " {lineText}", style="{lineStyle}", color="{lineColor}", penwidth=2]\n' ]
-
-"""
+"{threat._id}_countermeasure{i}" -> "{threat._id}" [label = " {lineText}", style="{lineStyle}", color="{lineColor}", penwidth=2]\n"""
 
     return output
 
