@@ -167,7 +167,7 @@ def generate_plantuml_for_threat_model(tmo):
     return diagram
 
 def generate_attackTree_for_whole_threat_model(tmo, praram_outputDir):
-    outputDir = os.path.join(praram_outputDir, "img")
+    outputDir = praram_outputDir # os.path.join(praram_outputDir, tmo._id, "img")
     os.makedirs(outputDir, exist_ok=True)
     try:
         # Create some basic PlantUML content about this ThreatModel
@@ -179,10 +179,10 @@ def generate_attackTree_for_whole_threat_model(tmo, praram_outputDir):
         with open(pumlFileName, "w", encoding="utf-8") as pumlFile:
             pumlFile.write(pumlText)
 
-    except Exception:
+    except Exception as e:
         tb = traceback.format_exc()
         print(tb)
-
+        raise e
 
 def generateAttackTreePerSingleTM(tmo, base_outputDir):
     """
@@ -191,27 +191,35 @@ def generateAttackTreePerSingleTM(tmo, base_outputDir):
     the previous Mako-based rendering with a pure Python approach.
     """
     print(f"Generating Attack Tree for {tmo.id} in {base_outputDir}")
-    outputDir = os.path.join(base_outputDir, "img")
-    os.makedirs(outputDir, exist_ok=True)
+    # outputDir = os.path.join(base_outputDir, "img")
+    # os.makedirs(outputDir, exist_ok=True)
     try:
         # Create some basic PlantUML content about this ThreatModel
         # You can enrich this template as needed
         pumlText = generate_plantuml_for_threat_model(tmo)
 
-        # Write the output to a .puml file named after the ThreatModel's ID
-        pumlFileName = os.path.join(outputDir, f"{tmo._id}_ATTACKTREE.puml")
+        # # Write the output to a .puml file named after the ThreatModel's ID
+        # parentDir = os.path.join(base_outputDir, tmo._id)
+        # outputDir = os.path.join(parentDir, "img")
+
+        # os.makedirs(outputDir, exist_ok=True)
+
+        pumlFileName = os.path.join(base_outputDir, f"{tmo._id}_ATTACKTREE.puml")
         with open(pumlFileName, "w", encoding="utf-8") as pumlFile:
             pumlFile.write(pumlText)
 
         # Recurse if child ThreatModels exist
         if hasattr(tmo, 'childrenTM'):
             for child in tmo.childrenTM:
-                parentOutputDir = os.path.join(base_outputDir, tmo._id)
-                generateAttackTreePerSingleTM(child, parentOutputDir)
+                # parentOutputDir = os.path.join(base_outputDir, tmo._id)
+                generateAttackTreePerSingleTM(child, base_outputDir)
 
-    except Exception:
+    except Exception as e:
         tb = traceback.format_exc()
         print(tb)
+        raise e
+
+    
 def generate_plantuml_for_threat_model(tmo):
     """
     Creates the PlantUML diagram for the entire threat model,
