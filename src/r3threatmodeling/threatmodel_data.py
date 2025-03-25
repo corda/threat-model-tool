@@ -7,6 +7,7 @@ R3 Threat Modeling
 """
 from xml.etree.ElementPath import get_parent_map
 from ruamel.yaml import YAML
+from ruamel.yaml.error import YAMLError
 #import yaml
 yaml=YAML(typ='rt')
 
@@ -643,11 +644,9 @@ class Attacker(BaseThreatModelObject):
             raise BaseException(f"Attacker {self.id} must have a title")
         for k, v in dict.items():
             setattr(self, k, v)
-    pass
+
 class Assumption(BaseThreatModelObject):
     pass
-
-
 
 class ThreatModel(BaseThreatModelObject):
 
@@ -684,8 +683,10 @@ class ThreatModel(BaseThreatModelObject):
         fileIn.seek(0)
         if not fileIn.name.endswith('.yaml'):
             print("input file needs to be .yaml")
-            exit -2   
-        tmDict = yaml.load(fileIn)
+            exit(-2)
+
+        #tmDict = yaml.load(fileIn)
+        tmDict = try_load_threatmodel_yaml(fileIn.name)
         
         self.originDict = tmDict
 
@@ -893,3 +894,32 @@ class ThreatModel(BaseThreatModelObject):
     @title.setter
     def title(self, value):
         self._title = value
+
+
+def try_load_threatmodel_yaml(filename):
+    try:
+        tm = yaml.load(open(filename, encoding="utf-8-sig"))#safe_load(open(filename))
+        return tm
+    except YAMLError as exc:
+        print ("Error while parsing YAML file:")
+        if hasattr(exc, 'problem_mark'):
+            if exc.context != None:
+                print ('  parser says\n' + str(exc.problem_mark) + '\n  ' +
+                    str(exc.problem) + ' ' + str(exc.context) +
+                    '\nPlease correct data and retry.')
+            else:
+                print ('  parser says\n' + str(exc.problem_mark) + '\n  ' +
+                    str(exc.problem) + '\nPlease correct data and retry.')
+        else:
+            print ("Something went wrong while parsing yaml file")
+        raise exc
+
+    except Exception as e:
+        print(f'Error reading: {filename}')
+        print(f'Exception: { e.__class__.__name__}')
+        offending = e.object[e.start:e.end+32]
+        print("This file isn't encoded with", e.encoding)
+        print("Illegal bytes:", repr(offending))
+        print(e)
+        print('-'*80)
+        raise e
