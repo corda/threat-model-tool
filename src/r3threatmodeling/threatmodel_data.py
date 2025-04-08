@@ -237,6 +237,11 @@ class TMCVSS(CVSS3):
         index = self.getSmartScoreIndex()
         ret = self.scores()[index]
         return ret
+    
+    def getSmartScoreSeverity(self):
+        index = self.getSmartScoreIndex()
+        ret = self.severities()[index]
+        return ret
 
 class SecurityObjective(BaseThreatModelObject):
 
@@ -302,6 +307,10 @@ class SecurityObjective(BaseThreatModelObject):
     
     def printAsText(self):
         return "\nID: " + self.id + " \nDescription: " + self.description 
+    
+    def shortText(self):
+        firstPara = self.description.split("\n")[0]
+        return f"*{self.id}*\n({firstPara})" 
 
 class Scope(BaseThreatModelObject):
     pass
