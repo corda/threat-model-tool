@@ -6,7 +6,7 @@
 
 ## <% dataModel = tmo.getOperationalGuideData() %> 
  
-${makeMarkdownLinkedHeader(headerLevel, 'Testing guide', skipTOC = False)}
+${makeMarkdownLinkedHeader(headerLevel, 'Testing guide', ctx , skipTOC = False)}
 
 
 This guide lists all testable attacks described in the threat model

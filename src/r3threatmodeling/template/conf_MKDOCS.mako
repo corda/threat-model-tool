@@ -22,6 +22,8 @@ theme:
   #   - navigation.tabs
 markdown_extensions:
   - toc:
+      # permalink: ⚓︎
+      # permalink_title: Copy link
       baselevel: 1
       toc_depth: 5
   - md_in_html

@@ -7,7 +7,7 @@
 
 <% dataModel = tmo.getOperationalGuideData() %> 
 
-${makeMarkdownLinkedHeader(headerLevel, 'Operational security hardening guides', skipTOC = False)}
+${makeMarkdownLinkedHeader(headerLevel, 'Operational security hardening guides', ctx, skipTOC = False)}
 
 % if printTOC:
 __TOC_PLACEHOLDER__
@@ -23,7 +23,7 @@ if operatorObj:
     operatorName = operatorObj.title
 %>
 
-${makeMarkdownLinkedHeader(headerLevel +1, 'Operational guide for ' + operatorName, skipTOC = False)}
+${makeMarkdownLinkedHeader(headerLevel +1, 'Operational guide for ' + operatorName, ctx, skipTOC = False)}
 
 
 <table markdown="block" style="print-color-adjust: exact; -webkit-print-color-adjust: exact;">

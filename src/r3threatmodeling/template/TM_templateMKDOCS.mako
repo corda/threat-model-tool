@@ -1,7 +1,7 @@
 <%! import html %>
-<%! from r3threatmodeling.template_utils import globaUseMarkDownHeaders, createTitleAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
+<%! from r3threatmodeling.template_utils import createTitleAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
 ## False enables MKDOCS title metadata {}
-<%! globaUseMarkDownHeaders = False %>
+<% ctx['useMarkDown_attr_list_ext'] = True %> 
 <% PAGEBREAK = """<div class="pagebreak"></div>"""%>
 
 <%namespace name="lib" file="lib.mako"/> 
@@ -13,7 +13,7 @@ ${lib.renderTMReportPart(tmo, ancestorData, toc=False, summary=True, )}
   ${lib.renderTMReportPart(descendantTM, ancestorData=False, headerLevel=2)}
 % endfor
 
-${makeMarkdownLinkedHeader(2, 'Requests For Information')}
+${makeMarkdownLinkedHeader(2, 'Requests For Information', ctx)}
 
 __RFI_PLACEHOLDER__
 

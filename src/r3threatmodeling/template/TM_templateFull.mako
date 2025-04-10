@@ -1,7 +1,7 @@
 <%! import html %>
-<%! from r3threatmodeling.template_utils import globaUseMarkDownHeaders, createTitleAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
+<%! from r3threatmodeling.template_utils import createTitleAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
 ## False enables MKDOCS title metadata {}
-<%! globaUseMarkDownHeaders = True %> 
+<% ctx['useMarkDown_attr_list_ext'] = False %> 
 
 <% PAGEBREAK = """<div class="pagebreak"></div>"""%>
 
@@ -15,11 +15,11 @@ ${lib.renderTMReportPart(tmo, ancestorData, toc = True, summary=True, )}
 % endfor
 
 ${PAGEBREAK}
-${makeMarkdownLinkedHeader(2, 'Annex 1 Operational Hardening')}
+${makeMarkdownLinkedHeader(2, 'Annex 1 Operational Hardening', ctx)}
 <%include file="operationalHardeningGuide.mako" args="printTOC=False"/>
 
 ${PAGEBREAK}
-${makeMarkdownLinkedHeader(2, 'Annex 2: Key Summary')}
+${makeMarkdownLinkedHeader(2, 'Annex 2: Key Summary', ctx)}
 <%include file="keysSummary.mako" args="printTOC=False"/>
 
 

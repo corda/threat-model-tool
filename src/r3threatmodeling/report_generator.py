@@ -72,7 +72,7 @@ def generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, 
                             , output_encoding='utf-8', preprocessor=[lambda x: x.replace("\r\n", "\n")]
             ))
         # ancestorData = True
-        mdReport = mdTemplate.render(tmo=tmo, ancestorData=ancestorData)
+        mdReport = mdTemplate.render(tmo=tmo, ancestorData=ancestorData, ctx={})
     except:
         # print(mako_exceptions.text_error_template().render())
         traceback = RichTraceback()

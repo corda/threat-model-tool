@@ -6,7 +6,7 @@ from .threatmodel_data import *
 
 #from r3threatmodeling.template_utils import BaseThreatModelObject
 
-globaUseMarkDownHeaders = True ## for MKDOCS metadata headers
+# globalMarkDown_attr_list_ext = True ## for MKDOCS metadata headers
 
 def unmark_element(element, stream=None):
     if stream is None:
@@ -81,8 +81,9 @@ def markdown_to_text(text):
 #
 CLEAN_RE = re.compile(r'[\<\>\)\(]+.*$')
 
-def makeMarkdownLinkedHeader(level, title, skipTOC = False, tmObject = None):
-    useMarkDownHeaders = globaUseMarkDownHeaders
+def makeMarkdownLinkedHeader(level, title, ctx, skipTOC = False, tmObject = None):
+    useMarkDown_attr_list_ext=ctx['useMarkDown_attr_list_ext']
+    # useMarkDown_attr_list_ext = globalMarkDown_attr_list_ext
     
     if isinstance(tmObject, BaseThreatModelObject):
         ahref=createObjectAnchorHash(tmObject)
@@ -99,23 +100,29 @@ def makeMarkdownLinkedHeader(level, title, skipTOC = False, tmObject = None):
     #
     toc_title = CLEAN_RE.sub('', title).rstrip()
 
-    if not useMarkDownHeaders and not tmObject:
-        code=  "<a name='"+ahref + "'></a>\n\n" + level * "#" + " " + title.rstrip()
-        code += f" {{: data-toc-label=\"{toc_title}\"}}"
-    else:
+    # if not useMarkDownHeaders and not tmObject:
+    #     code=  "<a name='"+ahref + "'></a>\n\n" + level * "#" + " " + title.rstrip()
+    #     code += f" {{: data-toc-label=\"{toc_title}\"}}"
+    # else:
         # code=  "<a name='"+ahref + "'></a>\n\n" + f"<H{level} id=\"{ahref}\" >" + title.rstrip() + f"</H{level}>"
+
+    if useMarkDown_attr_list_ext: #RENAME TO useMKDOCSsyntax
+        # code = f"<H{level} id=\"{ahref}\" data-toc-label=\"{toc_title}\">" + title.rstrip() + f"</H{level}>"
+        code = level * "#" + " " + title.rstrip() + f" {{: data-toc-label=\"{toc_title}\" id=\"{ahref}\" }}"
+
+    else:
         code = f"""
 <a name='{ahref}'></a>
 {'#' * level} {title.rstrip()}
 """
         
-    if skipTOC:
-        code += " <div class='" + SKIP_TOC + "'></div>"
+        if skipTOC:
+            code += " <div class='" + SKIP_TOC + "'></div>"
 
     return "\n" + code + "\n"
     
 def createObjectAnchorHash(tmObject):
-    return tmObject.id
+    return tmObject._id
 
 TAG_RE = re.compile(r'<[^>]+>')
 def createTitleAnchorHash(title):
