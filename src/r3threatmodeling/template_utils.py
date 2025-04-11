@@ -122,7 +122,8 @@ def makeMarkdownLinkedHeader(level, title, ctx, skipTOC = False, tmObject = None
     return "\n" + code + "\n"
     
 def createObjectAnchorHash(tmObject):
-    return tmObject.id[tmObject.id.find('.')+1:] #exclude the first TMID. from the anchor
+    #return tmObject.id[tmObject.id.find('.')+1:] #exclude the first TMID. from the anchor
+    return tmObject.anchor
 
 TAG_RE = re.compile(r'<[^>]+>')
 def createTitleAnchorHash(title):

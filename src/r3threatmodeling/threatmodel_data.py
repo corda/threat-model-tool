@@ -80,14 +80,21 @@ class BaseThreatModelObject:
             raise BaseException(f"ID does support other chars than alphanumeric and _ , pls change this ID: {id} (parent: {self.parent.id} )")
         self._id = id
 
+
+    @property
+    def anchor(self):
+        id = self.id
+        return id[id.find('.')+1:] #exclude the first TMID. from the anchor
+
+
     @property
     def uri(self):
-        if self.parent:
-            root = self.getRoot()
-            return root._id + '/' + root._id + '.html#' + self.id
-        else:
+        if not self.parent:
             return self.id
-
+        
+        root = self.getRoot()
+        return root._id + '/#' + self.anchor
+        
     isReference = False 
     
 
