@@ -24,7 +24,7 @@ import shutil
 
 
 def generateSingleTM(rootTMYaml, base_outputDir, assetDir, template, ancestorData=True,
-                      browserSync=False, public=False, generatePDF=False, pdfHeaderNote=None, versionsFilterStr=None):
+                      browserSync=False, public=False, generatePDF=False, pdfHeaderNote=None, versionsFilterStr=None, fileName=None):
     
     tmo = ThreatModel(rootTMYaml, public=public, versionsFilterStr=versionsFilterStr)
 
@@ -39,7 +39,7 @@ def generateSingleTM(rootTMYaml, base_outputDir, assetDir, template, ancestorDat
     # tmID = tmo.id
     # tmTitle = tmo.title
 
-    report_generator.generate(tmo, template, ancestorData, outputDir, browserSync, None, assetDir)
+    report_generator.generate(tmo, template, ancestorData, outputDir, browserSync, fileName, assetDir)
 
 
     for tm in tmo.getDescendants() + [tmo]:

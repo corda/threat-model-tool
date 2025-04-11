@@ -12,7 +12,7 @@ nav:
         tmName = tm['name']
         tmID   = tm['ID']
     %>
-  - ${tmTitle}: '${tmID}/${tmID}.md'
+  - ${tmTitle}: '${tmID}/README.md'
 % endfor
 
 theme:

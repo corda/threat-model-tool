@@ -136,6 +136,13 @@ def main():
     CLI.add_argument('--MKDocsSiteDir',  required=False)
     CLI.add_argument('--MKDocsDir',  required=False)
 
+    CLI.add_argument(
+    "--fileName",
+    default=None, 
+    required=False
+    )
+
+
     args = CLI.parse_args()
     outputDir = args.outputDir
     templateSiteFolderSRC = args.templateSiteFolderSRC
@@ -155,6 +162,7 @@ def main():
     pdfHeaderNote = args.pdfHeaderNote
     pdfArtifactLink = args.pdfArtifactLink
     public = True if args.visibility == "public" else False
+    fileName = args.fileName
 
     TMDir = args.TMDirectory
 
@@ -194,7 +202,7 @@ def main():
         rootTMYaml = tm['path']
         TMoutputDir = outputDir 
         
-        fullBuildSingleTM.generateSingleTM(open(rootTMYaml), TMoutputDir, assetDir, template, ancestorData, browserSync , generatePDF=generatePDF, pdfHeaderNote=pdfHeaderNote, public=public)
+        fullBuildSingleTM.generateSingleTM(open(rootTMYaml), TMoutputDir, assetDir, template, ancestorData, browserSync , generatePDF=generatePDF, pdfHeaderNote=pdfHeaderNote, public=public, fileName=fileName)
 
         # fullBuildSingleTM.generateSingleTM(open(rootTMYaml), TMoutputDir + "/full", assetDir, template, ancestorData, browserSync , generatePDF=generatePDF, pdfHeaderNote=pdfHeaderNote, public=False)
 
