@@ -12,7 +12,8 @@ nav:
         tmName = tm['name']
         tmID   = tm['ID']
     %>
-  - ${tmTitle}: '${tmID}/README.md'
+  - ${tmTitle}: '${tmID}/'
+  # there is no need to the index.html when the file is called README.md
 % endfor
 
 theme:
