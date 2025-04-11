@@ -75,7 +75,7 @@ def threat_description(threat, hashes=True, tm_home="https://example.com"):
   #panele  = "{panel}"
 
   reftxt  = f'*{threat.id}*\n{threat.title}'
-  refuri  = f'[{threat.id}|{tm_home}/{threat.id}]\n{threat.title}'
+  refuri  = f'[{threat.id}|{tm_home}/{threat.uri}]\n{threat.title}'
   
   missing = [cm for cm in threat.countermeasures if cm.inPlace is False]
   mitgs   = "\n".join([f"# {cm.title}\n{cm.description.strip()}" for idx, cm in enumerate(missing)])
@@ -91,7 +91,7 @@ def threat_description(threat, hashes=True, tm_home="https://example.com"):
         f"The following countermeasures are potential solutions to mitigate the described threat:\n\n{mitgs}\n\n" \
         f"h4. Required Actions\n\n" \
         f"# Update the design document for {threat.parent.title} to describe how the threat will be mitigated.\n"\
-        f"Alternatively provide a statement that the threat is not applicable or is an accepted risk.\n" \
+        f"Alternatively provide a statement that the threat is not applicable, or is an accepted risk.\n" \
         f"# Ensure that the design clearly references the threat title and ID.\n" \
         f"# Ensure that the following Security Objectives are referenced by the design:\n{secobs}\n" \
         f"# Update this ticket with the location of the changes.\n" \

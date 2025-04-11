@@ -80,6 +80,14 @@ class BaseThreatModelObject:
             raise BaseException(f"ID does support other chars than alphanumeric and _ , pls change this ID: {id} (parent: {self.parent.id} )")
         self._id = id
 
+    @property
+    def uri(self):
+        if self.parent:
+            root = self.getRoot()
+            return root._id + '/' + root._id + '.html#' + self.id
+        else:
+            return self.id
+
     isReference = False 
     
 
