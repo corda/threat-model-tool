@@ -12,8 +12,8 @@ nav:
         tmName = tm['name']
         tmID   = tm['ID']
     %>
-  - ${tmTitle}: '${tmID}/'
-  # there is no need to the index.html when the file is called README.md
+  - ${tmTitle}: '${tmID}/index.md'
+  # there is no need to the index.html when the file is called README.md ... but it may break left menu
 % endfor
 
 theme:
@@ -52,4 +52,5 @@ extra_css:
 
 extra_javascript:
   - js/tm.js
+  - javascript/readthedocs.js
   
