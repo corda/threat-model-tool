@@ -83,18 +83,18 @@ def threat_description(threat, hashes=True, tm_home="https://example.com"):
   secobs  = "\n".join([f"** {so.shortText()}" for so in threat.impactedSecObjs])
 
   desc = f"This issue represents a design issue in the {threat.parent.title} design. " \
-        f"Please ensure that the design is updated to detail how the threat will be mitigated. " \
-        f"Refer to the <> security policy .\n" \
+        f"Please ensure that the design is updated to detail how the threat will be mitigated.\n" \
         f"h4. Threat Reference\n{panelMD('error')}{refuri}{panelMD()}\n\n" \
         f"h4. Threat Description\n{threat.attack}\n\n" \
         f"h4. Proposed Mitigation(s)\n" \
         f"The following countermeasures are potential solutions to mitigate the described threat:\n\n{mitgs}\n\n" \
         f"h4. Required Actions\n\n" \
         f"# Update the design document for {threat.parent.title} to describe how the threat will be mitigated.\n"\
-        f"Alternatively provide a statement that the threat is not applicable, or is an accepted risk.\n" \
+        f"Alternatively provide a statement as to why the threat is not applicable, or is an accepted risk.\n" \
         f"# Ensure that the design clearly references the threat title and ID.\n" \
         f"# Ensure that the following Security Objectives are referenced by the design:\n{secobs}\n" \
         f"# Update this ticket with the location of the changes.\n" \
+        f"# Refer to the Security Issue Handling policy for more information.\n" \
         f"\n\n"
         
   
@@ -122,16 +122,13 @@ def review_jira_for_threat(jira, dest, issue_type, threat, tm_home):
    fields['CVSS Vector'] = cvss.clean_vector()
    fields['Severity']    = project.id_for_field_value('Severity', cvss.getSmartScoreSeverity())
 
-   print(pprint(fields))
+   #print(pprint(fields))
    encoded = urllib.parse.urlencode(fields, quote_via=urllib.parse.quote)
    
    cmd = f"https://r3-cev.atlassian.net/secure/CreateIssueDetails!init.jspa?{encoded}"
    res =  webbrowser.open_new_tab(cmd)
-   print(f"Result:{res}")
-   #os.system(cmd)
-   #secure/CreateIssue.jsp
-   #f"pid={project_id}&issuetype={issuetype_id}&summary={fields['summary']}&description={fields['description']}"
-   
+   #print(f"Result:{res}")
+        
    print(cmd)
 
    
@@ -161,9 +158,10 @@ def getargs():
 
   print(os.environ.get('R3TM_HOME'))
 
-  parser.add_argument("--rootTMYaml", default = None, required=True, type=open)
+  parser.add_argument("--rootTMYaml",  default = None, required=True, type=open)
   parser.add_argument("--YAMLprefix",  default = "",required=False)
-  parser.add_argument("--dryRun",  action='store_true',required=False)
+  parser.add_argument("--dryRun",     action='store_true',required=False)
+  parser.add_argument("--all",        action='store_true',required=False)
   
   parser.add_argument('--jira',      help='JIRA URI',      default = os.environ.get('ATLASSIAN_URI'))
   parser.add_argument('--username',  help='JIRA username', default = os.environ.get('ATLASSIAN_USERNAME'))
@@ -217,9 +215,18 @@ def main():
             print(f'  {x}{cm.title}')
         threat.ticketLink = f"http://jira....?id={threat.id}"
 
-        #create_jira_for_threat(jira, args.dest, args.issueType, threat)
-        review_jira_for_threat(jira, args.dest, args.type, threat, args.tmUri)
-        sys.exit(0)
+        answer = input("\nOpen JIRA? [Y]es/[N]o:").upper()
+        if answer == 'Y' or answer == 'YES':
+
+          #create_jira_for_threat(jira, args.dest, args.issueType, threat)
+          review_jira_for_threat(jira, args.dest, args.type, threat, args.tmUri)
+          while True:
+            i = input("\nSubmitted JIRA ticket? Continue to next threat? [Y]es/[N]o:").upper()
+            if answer == 'Y' or answer == 'YES':
+              break
+
+        if not args.all:
+           sys.exit(0)
 
     if(not args.dryRun):
         #tm.dumpRecursive(prefix=args.YAMLprefix)
