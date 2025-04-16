@@ -319,7 +319,7 @@ ${"From proposal: " + threat.proposal if hasattr(threat, 'proposal') else ""}
   <dt><strong>Ticket link:</strong><a href="${html.escape(threat.ticketLink)}"> ${html.escape(threat.ticketLink)}  </a> </dt><dd markdown="block">   </dd>
 % endif
 % if len(threat.countermeasures) > 0:
-${makeMarkdownLinkedHeader(headerLevel+3, 'Counter-measures for <code>'+threat._id + '</code>', ctx, True , tmObject=None)}
+${makeMarkdownLinkedHeader(headerLevel+3, f'Counter-measures for {threat._id} ', ctx, True , tmObject=None)}
 <dl markdown="block">
 % for countermeasure in threat.countermeasures:
     ##  - ID: T3.C1
