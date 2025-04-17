@@ -9,9 +9,8 @@ import re
 import urllib.parse
 import webbrowser
 
+from ruamel.yaml import YAML
 from r3threatmodeling import *
-
-#R3TM_URI = 'https://security.r3.com'
 
 from jira import JIRA
 
@@ -109,6 +108,10 @@ def review_jira_for_threat(jira, dest, issue_type, threat, tm_home):
 
    project = JiraProjectIssueType(jira, dest, issue_type)     
    
+   if not project or not project.meta or not project.meta['projects']:
+      print(f"Unable to find project {dest} or issue type {issue_type}")
+      sys.exit(1)
+
    fields = JiraFields({
       'pid':       project.meta['projects'][0]['id'],
       'issuetype': project.meta['projects'][0]['issuetypes'][0]['id'],
@@ -159,8 +162,9 @@ def getargs():
   print(os.environ.get('R3TM_HOME'))
 
   parser.add_argument("--rootTMYaml",  default = None, required=True, type=open)
-  parser.add_argument("--YAMLprefix",  default = "",required=False)
-  parser.add_argument("--dryRun",     action='store_true',required=False)
+  parser.add_argument("--TMID",       default=None, required=False, type=str)
+  #parser.add_argument("--YAMLprefix",  default = "",required=False)
+  #parser.add_argument("--dryRun",     action='store_true',required=False)
   parser.add_argument("--all",        action='store_true',required=False)
   
   parser.add_argument('--jira',      help='JIRA URI',      default = os.environ.get('ATLASSIAN_URI'))
@@ -190,6 +194,30 @@ def getargs():
 
   return args
 
+def update_yaml_with_ref(jira, path, threatid, ticketid):
+
+    yaml = YAML(typ='rt')
+    yaml.preserve_quotes = True
+    
+    with open(path, "r", encoding="utf-8-sig") as f:
+      y = yaml.load(f)
+
+      ythreat = next(ythreat for ythreat in y['threats'] if ythreat['ID'] == threatid)
+      if not ythreat:
+          print(f"Unable to find threat {threatid} in {path}")
+          return False
+
+      ythreat['ticketLink'] = f"{jira}/issues/{ticketid}"
+  
+    # write it back out to the same file but without the BOM
+    print("Updating: ", path)
+    with open(path, "w", encoding="utf-8") as f:
+      yaml.indent(mapping=2, sequence=4, offset=2)
+      yaml.dump(y, stream=f)#sys.stdout)
+      f.close()
+      return True
+
+
 def main():
 
     args = getargs()
@@ -197,40 +225,53 @@ def main():
  
     tm = ThreatModel(args.rootTMYaml)
 
-    print('-' * 80)
+    #for idPathPart in TMID.split('.')[1:]:
+    #if args.TMID:
+    #   tm = tm.getChildrenTMbyID(args.TMID)
 
-    unmitigatedNoOperational = tm.getThreatsByFullyMitigatedAndOperational(False, False)
+    for tm in tm.getDescendants() + [tm]:
+        #asset_path = tm.assetDir()
 
-    for  threat in unmitigatedNoOperational:
-        if hasattr(threat, '_ticketLink'):
-            ticket = threat.ticketLink
-            ref = ticket.split('/')[-1]
-        else:
-            ticket = '--'
-            ref = ''
-        print(f'{threat.parent.title:32} : {ref:16} : {threat.title}')
-        #print(threat)
-        for cm in threat.countermeasures:
-            x = '**' if cm.inPlace else '  '
-            print(f'  {x}{cm.title}')
-        threat.ticketLink = f"http://jira....?id={threat.id}"
+      if args.TMID and args.TMID != tm._id:
+        #print(f"Skipping TM {tm.id} ({tm.title})")
+        continue        
 
-        answer = input("\nOpen JIRA? [Y]es/[N]o:").upper()
-        if answer == 'Y' or answer == 'YES':
+      unmitigatedNoOperational = tm.getThreatsByFullyMitigatedAndOperational(False, False)
 
-          #create_jira_for_threat(jira, args.dest, args.issueType, threat)
-          review_jira_for_threat(jira, args.dest, args.type, threat, args.tmUri)
-          while True:
-            i = input("\nSubmitted JIRA ticket? Continue to next threat? [Y]es/[N]o:").upper()
-            if answer == 'Y' or answer == 'YES':
+      for idx, threat in enumerate(unmitigatedNoOperational):
+          
+          print('-' * 80)
+          print(f"Threat [{idx+1}/{len(unmitigatedNoOperational)}] {threat.id}")
+          
+          #self.fileName = fileIn.name
+          print(tm.fileName)
+
+          if hasattr(threat, '_ticketLink'):
+              ticket = threat.ticketLink
+              ref = ticket.split('/')[-1]
+          else:
+              ticket = '--'
+              ref = ' <no ticket>'
+          print(f'{threat.parent.title:32} : {ref:16} : {threat.title}')
+          #print(threat)
+          for cm in threat.countermeasures:
+              x = '**' if cm.inPlace else '  '
+              print(f'  {x}{cm.title}')
+          threat.ticketLink = f"http://jira....?id={threat.id}"
+
+          answer = input("\nOpen JIRA? [Y/N]: ").upper()
+          if answer == 'Y' or answer == 'YES':
+
+            #create_jira_for_threat(jira, args.dest, args.issueType, threat)
+            review_jira_for_threat(jira, args.dest, args.type, threat, args.tmUri)
+            while True:
+              key = input("\nSubmitted JIRA ticket? Enter [JIRA KEY] to link ticket into threat model,\nor press [ENTER] to continue: ").upper()
+              if key:
+                 update_yaml_with_ref(args.jira, tm.fileName, threat._id, key)
               break
 
-        if not args.all:
-           sys.exit(0)
-
-    if(not args.dryRun):
-        #tm.dumpRecursive(prefix=args.YAMLprefix)
-        pass
+          if not args.all:
+            sys.exit(0)
 
 if __name__ == "__main__":
     main()
