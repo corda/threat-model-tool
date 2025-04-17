@@ -229,49 +229,47 @@ def main():
     #if args.TMID:
     #   tm = tm.getChildrenTMbyID(args.TMID)
 
-    for tm in tm.getDescendants() + [tm]:
+    unmitigatedNoOperational = tm.getThreatsByFullyMitigatedAndOperational(False, False)
+
+    #for tm in tm.getDescendants() + [tm]:
         #asset_path = tm.assetDir()
 
-      if args.TMID and args.TMID != tm._id:
+    for idx, threat in enumerate(unmitigatedNoOperational):
+      tm = threat.threatModel
+      
+      if args.TMID and args.TMID != tm._id:        
         #print(f"Skipping TM {tm.id} ({tm.title})")
         continue        
 
-      unmitigatedNoOperational = tm.getThreatsByFullyMitigatedAndOperational(False, False)
+      if hasattr(threat, '_ticketLink'):
+        ticket = threat.ticketLink
+        ref = ticket.split('/')[-1]
+        print(f'{threat.parent.title:32} : [{ref:16}] : {threat.title}')
+        continue
 
-      for idx, threat in enumerate(unmitigatedNoOperational):
-          
-          print('-' * 80)
-          print(f"Threat [{idx+1}/{len(unmitigatedNoOperational)}] {threat.id}")
-          
-          #self.fileName = fileIn.name
-          print(tm.fileName)
+      print('-' * 80)
+      print(f"Threat [{idx+1}/{len(unmitigatedNoOperational)}]")
+      print(f"{threat.id}")
+      print(f">> {tm.fileName}")
 
-          if hasattr(threat, '_ticketLink'):
-              ticket = threat.ticketLink
-              ref = ticket.split('/')[-1]
-          else:
-              ticket = '--'
-              ref = ' <no ticket>'
-          print(f'{threat.parent.title:32} : {ref:16} : {threat.title}')
-          #print(threat)
-          for cm in threat.countermeasures:
-              x = '**' if cm.inPlace else '  '
-              print(f'  {x}{cm.title}')
-          threat.ticketLink = f"http://jira....?id={threat.id}"
+      #self.fileName = fileIn.name
+      ref = '   not linked'
+      print(f'{threat.parent.title:32} : [{ref:16}] : {threat.title}')
 
-          answer = input("\nOpen JIRA? [Y/N]: ").upper()
-          if answer == 'Y' or answer == 'YES':
+      #for cm in threat.countermeasures:
+      #    x = '**' if cm.inPlace else '  '
+      #    print(f'  {x}{cm.title}')
+      
+      threat.ticketLink = f"http://jira....?id={threat.id}"
 
-            #create_jira_for_threat(jira, args.dest, args.issueType, threat)
-            review_jira_for_threat(jira, args.dest, args.type, threat, args.tmUri)
-            while True:
-              key = input("\nSubmitted JIRA ticket? Enter [JIRA KEY] to link ticket into threat model,\nor press [ENTER] to continue: ").upper()
-              if key:
-                 update_yaml_with_ref(args.jira, tm.fileName, threat._id, key)
-              break
+      answer = input("\nOpen JIRA? [Y/N]: ").upper()
+      if answer == 'Y' or answer == 'YES':
+        review_jira_for_threat(jira, args.dest, args.type, threat, args.tmUri)
 
-          if not args.all:
-            sys.exit(0)
+      key = input("Submitted JIRA ticket?\nEnter [JIRA KEY] to link ticket into threat model, or press [ENTER] to continue: ").upper()
+      if key:
+        update_yaml_with_ref(args.jira, tm.fileName, threat._id, key)
+
 
 if __name__ == "__main__":
     main()
