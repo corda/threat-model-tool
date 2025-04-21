@@ -566,7 +566,7 @@ ${makeMarkdownLinkedHeader(headerLevel+2, 'References', ctx)}
 
 ## No Security Objectives defined in this scope
   % else:
-${makeMarkdownLinkedHeader(headerLevel+2, 'Security Objectives', ctx)}
+${makeMarkdownLinkedHeader(headerLevel+2, tmo.title + ' security objectives', ctx)}
 
 ${renderTextSecurityObjectivesTree(tmo.securityObjectives)}
   **Diagram:**

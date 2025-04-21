@@ -11,7 +11,7 @@
         tmName = tm['name']
         tmID   = tm['ID']
     %>
-<a href="${tmID}/${tmID}.html">${tmTitle}</a>
+<a href="${tmID}/">${tmTitle}</a>
 ##   (${tmTitle})[${tmID}/${tmID}.html]
 % endfor
 
