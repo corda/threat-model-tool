@@ -64,7 +64,7 @@ ${MERMAID_AT_HEAD}
 **${subgraphName}:**
 
   % endif
-  - <a href="#${so.id}">${so.title}</a>
+  - <a href="#${so.anchor}">${so.title}</a>
 
   ## %if so.contributesTo:
 
@@ -616,7 +616,7 @@ ${tmo.scope.diagram}
 ## No actors defined in this scope
 ## % else:
 ${PAGEBREAK}
-${makeMarkdownLinkedHeader(headerLevel+2, 'Actors', ctx)}
+${makeMarkdownLinkedHeader(headerLevel+2, tmo.title + ' Threat Actors', ctx)}
 
 > Actors, agents, users and attackers may be used as synonymous. 
 > If the analysis considers attacks and threats from a specific actor then it is considered *in scope*.
