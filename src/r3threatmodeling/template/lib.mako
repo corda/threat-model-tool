@@ -261,7 +261,7 @@ ${"From proposal: " + threat.proposal if hasattr(threat, 'proposal') else ""}
 <dt>Assets (IDs) involved in this threat:</dt>
 
 % for asset in threat.assets:
-<dd markdown="block"> - <code><a href="#${asset.id}">${asset._id}</a></code> - ${asset.title}</dd>
+<dd markdown="block"> - <code><a href="#${asset.anchor}">${asset._id}</a></code> - ${asset.title}</dd>
 %if hasattr(asset, "icon"): 
 <img src="${asset.icon}"/>\
 %endif
@@ -273,7 +273,7 @@ ${"From proposal: " + threat.proposal if hasattr(threat, 'proposal') else ""}
   <dt>Threat actors:</dt>
 
 % for attacker in threat.attackers:
-<dd markdown="block"> - <code><a href="#${attacker.id}">${attacker._id}</a></code>\
+<dd markdown="block"> - <code><a href="#${attacker.anchor}">${attacker._id}</a></code>\
 %if hasattr(attacker, "icon"): 
 <img src="${asset.icon}"/>\
 %endif
@@ -502,7 +502,7 @@ ${asset.propertiesHTML()}
 %if hasattr(asset, "specifies"):
 <dt>Specifies, inherit analysis and attribute from:</dt>
 <% specifiedAsset = tmo.getById(asset.specifies) %>
-<dd markdown="block"> ${specifiedAsset.title}  (<a href="#${specifiedAsset.id}">${specifiedAsset._id}</a>) </dd>
+<dd markdown="block"> ${specifiedAsset.title}  (<a href="#${specifiedAsset.anchor}">${specifiedAsset._id}</a>) </dd>
 %endif
 </dl>
 
