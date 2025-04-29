@@ -315,7 +315,7 @@ class SecurityObjective(BaseThreatModelObject):
                 setattr(self, k, v)
 
     def linkedImpactMDText(self):
-        return  f"<code><a href=\"#{self.id}\">{self._id}</a></code>"
+        return  f"<code><a href=\"#{self.anchor}\">{self._id}</a></code>"
     
     def contributedToMDText(self):
         return  f"<code><a href=\"#{self.id}\">{self._id}</a></code> *({self.title})*"
