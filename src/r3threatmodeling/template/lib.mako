@@ -1,6 +1,6 @@
 <%! import html %>
 <%! import textwrap %>\
-<%! from r3threatmodeling.template_utils import unmark, mermaid_escape, getShortDescForMermaid, createTitleAnchorHash, createObjectAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
+<%! from r3threatmodeling.template_utils import unmark, mermaid_escape, getShortDescForMermaid, createTitleAnchorHash, createObjectAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr, renderNestedMarkdownList  %>
 
 <%! from cvss import CVSS3 %>
 <%! from datetime import datetime %>
@@ -314,6 +314,32 @@ ${"From proposal: " + threat.proposal if hasattr(threat, 'proposal') else ""}
 ## </table>
 </dd>
 % endif
+
+
+
+
+% if hasattr(threat, "compliance"):
+Compliance:
+
+${renderNestedMarkdownList(threat.compliance, -1, firstIndent=None)}
+
+## <dt>Compliance Standards</dt>
+## <dd>
+## % for standard in threat.compliance:
+## % for std_name, controls in standard.items():
+## <strong>${std_name}:</strong>
+## <ul>
+## % for control in controls:
+## ## % if hasattr(control, "ref"):
+## <li>${control['ref']}</li>
+## % endfor
+## </ul>
+## % endfor
+## % endfor
+## </dd>
+% endif
+
+
 </dl>
 % if hasattr(threat, "ticketLink") and threat.ticketLink is not None:
   <dt><strong>Ticket link:</strong><a href="${html.escape(threat.ticketLink)}"> ${html.escape(threat.ticketLink)}  </a> </dt><dd markdown="block">   </dd>
@@ -534,7 +560,11 @@ Versions in scope: ${tmo.versionsFilterStr}
 ${PAGEBREAK}
 ${makeMarkdownLinkedHeader(headerLevel+1, 'Table of contents', ctx, skipTOC = True)}
 <div markdown="1">
-__TOC_PLACEHOLDER__
+
+## [TOC] use this to have a better TOC but will loose it in the MD format (TOC only in HTML)
+
+__TOC_PLACEHOLDER__ ## this creates a TOC in the markdown file as well
+
 </div>
 ${PAGEBREAK}
 % endif

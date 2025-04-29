@@ -73,6 +73,46 @@ def markdown_to_text(text):
     return __md.convert(text)
 
 
+def renderNestedMarkdownList(data, level=0, stream=None, firstIndent=None):
+    """
+    Recursively renders nested dictionaries and lists into a Markdown list string.
+    """
+    initial_call = stream is None
+    if initial_call:
+        stream = StringIO()
+
+    indent = "  " * level
+
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if not stream.getvalue() and firstIndent:
+                # For the first level, we don't add a hyphen
+                stream.write(f"{firstIndent}{key}: ")
+            else:
+                stream.write(f"{indent}- **{key}**: ")
+            if isinstance(value, (dict, list)):
+                stream.write("\n")  # Add newline before nested list/dict
+                renderNestedMarkdownList(value, level + 1, stream, firstIndent=firstIndent) # Pass stream recursively
+            else:
+                stream.write(f"{value}\n") # Add newline after simple value
+    elif isinstance(data, list):
+        for item in data:
+            if isinstance(item, dict):
+                # For dictionaries within a list, start with a hyphen on the current level
+                # stream.write(f"{indent}- \n")
+                # Then render the dictionary content indented further
+                renderNestedMarkdownList(item, level + 1, stream, firstIndent=firstIndent) # Pass stream recursively
+            elif isinstance(item, list):
+                 # Handle nested lists
+                stream.write(f"{indent}- \n")
+                renderNestedMarkdownList(item, level + 1, stream, firstIndent=firstIndent) # Pass stream recursively
+            else:
+                stream.write(f"{indent}- {item}\n")
+
+    if initial_call:
+        return stream.getvalue()
+    # For recursive calls, we don't return anything, just write to the stream
+
 
 #
 # useMarkDownHeaders = True will hide the header from MKDocs TOC
