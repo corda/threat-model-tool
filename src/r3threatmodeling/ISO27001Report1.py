@@ -26,6 +26,113 @@ def list_of_dicts_to_dict_of_dicts(list_of_dicts, id_key="id"):
     """
     return {item[id_key]: item for item in list_of_dicts if isinstance(item, dict) and id_key in item}
 
+def render_summary(tmo: ThreatModel, ctx=None, headerLevel=1, text: StringIO = StringIO()):
+    """
+    Renders the ISO27001 summary table as an HTML table compatible with Markdown.
+    """
+    text.write(makeMarkdownLinkedHeader(headerLevel, "ISO27001 Summary", ctx))
+    text.write("\n\n")
+
+    text.write("""<table>
+  <thead>
+    <tr>
+      <th>Control ID</th>
+      <th>Description</th>
+      <th>Threats</th>
+    </tr>
+  </thead>
+  <tbody>
+""")
+
+    # Pre-calculate dictionaries needed for the summary table
+    isoDict = list_of_dicts_to_dict_of_dicts(tmo.ISO27001Ref, id_key="ID")
+    threats = tmo.getAllDown('threats')
+    threats_by_iso_ref = {}
+    threat : Threat
+    for threat in threats:
+        if hasattr(threat, 'compliance') and isinstance(threat.compliance, list):
+            for compliance_item in threat.compliance:
+                if isinstance(compliance_item, dict) and 'ISO27001' in compliance_item and isinstance(compliance_item['ISO27001'], list):
+                    for iso_ref_item in compliance_item['ISO27001']:
+                        if isinstance(iso_ref_item, dict) and 'ref' in iso_ref_item:
+                            ref_string = iso_ref_item['ref']
+                            # Extract the control ID (e.g., "A.5.1")
+                            control_id = ref_string.split(' ')[0]
+                            if control_id not in threats_by_iso_ref:
+                                threats_by_iso_ref[control_id] = []
+                            # Append the threat object only if not already present
+                            if threat not in threats_by_iso_ref[control_id]:
+                                threats_by_iso_ref[control_id].append(threat)
+
+    # Generate the summary table rows
+    # Sort controls by ID for consistent order
+    sorted_control_ids = sorted(isoDict.keys())
+
+    for control_id in sorted_control_ids:
+        control = isoDict[control_id]
+        description = control.get('description', 'N/A')
+        related_threats = threats_by_iso_ref.get(control_id, [])
+
+        # Create Markdown links for related threats (these work fine in HTML)
+        threat_links = []
+        if related_threats:
+            # Create a nested table for threats, without headers
+            threat_links_str = "<table><tbody>"
+            th: Threat
+            for th in related_threats:
+                # Use the threat._id for the anchor link target
+                threat_anchor = th._id
+                
+                # Get mitigation status and apply color styling
+                is_mitigated = getattr(th, 'fullyMitigated', False)
+                if is_mitigated:
+                    mitigated_status_html = '<span style="color:green;">Mitigated</span>'
+                else:
+                    mitigated_status_html = '<span style="color:red;">Not fully mitigated</span>'
+                    
+                # Get CVSS score
+                cvss_score = " Severity: N/A"
+                # Use cvssObject attribute as defined in Threat class
+                if hasattr(th, 'cvssObject') and th.cvssObject:
+                    # Assuming CVSS has a method or property like 'baseScore' or 'getScore'
+                    # Adjust based on the actual attribute/method name in your Cvss class
+                    try:
+                        # Get the CVSS score description and color
+                        score_desc = th.cvssObject.getSmartScoreDesc()
+                        score_color = th.cvssObject.getSmartScoreColor()
+                        if score_desc is not None:
+                            # Apply color using an HTML span tag
+                            cvss_score = f'<span style="color:{score_color};">{score_desc}</span>'
+                    except AttributeError:
+                        # Handle cases where the score attribute/method doesn't exist or returns None
+                        pass 
+                        
+                # Create a table row for the threat with ID, styled mitigation status, and CVSS score
+                threat_links_str += (
+                    f'<tr>'
+                    f'<td><a href="#{threat_anchor}"><code>{th._id}</code></a></td>'
+                    f'<td>{mitigated_status_html}</td>'
+                    f'<td>{cvss_score}</td>'
+                    f'</tr>'
+                )
+            threat_links_str += "</tbody></table>"
+        else:
+            threat_links_str = "None"
+
+        # Escape potential HTML characters in the description
+        safe_description = html.escape(description)
+
+        text.write(f"    <tr>\n")
+        text.write(f"      <td>{control_id}</td>\n")
+        text.write(f"      <td>{safe_description}</td>\n")
+        text.write(f"      <td>{threat_links_str}</td>\n") # Links are already HTML compatible
+        text.write(f"    </tr>\n")
+
+    text.write(f"  </tbody>\n")
+    text.write(f"</table>\n\n") # Add a newline after the table definition
+    return text.getvalue()
+
+
 def renderISO27001Report(tmo: ThreatModel, ctx=None, headerLevel=1):
 
     text = StringIO()
@@ -33,6 +140,9 @@ def renderISO27001Report(tmo: ThreatModel, ctx=None, headerLevel=1):
 
     text.write(f"Generated on {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n")
     text.write(f"[TOC]\n\n")
+
+    render_summary(tmo, ctx, headerLevel, text=text)
+
     text.write(f"# ISO27001 Controls\n\n")
 
     grouped_ids = tmo.get_ISO27001_grouped_ids()
