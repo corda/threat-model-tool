@@ -8,6 +8,7 @@ R3 Threat Modeling
 from xml.etree.ElementPath import get_parent_map
 from ruamel.yaml import YAML
 from ruamel.yaml.error import YAMLError
+from collections import defaultdict
 #import yaml
 yaml=YAML(typ='rt')
 
@@ -918,6 +919,50 @@ class ThreatModel(BaseThreatModelObject):
     @title.setter
     def title(self, value):
         self._title = value
+
+    def get_ISO27001_groups_titles(self):
+        """
+        Returns a list of unique group descriptions found in the policy items.
+
+        Returns:
+            list: A list of strings, where each string is a unique group description.
+        """
+        group_descriptions = set()
+        for item in self.ISO27001Ref:
+            # Ensure 'group' key exists to prevent errors on malformed data
+            if isinstance(item, dict) and 'group' in item:
+                 group_descriptions.add(item['group'])
+            # Optional: Handle/log items that are not dictionaries or lack 'group'
+            # else:
+            #     print(f"Warning: Skipping item {item} as it's not a valid policy dictionary.")
+
+
+        return list(group_descriptions)
+
+
+    def get_ISO27001_grouped_ids(self):
+        """
+        Returns a dictionary mapping group descriptions to a list of their
+        associated policy IDs.
+
+        Returns:
+            dict: A dictionary where keys are group descriptions (str)
+                  and values are lists of policy IDs (list of str).
+        """
+        # Use defaultdict for simpler appending
+        group_ids_dict = defaultdict(list)
+
+        for item in self.ISO27001Ref:
+             # Ensure 'group' and 'ID' keys exist
+            if isinstance(item, dict) and 'group' in item and 'ID' in item:
+                group = item['group']
+                item_id = item['ID']
+                group_ids_dict[group].append(item_id)
+            # Optional: Handle/log malformed items as above
+
+        # Convert defaultdict to a regular dict before returning if preferred,
+        # though defaultdict often works fine downstream.
+        return dict(group_ids_dict)
 
 
 def try_load_threatmodel_yaml(filename):

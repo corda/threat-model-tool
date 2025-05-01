@@ -122,7 +122,10 @@ def renderNestedMarkdownList(data, level=0, stream=None, firstIndent=None):
 CLEAN_RE = re.compile(r'[\<\>\)\(]+.*$')
 
 def makeMarkdownLinkedHeader(level, title, ctx, skipTOC = False, tmObject = None):
-    useMarkDown_attr_list_ext=ctx['useMarkDown_attr_list_ext']
+    if ctx:
+        useMarkDown_attr_list_ext=ctx['useMarkDown_attr_list_ext']
+    else:
+        useMarkDown_attr_list_ext = False
     # useMarkDown_attr_list_ext = globalMarkDown_attr_list_ext
     
     if isinstance(tmObject, BaseThreatModelObject):
@@ -170,3 +173,13 @@ def createTitleAnchorHash(title):
     hash = title.lower().rstrip().replace(' ','-').replace(':','').replace(',','').replace("`","").replace("'","")
     hash = TAG_RE.sub('', hash)
     return hash
+
+def trueorFalseMark(value: bool) -> str:
+    """
+    Returns an HTML checkmark or cross mark based on the boolean value.
+    Equivalent to the trueorFalseMark Mako template function.
+    """
+    if value:
+        return '<span style="color:green;">&#10004;</span>'
+    else:
+        return '&#10060;'
