@@ -575,10 +575,10 @@ ${executiveSummary(tmo)}
 ${PAGEBREAK}
 ${threatsSummary(tmo)}
 % endif
-% if hasattr(tmo.scope, "description") and tmo.scope.description is not None: 
 ${PAGEBREAK}
 ${makeMarkdownLinkedHeader(headerLevel+1, tmo.title +  ' - scope of analysis', ctx, tmObject=None)}
 
+% if hasattr(tmo.scope, "description") and tmo.scope.description: 
 ${makeMarkdownLinkedHeader(headerLevel+2, 'Overview', ctx)}
 ${tmo.scope.description} 
 % endif
@@ -648,8 +648,7 @@ ${tmo.scope.diagram}
 ${PAGEBREAK}
 ${makeMarkdownLinkedHeader(headerLevel+2, tmo.title + ' Threat Actors', ctx)}
 
-> Actors, agents, users and attackers may be used as synonymous. 
-> If the analysis considers attacks and threats from a specific actor then it is considered *in scope*.
+> Actors, agents, users and attackers may be used as synonymous.
 
 % for attacker in tmo.attackers:
 ${lib.renderAttacker(attacker)}

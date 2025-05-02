@@ -127,7 +127,7 @@ class BaseThreatModelObject:
 
         self.originDict = dict
 
-        self.description = "undefined"
+        self.description = ""
         self.parent = parent
 
         if hasattr(parent, "children"):
@@ -384,7 +384,7 @@ class Countermeasure(BaseThreatModelObject):
     #default value
     operational = False
 
-    _operator = "TODO: UNDEFINED"
+    _operator = "UNDEFINED"
     @property
     def operator(self):
         return self._operator
