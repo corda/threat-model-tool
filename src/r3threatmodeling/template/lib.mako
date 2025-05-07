@@ -428,6 +428,8 @@ ${securityObjective.description}
 **Attack tree:**
 
 <img src="img/secObjectives/${securityObjective._id}.svg"/>
+<img src="img/legend_SecObjTree.svg" width="400"/>
+
 % endif
 
 
@@ -719,7 +721,7 @@ ${PAGEBREAK}
 <hr/>
 ${makeMarkdownLinkedHeader(headerLevel+1, tmo.title +' Attack tree', ctx, tmObject=None)}
 <object type="image/svg+xml" style="width:100%; height:auto;" data="img/${tmo._id}_ATTACKTREE.svg"></object>
-## <img src="img/${tmo._id}_ATTACKTREE.svg"/>
+<img src="img/legend_AttackTree.svg" width="600"/>
 
 ${PAGEBREAK}
 <hr/>
