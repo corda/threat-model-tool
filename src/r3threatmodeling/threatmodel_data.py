@@ -615,7 +615,12 @@ class Threat(BaseThreatModelObject):
                 raise BaseException(f"Malformed CVSS vector in {self.id}" )
         else:
             self.cvssObject = None
-        
+    
+
+
+
+
+
     def hasOperationalCountermeasures(self):
         for cm in self.countermeasures:
             if cm.operational:
@@ -813,7 +818,45 @@ class ThreatModel(BaseThreatModelObject):
                 except:
                     raise BaseException(f"cannot set attribute {k} on {self.__class__}: {self.id} ")
 
+        if self.isRoot():
+            self.checkThreatModelConsistency()
 
+    def checkThreatModelConsistency(self):
+        """
+        Check the consistency of the threat model.
+        This includes checking the following:
+        - If a threat is fully mitigated, at least one mitigation should be 'inPlace' true.
+        - If a threat is not fully mitigated, there should be no mitigation 'inPlace' true.
+        - If a threat is public = true, the threat should be fully mitigated.
+        - If a threat is fully mitigated and public, at least one countermeasure should be 'inPlace' true and public = true.
+        """
+        ##############
+        # Check the consistency of the threat model
+        ##############
+        warnings = []
+
+        for threat in self.getAllDown('threats'):
+            if threat.fullyMitigated:
+                has_inplace = any(cm.inPlace for cm in threat.countermeasures)
+                if not has_inplace:
+                    warnings.append(f"Threat '{threat.id}' is fully mitigated but has no 'inPlace' countermeasures.")
+            else:
+                has_inplace = any(cm.inPlace for cm in threat.countermeasures)
+                if has_inplace:
+                    warnings.append(f"Threat '{threat.id}' is not fully mitigated but has 'inPlace' countermeasures.")
+
+            if hasattr(threat, 'public') and threat.public and not threat.fullyMitigated:
+                warnings.append(f"Threat '{threat.id}' is public but not fully mitigated.")
+
+            if threat.fullyMitigated and hasattr(threat, 'public') and threat.public:
+                has_inplace_and_public = any(cm.inPlace and hasattr(cm, 'public') and cm.public for cm in threat.countermeasures)
+                if not has_inplace_and_public:
+                    warnings.append(f"Threat '{threat.id}' is fully mitigated and public but has no 'inPlace' and public countermeasures.")
+
+        if warnings:
+            print("Threat Model Consistency Warnings:")
+            for warning in warnings:
+                print(f"WARNING!!! - {warning}")
 
 
     def printAsText(self):
