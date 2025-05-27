@@ -2,7 +2,7 @@
 # pip install -r requirements.txt
 pathvalidate
 pyyaml
-markdown
+markdown==3.7
 watchdog
 mako
 cvss

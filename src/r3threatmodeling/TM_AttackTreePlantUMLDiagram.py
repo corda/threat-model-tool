@@ -48,7 +48,7 @@ def render_plant_uml_threat_tree(threat):
 "{threat._id}" [ fillcolor="{fill_color}", style=filled, shape=polygon, color="{customRed}", penwidth=2,
     URL="../index.html#{threat._id}",  target="_top", 
     label= 
-    <<table border="0" cellborder="0" cellspacing="0">
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
      <tr><td align="left"><b>{wrap_text(threat.title)}</b> 
      </td>  <td BGCOLOR="{threat.getSmartScoreColor()}">{threat.getSmartScoreDesc()}</td></tr>
      <tr><td align="center" COLSPAN="2">{wrap_text(threat.attack)}</td></tr>   
@@ -72,7 +72,7 @@ def render_plant_uml_threat_tree(threat):
     fillcolor="{fill_color}", style=filled, shape=polygon, penwidth=2,
     color="{borderColor}", 
     label=
-    <<table border="0" cellborder="0" cellspacing="0">
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
       <tr><td align="left">
         <b>{wrap_text(cm.title)}</b><br/><br/> 
         {wrap_text(cm.description)}

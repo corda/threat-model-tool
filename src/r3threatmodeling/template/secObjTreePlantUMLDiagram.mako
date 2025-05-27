@@ -9,7 +9,7 @@ tmo = secObj.getRoot()
 <%def name="renderPlantUMLThreatTree(threat: Threatm, markdown=True)">\
 "${threat._id}" [ fillcolor="#F8CECC", style=filled, shape=polygon, color="#B85450"
     label= 
-    <<table border="0" cellborder="0" cellspacing="0">
+    <<table border="0" cellborder="0" cellspacing="0" width="505">
      <tr><td align="center"><b>${threat._id} ATTACK</b> <br/></td></tr>
      <tr><td align="center">${lib.wrapText(threat.attack)}</td></tr>
    </table>>
@@ -21,7 +21,7 @@ tmo = secObj.getRoot()
      % if countermeasure.description is not None:
     "${threat._id}_countermeasure${i}" [ 
        fillcolor="${countermeasure.statusColors()['fill']}", style=filled, shape=polygon, color="${countermeasure.statusColors()['border']}", label =     
-    <<table border="0" cellborder="0" cellspacing="0">
+    <<table border="0" cellborder="0" cellspacing="0" width="505">
      <tr><td align="left"><b> ${lib.wrapText(countermeasure.title)} (${countermeasure._id}) </b><br/><br/> ${lib.wrapText(countermeasure.description)} </td></tr>
    </table>>
    ]

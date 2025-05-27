@@ -8,6 +8,7 @@ R3 Threat Modeling
 from xml.etree.ElementPath import get_parent_map
 from ruamel.yaml import YAML
 from ruamel.yaml.error import YAMLError
+from collections import defaultdict
 #import yaml
 yaml=YAML(typ='rt')
 
@@ -126,7 +127,7 @@ class BaseThreatModelObject:
 
         self.originDict = dict
 
-        self.description = "undefined"
+        self.description = ""
         self.parent = parent
 
         if hasattr(parent, "children"):
@@ -315,10 +316,10 @@ class SecurityObjective(BaseThreatModelObject):
                 setattr(self, k, v)
 
     def linkedImpactMDText(self):
-        return  f"<code><a href=\"#{self.id}\">{self._id}</a></code>"
+        return  f"<code><a href=\"#{self.anchor}\">{self._id}</a></code>"
     
     def contributedToMDText(self):
-        return  f"<code><a href=\"#{self.id}\">{self._id}</a></code> *({self.title})*"
+        return  f"<code><a href=\"#{self.anchor}\">{self._id}</a></code> *({self.title})*"
     
     def printAsText(self):
         return "\nID: " + self.id + " \nDescription: " + self.description 
@@ -383,7 +384,7 @@ class Countermeasure(BaseThreatModelObject):
     #default value
     operational = False
 
-    _operator = "TODO: UNDEFINED"
+    _operator = "UNDEFINED"
     @property
     def operator(self):
         return self._operator
@@ -614,7 +615,12 @@ class Threat(BaseThreatModelObject):
                 raise BaseException(f"Malformed CVSS vector in {self.id}" )
         else:
             self.cvssObject = None
-        
+    
+
+
+
+
+
     def hasOperationalCountermeasures(self):
         for cm in self.countermeasures:
             if cm.operational:
@@ -814,7 +820,45 @@ class ThreatModel(BaseThreatModelObject):
                 except:
                     raise BaseException(f"cannot set attribute {k} on {self.__class__}: {self.id} ")
 
+        if self.isRoot():
+            self.checkThreatModelConsistency()
 
+    def checkThreatModelConsistency(self):
+        """
+        Check the consistency of the threat model.
+        This includes checking the following:
+        - If a threat is fully mitigated, at least one mitigation should be 'inPlace' true.
+        - If a threat is not fully mitigated, there should be no mitigation 'inPlace' true.
+        - If a threat is public = true, the threat should be fully mitigated.
+        - If a threat is fully mitigated and public, at least one countermeasure should be 'inPlace' true and public = true.
+        """
+        ##############
+        # Check the consistency of the threat model
+        ##############
+        warnings = []
+
+        for threat in self.getAllDown('threats'):
+            if threat.fullyMitigated:
+                has_inplace = any(cm.inPlace for cm in threat.countermeasures)
+                if not has_inplace:
+                    warnings.append(f"Threat '{threat.id}' is fully mitigated but has no 'inPlace' countermeasures.")
+            else:
+                has_inplace = any(cm.inPlace for cm in threat.countermeasures)
+                if has_inplace:
+                    warnings.append(f"Threat '{threat.id}' is not fully mitigated but has 'inPlace' countermeasures.")
+
+            if hasattr(threat, 'public') and threat.public and not threat.fullyMitigated:
+                warnings.append(f"Threat '{threat.id}' is public but not fully mitigated.")
+
+            if threat.fullyMitigated and hasattr(threat, 'public') and threat.public:
+                has_inplace_and_public = any(cm.inPlace and hasattr(cm, 'public') and cm.public for cm in threat.countermeasures)
+                if not has_inplace_and_public:
+                    warnings.append(f"Threat '{threat.id}' is fully mitigated and public but has no 'inPlace' and public countermeasures.")
+
+        if warnings:
+            print("Threat Model Consistency Warnings:")
+            for warning in warnings:
+                print(f"WARNING!!! - {warning}")
 
 
     def printAsText(self):
@@ -920,6 +964,50 @@ class ThreatModel(BaseThreatModelObject):
     @title.setter
     def title(self, value):
         self._title = value
+
+    def get_ISO27001_groups_titles(self):
+        """
+        Returns a list of unique group descriptions found in the policy items.
+
+        Returns:
+            list: A list of strings, where each string is a unique group description.
+        """
+        group_descriptions = set()
+        for item in self.ISO27001Ref:
+            # Ensure 'group' key exists to prevent errors on malformed data
+            if isinstance(item, dict) and 'group' in item:
+                 group_descriptions.add(item['group'])
+            # Optional: Handle/log items that are not dictionaries or lack 'group'
+            # else:
+            #     print(f"Warning: Skipping item {item} as it's not a valid policy dictionary.")
+
+
+        return list(group_descriptions)
+
+
+    def get_ISO27001_grouped_ids(self):
+        """
+        Returns a dictionary mapping group descriptions to a list of their
+        associated policy IDs.
+
+        Returns:
+            dict: A dictionary where keys are group descriptions (str)
+                  and values are lists of policy IDs (list of str).
+        """
+        # Use defaultdict for simpler appending
+        group_ids_dict = defaultdict(list)
+
+        for item in self.ISO27001Ref:
+             # Ensure 'group' and 'ID' keys exist
+            if isinstance(item, dict) and 'group' in item and 'ID' in item:
+                group = item['group']
+                item_id = item['ID']
+                group_ids_dict[group].append(item_id)
+            # Optional: Handle/log malformed items as above
+
+        # Convert defaultdict to a regular dict before returning if preferred,
+        # though defaultdict often works fine downstream.
+        return dict(group_ids_dict)
 
 
 def try_load_threatmodel_yaml(filename):

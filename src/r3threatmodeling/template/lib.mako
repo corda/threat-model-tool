@@ -1,6 +1,6 @@
 <%! import html %>
 <%! import textwrap %>\
-<%! from r3threatmodeling.template_utils import unmark, mermaid_escape, getShortDescForMermaid, createTitleAnchorHash, createObjectAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr  %>
+<%! from r3threatmodeling.template_utils import unmark, mermaid_escape, getShortDescForMermaid, createTitleAnchorHash, createObjectAnchorHash, makeMarkdownLinkedHeader, mermaid_escape, valueOr, renderNestedMarkdownList  %>
 
 <%! from cvss import CVSS3 %>
 <%! from datetime import datetime %>
@@ -64,7 +64,7 @@ ${MERMAID_AT_HEAD}
 **${subgraphName}:**
 
   % endif
-  - <a href="#${so.id}">${so.title}</a>
+  - <a href="#${so.anchor}">${so.title}</a>
 
   ## %if so.contributesTo:
 
@@ -261,7 +261,7 @@ ${"From proposal: " + threat.proposal if hasattr(threat, 'proposal') else ""}
 <dt>Assets (IDs) involved in this threat:</dt>
 
 % for asset in threat.assets:
-<dd markdown="block"> - <code><a href="#${asset.id}">${asset._id}</a></code> - ${asset.title}</dd>
+<dd markdown="block"> - <code><a href="#${asset.anchor}">${asset._id}</a></code> - ${asset.title}</dd>
 %if hasattr(asset, "icon"): 
 <img src="${asset.icon}"/>\
 %endif
@@ -273,7 +273,7 @@ ${"From proposal: " + threat.proposal if hasattr(threat, 'proposal') else ""}
   <dt>Threat actors:</dt>
 
 % for attacker in threat.attackers:
-<dd markdown="block"> - <code><a href="#${attacker.id}">${attacker._id}</a></code>\
+<dd markdown="block"> - <code><a href="#${attacker.anchor}">${attacker._id}</a></code>\
 %if hasattr(attacker, "icon"): 
 <img src="${asset.icon}"/>\
 %endif
@@ -314,6 +314,32 @@ ${"From proposal: " + threat.proposal if hasattr(threat, 'proposal') else ""}
 ## </table>
 </dd>
 % endif
+
+
+
+
+% if hasattr(threat, "compliance"):
+Compliance:
+
+${renderNestedMarkdownList(threat.compliance, -1, firstIndent=None)}
+
+## <dt>Compliance Standards</dt>
+## <dd>
+## % for standard in threat.compliance:
+## % for std_name, controls in standard.items():
+## <strong>${std_name}:</strong>
+## <ul>
+## % for control in controls:
+## ## % if hasattr(control, "ref"):
+## <li>${control['ref']}</li>
+## % endfor
+## </ul>
+## % endfor
+## % endfor
+## </dd>
+% endif
+
+
 </dl>
 % if hasattr(threat, "ticketLink") and threat.ticketLink is not None:
   <dt><strong>Ticket link:</strong><a href="${html.escape(threat.ticketLink)}"> ${html.escape(threat.ticketLink)}  </a> </dt><dd markdown="block">   </dd>
@@ -402,6 +428,8 @@ ${securityObjective.description}
 **Attack tree:**
 
 <img src="img/secObjectives/${securityObjective._id}.svg"/>
+<img src="img/legend_SecObjTree.svg" width="400"/>
+
 % endif
 
 
@@ -476,7 +504,7 @@ ${asset.propertiesHTML()}
 %if hasattr(asset, "specifies"):
 <dt>Specifies, inherit analysis and attribute from:</dt>
 <% specifiedAsset = tmo.getById(asset.specifies) %>
-<dd markdown="block"> ${specifiedAsset.title}  (<a href="#${specifiedAsset.id}">${specifiedAsset._id}</a>) </dd>
+<dd markdown="block"> ${specifiedAsset.title}  (<a href="#${specifiedAsset.anchor}">${specifiedAsset._id}</a>) </dd>
 %endif
 </dl>
 
@@ -534,7 +562,11 @@ Versions in scope: ${tmo.versionsFilterStr}
 ${PAGEBREAK}
 ${makeMarkdownLinkedHeader(headerLevel+1, 'Table of contents', ctx, skipTOC = True)}
 <div markdown="1">
-__TOC_PLACEHOLDER__
+
+## [TOC] use this to have a better TOC but will loose it in the MD format (TOC only in HTML)
+
+__TOC_PLACEHOLDER__ ## this creates a TOC in the markdown file as well
+
 </div>
 ${PAGEBREAK}
 % endif
@@ -545,10 +577,10 @@ ${executiveSummary(tmo)}
 ${PAGEBREAK}
 ${threatsSummary(tmo)}
 % endif
-% if hasattr(tmo.scope, "description") and tmo.scope.description is not None: 
 ${PAGEBREAK}
 ${makeMarkdownLinkedHeader(headerLevel+1, tmo.title +  ' - scope of analysis', ctx, tmObject=None)}
 
+% if hasattr(tmo.scope, "description") and tmo.scope.description: 
 ${makeMarkdownLinkedHeader(headerLevel+2, 'Overview', ctx)}
 ${tmo.scope.description} 
 % endif
@@ -616,10 +648,9 @@ ${tmo.scope.diagram}
 ## No actors defined in this scope
 ## % else:
 ${PAGEBREAK}
-${makeMarkdownLinkedHeader(headerLevel+2, 'Actors', ctx)}
+${makeMarkdownLinkedHeader(headerLevel+2, tmo.title + ' Threat Actors', ctx)}
 
-> Actors, agents, users and attackers may be used as synonymous. 
-> If the analysis considers attacks and threats from a specific actor then it is considered *in scope*.
+> Actors, agents, users and attackers may be used as synonymous.
 
 % for attacker in tmo.attackers:
 ${lib.renderAttacker(attacker)}
@@ -690,7 +721,7 @@ ${PAGEBREAK}
 <hr/>
 ${makeMarkdownLinkedHeader(headerLevel+1, tmo.title +' Attack tree', ctx, tmObject=None)}
 <object type="image/svg+xml" style="width:100%; height:auto;" data="img/${tmo._id}_ATTACKTREE.svg"></object>
-## <img src="img/${tmo._id}_ATTACKTREE.svg"/>
+<img src="img/legend_AttackTree.svg" width="600"/>
 
 ${PAGEBREAK}
 <hr/>
