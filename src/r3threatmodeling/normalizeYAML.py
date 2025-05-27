@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from lib2to3.pygram import pattern_symbols
+#from lib2to3.pygram import pattern_symbols
 from pathvalidate import sanitize_filename
 import os
 from tokenize import String
@@ -21,7 +21,11 @@ import traceback
 from r3threatmodeling.threatmodel_data import Countermeasure, Threat, ThreatModel
 
 
+
+
 def com_insert(self, pos, key, value, comment=None):
+    print('insert!')
+    sys.exit(1)
     od = ordereddict()
     od.update(self)
     for k in od:
@@ -33,9 +37,11 @@ def com_insert(self, pos, key, value, comment=None):
     if comment is not None:
         self.yaml_add_eol_comment(comment, key=key)
 
-CommentedMap.insert = com_insert
-getPos = lambda oDict, toFind, byKey=True: list(oDict.keys() if byKey else oDict.values()).index(toFind)
 
+#getPos = lambda oDict, toFind, byKey=True: list(oDict.keys() if byKey else oDict.values()).index(toFind)
+
+def getPos(oDict, toFind, byKey=True):
+    return list(oDict.keys() if byKey else oDict.values()).index(toFind)
 
 # add new methods
 
@@ -97,10 +103,18 @@ def updateCountermeasureYaml(self):
                 self.originDict.insert(order, 'operator', self.operator)
 
 
+CommentedMap.insert = com_insert
 ThreatModel.updateYaml = updateThreatModelYaml
 Threat.updateYaml = updateThreatYaml
 Countermeasure.updateYaml = updateCountermeasureYaml
 
+
+def normalizeandDumpYAML(threatModel, filePrefix=""):
+    print('normalize!')
+
+
+    threatModel.updateYaml()
+    threatModel.dumpRecursive(prefix=filePrefix)
 
 def main():
 
@@ -135,8 +149,7 @@ def main():
     #     threat.ticketLink = f"http://jira....?id={threat.id}"
 
     if(not args.dryRun):
-        tm.updateYaml()
-        tm.dumpRecursive(prefix=args.YAMLprefix)
+        normalizeandDumpYAML(tm, args.YAMLprefix)
 
 if __name__ == "__main__":
     main()
