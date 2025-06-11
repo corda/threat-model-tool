@@ -1,0 +1,22 @@
+@startyaml
+ID: SolanaTrustedNotary
+title: Solana Trusted Notary
+version: 0.1
+authors: |
+   David Cervigni (derived from Solana Notary design document)
+parentID: Corda
+
+scope:
+  description: |
+    This threat mod
+  assets:
+    # Systems / Components
+    - ID: id of the asset
+      type: system
+      title: Solana Notary Program
+      description: |
+        The on-chain Solana pr
+      inScope: true
+
+
+@endyaml

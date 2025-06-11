@@ -373,7 +373,7 @@ ${countermeasure.description}</dd>
 ##*Is this countermeasure implemented and in place?* ${ "Yes" if countermeasure.inPlace else "No" }
 ##*Is this countermeasure public and disclosable?* ${ "Yes" if countermeasure.public else "No" }
 <dd markdown="block">
-<strong>Countermeasure implemented?</strong> ${trueorFalseMark(countermeasure.inPlace)} \
+<strong>Countermeasure in place?</strong> ${trueorFalseMark(countermeasure.inPlace)} \
  <strong>Public and disclosable?</strong> ${trueorFalseMark(countermeasure.public)} \
 % if countermeasure.operational: 
  <strong>Is operational?</strong>${ "<span style=\"color:green;\">&#10004;</span>"} \

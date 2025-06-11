@@ -10,7 +10,7 @@ tmo = secObj.getRoot()
 "${threat._id}" [ fillcolor="#F8CECC", style=filled, shape=polygon, color="#B85450"
     label= 
     <<table border="0" cellborder="0" cellspacing="0" width="505">
-     <tr><td align="center"><b>${threat._id} ATTACK</b> <br/></td></tr>
+     <tr><td align="center"><b>${threat.title}</b> <br/></td></tr>
      <tr><td align="center">${lib.wrapText(threat.attack)}</td></tr>
    </table>>
    ];

@@ -383,7 +383,7 @@ def renderThreat(threat: Threat, text: StringIO, ctx=None, headerLevel=1):
 
             # InPlace, Public, Operational status
             text.write('<dd markdown="block">\n')
-            text.write(f'<strong>Countermeasure implemented?</strong> {trueorFalseMark(countermeasure.inPlace)} \n ')
+            text.write(f'<strong>Countermeasure in place?</strong> {trueorFalseMark(countermeasure.inPlace)} \n ')
             text.write(f'<strong>Public and disclosable?</strong> {trueorFalseMark(countermeasure.public)} \n')
             if getattr(countermeasure, 'operational', False):
                 text.write(f' <strong>Is operational?</strong>"<span style="color:green;">&#10004;</span>" \n') # Escaped quotes for f-string
