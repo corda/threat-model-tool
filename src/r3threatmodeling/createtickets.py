@@ -11,6 +11,7 @@ import webbrowser
 
 from ruamel.yaml import YAML
 from r3threatmodeling import *
+from r3threatmodeling.normalizeYAML import normalizeandDumpYAML
 
 from jira import JIRA
 
@@ -217,6 +218,28 @@ def update_yaml_with_ref(jira, path, threatid, ticketid):
       f.close()
       return True
 
+def update_threat_with_ref(threat, ticketid, jira):
+
+    y = threat.threatModel.yaml
+
+    # relocate the original YAML object from this parsed threat
+    ythreat = next(ythreat for ythreat in y['threats'] if ythreat['ID'] == threat.id)
+    if not ythreat:
+        print(f"Unable to find threat {threat.id} in {path}")
+        return False
+
+    ythreat['ticketLink'] = f"{jira}/issues/{ticketid}"
+  
+    # write it back out to the same file but without the BOM
+    normalizeandDumpYAML(threat.threatModel, recursive=False)
+    threat.threatModel
+
+    print("Updating: ", path)
+    with open(path, "w", encoding="utf-8") as f:
+      yaml.indent(mapping=2, sequence=4, offset=2)
+      yaml.dump(y, stream=f)#sys.stdout)
+      f.close()
+      return True
 
 def main():
 
@@ -268,8 +291,7 @@ def main():
 
       key = input("Submitted JIRA ticket?\nEnter [JIRA KEY] to link ticket into threat model, or press [ENTER] to continue: ").upper()
       if key:
-        update_yaml_with_ref(args.jira, tm.fileName, threat._id, key)
-
-
+        #update_yaml_with_ref(args.jira, tm.fileName, threat._id, key)
+        update_threat_with_ref(threat, args.jira, key)
 if __name__ == "__main__":
     main()

@@ -680,7 +680,7 @@ class Assumption(BaseThreatModelObject):
 
 class ThreatModel(BaseThreatModelObject):
 
-    def dumpRecursive(self, folder=None, prefix=""):
+    def dumpRecursive(self, folder=None, prefix="", encoding="utf-8", recursive=True):
         
         originalFolder, fn = os.path.split(self.fileName)
 
@@ -688,13 +688,15 @@ class ThreatModel(BaseThreatModelObject):
             folder = originalFolder
         fn = prefix + fn
         path = folder + os.path.sep +  fn
-        outputStream = open(path, "wb")
+        outputStream = open(path, "wt", encoding=encoding)
+        
         print (f"...dumping yaml file: {path}")
         yaml.indent(mapping=2, sequence=4, offset=2)
         yaml.dump(self.originDict, outputStream)
 
-        for childrenTM in self.childrenTM:
-            childrenTM.dumpRecursive(prefix=prefix)
+        if recursive:
+            for childrenTM in self.childrenTM:
+                childrenTM.dumpRecursive(prefix=prefix, encoding=encoding, recursive=recursive)
 
     def assetDir(self):
         return os.path.dirname(self.fileName)+ "/assets"

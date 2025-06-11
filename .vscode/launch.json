@@ -13,9 +13,12 @@
             "module": "r3threatmodeling.createtickets",
             "justMyCode": true,
             "args": [
-                "--rootTMYaml",
-                "../Corda5ThreatModelsthreatModels/C5/C5.yaml"
-                // ,
+                "--rootTMYaml", "../threat-modeling/threatModels/CBUAE_PHASE2/CBUAE_PHASE2.yaml",
+                "--TMID", "IAM",
+                "--type","Security Story",
+                "--dest", "SEC",
+                "--all"
+
                 // "--YAMLprefix", "devticket_"
             ]
         },
@@ -64,7 +67,7 @@
             "name": "Python: Module refactorYAML01to02 OVERWRITE",
             "type": "python",
             "request": "launch",
-            "module": "r3threatmodeling.refactorYAML01to02",
+            "module": "r3threatmodeling.normalizeYAML",
             "justMyCode": true,
             "args": [
                 "--rootTMYaml",
@@ -146,7 +149,7 @@
             "justMyCode": false,
             "args": [
                 "--TMDirectory",
-                "../Corda5ThreatModels/threatModels",
+                "../threat-modeling/threatModels",
                 "--browserSync",
                 "--outputDir",
                 "../Corda5ThreatModels/build",
