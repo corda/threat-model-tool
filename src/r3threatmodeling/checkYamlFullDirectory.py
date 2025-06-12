@@ -48,23 +48,6 @@ def main():
                         print(f"Successfully parsed: {tm.id if hasattr(tm, 'id') else potential_tm_yaml_file.name}")
                 except Exception as e:
                     print(f"Error parsing {potential_tm_yaml_file}: {e}")
-            # else:
-            #     # Check for .yml extension as well
-            #     potential_tm_yml_file = item / (item.name + ".yml")
-            #     if potential_tm_yml_file.is_file():
-            #         print(f"Found root threat model YAML (with .yml extension): {potential_tm_yml_file}")
-            #         try:
-            #             with open(potential_tm_yml_file, 'r') as f:
-            #                 tm = ThreatModel(f)
-            #                 found_root_tms.append({
-            #                     "name": tm.id if hasattr(tm, 'id') else potential_tm_yml_file.name,
-            #                     "path": str(potential_tm_yml_file.resolve()),
-            #                     "object": tm
-            #                 })
-            #                 print(f"Successfully parsed: {tm.id if hasattr(tm, 'id') else potential_tm_yml_file.name}")
-            #         except Exception as e:
-            #             print(f"Error parsing {potential_tm_yml_file}: {e}")
-
 
     if found_root_tms:
         print("\n--- Summary of Parsed Root Threat Models ---")
