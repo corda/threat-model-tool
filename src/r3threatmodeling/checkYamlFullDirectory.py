@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import sys
 import os
 import pathlib
 import yaml # Ensure PyYAML or ruamel.yaml is installed
@@ -48,6 +49,7 @@ def main():
                         print(f"Successfully parsed: {tm.id if hasattr(tm, 'id') else potential_tm_yaml_file.name}")
                 except Exception as e:
                     print(f"Error parsing {potential_tm_yaml_file}: {e}")
+                    sys.exit(-1)
 
     if found_root_tms:
         print("\n--- Summary of Parsed Root Threat Models ---")

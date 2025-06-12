@@ -2,6 +2,7 @@ import argparse
 import yaml
 import os
 from r3threatmodeling.threatmodel_data import ThreatModel
+import sys 
 
 def find_root_yaml(filepath):
     """
@@ -61,7 +62,9 @@ if __name__ == '__main__':
         if threat_model:
             print("Threat Model Parsed Successfully:")
             print(threat_model.id) # print the threat model object
+            sys.exit(0)
         else:
             print("Failed to parse threat model.")
     else:
         print("Could not find root YAML file.")
+    sys.exit(-1)
