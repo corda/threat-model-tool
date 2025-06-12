@@ -546,6 +546,10 @@ ${makeMarkdownLinkedHeader(headerLevel, tmo.title, ctx, skipTOC = False, tmObjec
 Version: ${tmo.version}
 % endif 
 
+% if hasattr(tmo, 'status'):
+Status: ${tmo.status}
+% endif 
+
 %if toc:
 Last update: ${datetime.now().strftime("%Y-%m-%d %H:%M:%S")} 
 %endif
