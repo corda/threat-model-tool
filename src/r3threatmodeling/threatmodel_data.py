@@ -168,6 +168,41 @@ class BaseThreatModelObject:
             ret = ret + c.getAllDown(attrName)
         return ret
 
+    def getAllDownByType(self, typeName):
+        
+        """
+        Get all objects of a specific type in the threat model and its children.
+        """
+        ret = []
+        try:
+            if isinstance(self, typeName):
+                ret.append(self)
+            # for c in self.children:
+            #     ret = ret + c.getAllDownByType(typeName)
+
+            for attr_name in dir(self):
+                if attr_name.startswith('_'):
+                    continue
+                # Avoid calling properties that may raise or are not data attributes
+                try:
+                    attr = getattr(self, attr_name)
+                except Exception:
+                    continue
+                # Avoid calling methods
+                if callable(attr):
+                    continue
+                if isinstance(attr, list):
+                    for item in attr:
+                        if isinstance(item, typeName):
+                            ret.append(item)
+                        elif isinstance(item, BaseThreatModelObject):
+                            # Avoid infinite recursion
+                            if item is not self:
+                                ret = ret + item.getAllDownByType(typeName)
+        except:
+            raise BaseException(f"Error getting all down by type {typeName} in {self.id}")
+
+        return ret
 
     #get something by ID inside a specific TM object
     def getDescendantById(self, id):
@@ -200,7 +235,70 @@ class BaseThreatModelObject:
             if res != None:
                 return res
         return None
+
+class REFID(BaseThreatModelObject):
+    """
+    This is a reference to an object in the threat model.
+    It is used to link objects together, e.g. a countermeasure to a threat.
+    """
+    def __init__(self, dict, parent):
+        super().__init__(dict, parent)
+        if "REFID" not in dict:
+            raise BaseException("REFID needs to be defined in: "+self.id)
+        self._id = "REFID_"+ dict["REFID"]
+        # Store REFID in a map by ID on the root element
+        root = self.getRoot()
+        if not hasattr(root, "_refid_map"):
+            root._refid_map = {}
+        root._refid_map[self._id] = self
     
+    def resolve(self):
+        """
+        Resolve the REFID to the actual object in the threat model.
+        """
+        root = self.getRoot()
+        # refid = self._id.replace("REFID_", "")
+        return root.getDescendantFirstById(self.REFID)
+    
+    def replaceInParent(self, copyReferenced=True):
+        
+        """
+        Replace the REFID in the parent object with the actual object.
+        """
+        referenced = self.resolve()
+        if copyReferenced:
+            # if copyReferenced is True, we copy the referenced object
+            # this is useful to avoid modifying the original object
+            referenced = copy.copy(referenced)
+            referenced.isReference = True
+        if hasattr(self.parent, 'children'):
+            if self in self.parent.children:
+                self.parent.children.remove(self)
+                self.parent.children.add(referenced)
+        
+        replaced = False
+        for attr_name in dir(self.parent):
+            if attr_name.startswith('_'):
+              continue
+                            # Avoid calling properties that may raise or are not data attributes
+            try:
+                attr = getattr(self.parent, attr_name)
+            except Exception:
+                continue
+            # Avoid calling methods
+            if callable(attr):
+                continue
+
+            attr = getattr(self.parent, attr_name)
+            if isinstance(attr, list):
+                # Replace all occurrences of self in the list
+                while self in attr:
+                    attr[attr.index(self)] = referenced
+                    replaced = True
+
+        if not replaced:
+             raise BaseException("Could not replace REFID in parent: " + self.id)
+
 class TMCVSS(CVSS3):
 
     def getSmartScoreIndex(self):
@@ -305,13 +403,14 @@ class SecurityObjective(BaseThreatModelObject):
                     references = dict["contributesTo"]
                     for dict2 in references:
                         if "REFID" in dict2:
-                            refID = dict2['REFID']
-                            referenced = self.getRoot().getDescendantFirstById(refID)
-                            if referenced == None:
-                                raise BaseException("REFID: "+ dict2['REFID'] +" not found in: "+self.id )
-                            copiedObject  = copy.copy(referenced)
-                            copiedObject.isReference = True
-                            self.contributesTo.append(copiedObject)
+                            self.contributesTo.append(REFID(dict2, self))
+                            # refID = dict2['REFID']
+                            # referenced = self.getRoot().getDescendantFirstById(refID)
+                            # if referenced == None:
+                            #     raise BaseException("REFID: "+ dict2['REFID'] +" not found in: "+self.id )
+                            # copiedObject  = copy.copy(referenced)
+                            # copiedObject.isReference = True
+                            # self.contributesTo.append(copiedObject)
             else:
                 setattr(self, k, v)
 
@@ -400,7 +499,7 @@ class Threat(BaseThreatModelObject):
     def ticketLink(self):
         # if self.public:
         #     return None
-        return self._ticketLink
+        self._ticketLink
     
     @ticketLink.setter
     def ticketLink(self, value):
@@ -438,7 +537,7 @@ class Threat(BaseThreatModelObject):
                 try:
                     ret += secObj.linkedImpactMDText() + "<br/> "
                 except:
-                    raise BaseException(f"Problem in impactedSecObj definition reference in {secObj.id} " )  
+                    raise Exception(f"Problem in impactedSecObj definition reference in {secObj.id} " )  
 
         return ret
 
@@ -519,16 +618,11 @@ class Threat(BaseThreatModelObject):
         self.parent = tm 
         self.threatModel = tm
 
-        # if "ID" in dict and dict["ID"] is not None and "." in dict["ID"]:
-        #     dict["ID"] = dict["ID"].replace(".","_").upper()
         self.id = dict["ID"]
-        
+       
         dict.setdefault('CVSS', {'base':'TODO CVSS', 'vector':''})
         dict.setdefault('fullyMitigated', False)
 
-        # parentProposal = self.getFirstUp('proposal')
-        # if parentProposal:
-        #     self.proposal = parentProposal
             
         for k, v in dict.items():
             if k == "ticketLink":
@@ -544,17 +638,9 @@ class Threat(BaseThreatModelObject):
                         if "ID" in cmData:
                             self.countermeasures.append(Countermeasure(cmData, self))
                         elif "REFID" in cmData:
-                            refID = cmData['REFID']
-                            referencedCM = self.getRoot().getDescendantFirstById(refID)
-                            if not isinstance(referencedCM, Countermeasure):
-                                raise BaseException(f"REFID: {cmData['REFID']} ({type(referencedCM)}) is not a Countermeasure" )
-                            if referencedCM == None:
-                                raise BaseException("REFID: "+ cmData['REFID'] +" not found in: "+self.id )
-                            copiedObject  = copy.copy(referencedCM)
-                            copiedObject.isReference = True
-                            # if 'notes' in cmData:
-                            #     copiedObject.notes = cmData['notes']
-                            self.countermeasures.append(copiedObject)
+
+                            self.countermeasures.append(REFID(cmData, self))
+
                         else:
                             raise BaseException("REFID or ID needed to define a countermeasure in: "+self.id )
 
@@ -562,13 +648,8 @@ class Threat(BaseThreatModelObject):
                 for cmData in v:
                     try:
                         if "REFID" in cmData:
-                            refID = cmData['REFID']
-                            referenced = self.getRoot().getDescendantFirstById(refID)
-                            if referenced == None:
-                                raise BaseException("REFID: "+ cmData['REFID'] +" not found in: "+self.id )
-                            copiedObject  = copy.copy(referenced)
-                            copiedObject.isReference = True
-                            self.impactedSecObjs.append(copiedObject)
+
+                            self.impactedSecObjs.append(REFID(cmData, self))
                         else:
                             raise BaseException("REFID needed to reference an impacted Security Objective in: "+self.id )
                     except: 
@@ -578,7 +659,8 @@ class Threat(BaseThreatModelObject):
                 if v is not None:
                     for assetData in v:
                         try:
-                            self.assets.append(tm.getAssetById(assetData["REFID"])) 
+                            # self.assets.append(tm.getAssetById(assetData["REFID"])) 
+                            self.assets.append(REFID(assetData, self))
                         except:
                             raise BaseException("reference To asset ID, REFID not found  in: "+self.id )
             
@@ -586,13 +668,8 @@ class Threat(BaseThreatModelObject):
                 for attackerData in v:
                     try:
                         if "REFID" in attackerData:
-                            refID = attackerData['REFID']
-                            referenced = self.getRoot().getDescendantFirstById(refID)
-                            if referenced == None:
-                                raise BaseException("REFID: "+ attackerData['REFID'] +" not found in: "+self.id )
-                            copiedObject  = copy.copy(referenced)
-                            copiedObject.isReference = True
-                            self.attackers.append(copiedObject)
+
+                            self.attackers.append(REFID(attackerData, self))
                         else:
                             raise BaseException("REFID needed to reference an actual attacker ID in: "+self.id )
                     except: 
@@ -615,11 +692,6 @@ class Threat(BaseThreatModelObject):
                 raise BaseException(f"Malformed CVSS vector in {self.id}" )
         else:
             self.cvssObject = None
-    
-
-
-
-
 
     def hasOperationalCountermeasures(self):
         for cm in self.countermeasures:
@@ -820,7 +892,19 @@ class ThreatModel(BaseThreatModelObject):
                 except:
                     raise BaseException(f"cannot set attribute {k} on {self.__class__}: {self.id} ")
 
+        
+
         if self.isRoot():
+            # resolve REFIDs in the threat model
+            # Replace all objects of type REFID in the threat model tree
+            for ref in self.getAllDownByType(REFID):
+                try:
+                    ref: REFID
+                    ref.replaceInParent(copyReferenced=True)
+                except Exception as e:
+                    raise BaseException(f"Error replacing REFID {ref.id} in threat model {self.id}: {e}")
+            
+
             self.checkThreatModelConsistency()
 
     def checkThreatModelConsistency(self):
@@ -870,12 +954,6 @@ class ThreatModel(BaseThreatModelObject):
         else:
             return self.parent.getAllAttackers() + self.attackers
 
-    # def getAllAssets(self):
-    #     if self.parent is None:
-    #         return self.assets
-    #     else:
-    #         return self.parent.getAllAssets() + self.assets
-
     def isRoot(self):
         return self.parent == None
     
@@ -896,14 +974,6 @@ class ThreatModel(BaseThreatModelObject):
     def getAssetsByProps(self, **kwargs ):
         res = [asset for asset in self.getAllDown('assets') if matchesAllPros(asset , **kwargs)]
         return res
-
-
-    # def getOperationalGuideData(self):
-
-    #     #TODO group threats by attack vector (represented by dataflow)
-    #     guideData = {}
-    #     return guideData
-
         
     def getOperationalGuideData(self):
 
@@ -931,9 +1001,6 @@ class ThreatModel(BaseThreatModelObject):
             guideData[countermeasure.operator].append(countermeasure)
 
         return guideData
-
-    # def getAllThreatsByFullyMitigated(self, fullyMitigated ):
-    #     return  [t for t in self.getAllThreats() if t.fullyMitigated is fullyMitigated]
 
     def getAssetById(self, id):
         if id is None:

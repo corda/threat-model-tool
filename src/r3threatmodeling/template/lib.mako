@@ -712,9 +712,9 @@ ${PAGEBREAK}
 <hr/>
 ${makeMarkdownLinkedHeader(headerLevel+1, tmo.title + ' Analysis', ctx, tmObject=None)}
 
-> **Note** This section documents the work performed to identify threats and thier mitigations.#
-> It may contains notes from the analysis sessions.
-> This analysis section may be omitted in future reports.
+## > **Note** This section documents the work performed to identify threats and thier mitigations.#
+## > It may contains notes from the analysis sessions.
+## > This analysis section may be omitted in future reports.
 
 ${tmo.analysis}  
 % endif
