@@ -262,8 +262,8 @@ def postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileNa
     mermaidHtmlTags = mdReport.replace(#FIX mermaid diagrams for html
                 PRE_MERMAID, "<div class=mermaid>").replace(AFTER_MERMAID,"</div>")
 
-    htmlReport = markdown.markdown(mermaidHtmlTags, extensions=['md_in_html', 'attr_list', 'toc'])
-
+    #TOC is freezing the rendering together with attr list ... htmlReport = markdown.markdown(mermaidHtmlTags, extensions=['md_in_html', 'attr_list', 'toc'])
+    htmlReport = markdown.markdown(mermaidHtmlTags, extensions=['md_in_html', 'attr_list'])
     baseHTML = """<!DOCTYPE html>
         <html>
         <head>
@@ -285,7 +285,7 @@ def postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileNa
     if browserSync:
         htmlReport=htmlReport.replace("</body>","""
             <script id="__bs_script__">//<![CDATA[
-        document.write("<script async src='http://HOST:3000/browser-sync/browser-sync-client.js?v=2.27.10'><\/script>".replace("HOST", location.hostname));//]]></script>
+        document.write("<script async src='http://HOST:3000/browser-sync/browser-sync-client.js?v=2.27.10'></script>".replace("HOST", location.hostname));//]]></script>
     </body> """)
         
 #     mermaid_script = """

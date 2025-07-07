@@ -805,6 +805,8 @@ class ThreatModel(BaseThreatModelObject):
 
         self.threats: list[Threat] = []
         self._id = tmDict["ID"]
+        if tmDict["scope"] is None:
+            raise BaseException(f"Scope is empty in {self.id}, please check the threat model file")
         self.scope = Scope(tmDict["scope"], self)
         self.analysis = tmDict["analysis"]
         self.assets: list[Asset]  = []
@@ -873,14 +875,19 @@ class ThreatModel(BaseThreatModelObject):
                 
             elif "children"  == k:
                 for childrenDict in tmDict['children']:
-                    # childrenFilename = ""
                     try:
-                        childrenFilename = os.path.dirname(fileIn.name) + os.path.sep + childrenDict['ID'] + os.path.sep + childrenDict['ID'] +".yaml"
+                        child_id = childrenDict['ID']
+                        base_path = os.path.dirname(fileIn.name)
+                        if child_id.endswith('.yaml'):
+                            childrenFilename = os.path.join(base_path, child_id)
+                        else:
+                            childrenFilename = os.path.join(base_path, child_id, child_id + ".yaml")
                     except Exception as e:
                         print(f"Error processing child threat model: {e}")
                         raise BaseException(f"Error processing child threat models (check if children is an array e.g. - ID: ...)")
-                    childTM = ThreatModel(open( childrenFilename),
-                        parent = self, public=public, versionsFilterStr=versionsFilterStr)
+                    
+                    childTM = ThreatModel(open(childrenFilename, encoding="utf-8-sig"),
+                        parent=self, public=public, versionsFilterStr=versionsFilterStr)
 
 
             elif "gantt"  == k:
