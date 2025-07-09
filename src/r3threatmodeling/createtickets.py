@@ -190,7 +190,7 @@ def getargs():
     sys.exit(0)
 
   if not args.password:
-    print('Please specify --username or ATLASSIAN_USERNAME environment')
+    print('Please specify --username or ATLASSIAN_PASSWORD environment')
     sys.exit(0)
 
   return args
@@ -244,9 +244,9 @@ def update_threat_with_ref(threat, ticketid, jira):
 def main():
 
     args = getargs()
-    jira = JIRA(args.jira, basic_auth=(args.username, args.password))
- 
+
     tm = ThreatModel(args.rootTMYaml)
+
 
     #for idPathPart in TMID.split('.')[1:]:
     #if args.TMID:
@@ -284,6 +284,8 @@ def main():
       #    print(f'  {x}{cm.title}')
       
       threat.ticketLink = f"http://jira....?id={threat.id}"
+
+      jira = JIRA(args.jira, basic_auth=(args.username, args.password))
 
       answer = input("\nOpen JIRA? [Y/N]: ").upper()
       if answer == 'Y' or answer == 'YES':
