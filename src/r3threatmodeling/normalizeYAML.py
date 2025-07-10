@@ -109,12 +109,12 @@ Threat.updateYaml = updateThreatYaml
 Countermeasure.updateYaml = updateCountermeasureYaml
 
 
-def normalizeandDumpYAML(threatModel, filePrefix=""):
+def normalizeandDumpYAML(threatModel, filePrefix="", recursive=True):
     print('normalize!')
 
 
     threatModel.updateYaml()
-    threatModel.dumpRecursive(prefix=filePrefix)
+    threatModel.dumpRecursive(prefix=filePrefix, recursive=recursive)
 
 def main():
 
