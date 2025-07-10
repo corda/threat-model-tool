@@ -185,6 +185,9 @@ class BaseThreatModelObject:
                     continue
                 # Avoid calling properties that may raise or are not data attributes
                 try:
+                    attr = getattr(type(self), attr_name, None)
+                    if isinstance(attr, property):
+                        continue
                     attr = getattr(self, attr_name)
                 except Exception:
                     continue
@@ -280,11 +283,13 @@ class REFID(BaseThreatModelObject):
         for attr_name in dir(self.parent):
             if attr_name.startswith('_'):
               continue
-                            # Avoid calling properties that may raise or are not data attributes
-            try:
-                attr = getattr(self.parent, attr_name)
-            except Exception:
+            # Avoid calling properties that may raise or are not data attributes
+
+            attr = getattr(type(self.parent), attr_name, None)
+            if isinstance(attr, property):
                 continue
+            attr = getattr(self.parent, attr_name)
+
             # Avoid calling methods
             if callable(attr):
                 continue
