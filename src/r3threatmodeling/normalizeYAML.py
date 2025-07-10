@@ -24,8 +24,8 @@ from r3threatmodeling.threatmodel_data import Countermeasure, Threat, ThreatMode
 
 
 def com_insert(self, pos, key, value, comment=None):
-    print('insert!')
-    sys.exit(1)
+    #print('insert!')
+    #sys.exit(1)
     od = ordereddict()
     od.update(self)
     for k in od:
