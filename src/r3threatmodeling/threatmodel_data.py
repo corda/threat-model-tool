@@ -504,7 +504,7 @@ class Threat(BaseThreatModelObject):
     def ticketLink(self):
         # if self.public:
         #     return None
-        self._ticketLink
+        return getattr(self, '_ticketLink', None)
     
     @ticketLink.setter
     def ticketLink(self, value):
@@ -514,8 +514,6 @@ class Threat(BaseThreatModelObject):
         else:
             self.originDict.update({'ticketLink': value})
             
-
-    
     @property
     def description(self):
         if hasattr(self, 'attack'):
