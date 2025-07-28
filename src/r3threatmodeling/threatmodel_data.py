@@ -220,6 +220,17 @@ class BaseThreatModelObject:
                 return res
         return None
 
+    def getThreatModel(self):
+        """
+        Get the threat model object that contains this object.
+        """
+        if isinstance(self, ThreatModel):
+            return self
+        elif self.parent is None:
+            return None
+        else:
+            return self.parent.getThreatModel()
+
     def getRoot(self):
         if (self.parent == None):
             return self
@@ -238,6 +249,15 @@ class BaseThreatModelObject:
             if res != None:
                 return res
         return None
+    
+    def getFileAndLineErrorMessage(self):
+
+        line_number = None
+        if hasattr(self, "originDict") and hasattr(self.originDict, "lc"):
+            if hasattr(self.originDict, "lc") and hasattr(self.originDict.lc, "data"):
+                line_number = self.originDict.lc.line
+                return f" (file: \"{self.getThreatModel().fileName}\", line {line_number})" if line_number is not None else ""
+        return f" (file: \"{self.getThreatModel().fileName}\""
 
 class REFID(BaseThreatModelObject):
     """
@@ -911,7 +931,9 @@ class ThreatModel(BaseThreatModelObject):
                     ref: REFID
                     ref.replaceInParent(copyReferenced=True)
                 except Exception as e:
-                    raise BaseException(f"Error replacing REFID {ref.id} in threat model {self.id}: {e}")
+                    errorLink = ref.getFileAndLineErrorMessage()
+                    raise BaseException(
+                        f"Error replacing REFID {ref.id} in threat model {self.id}: {e} in \n\{errorLink} " )
             
 
             self.checkThreatModelConsistency()
