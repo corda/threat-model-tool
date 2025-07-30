@@ -255,7 +255,7 @@ class BaseThreatModelObject:
         line_number = None
         if hasattr(self, "originDict") and hasattr(self.originDict, "lc"):
             if hasattr(self.originDict, "lc") and hasattr(self.originDict.lc, "data"):
-                line_number = self.originDict.lc.line
+                line_number = self.originDict.lc.line + 1
                 return f" (file: \"{self.getThreatModel().fileName}\", line {line_number})" if line_number is not None else ""
         return f" (file: \"{self.getThreatModel().fileName}\""
 
@@ -413,8 +413,10 @@ class SecurityObjective(BaseThreatModelObject):
     
         # if "ID" in dict and dict["ID"] is not None and "." in dict["ID"]:
         #     dict["ID"] = dict["ID"].replace(".","_").upper()
-
+        self.originDict = dict
         self.contributesTo = []
+
+
 
         self.parent = parent
         if hasattr(parent, "children"):
@@ -425,6 +427,11 @@ class SecurityObjective(BaseThreatModelObject):
         self.scope=parent
         self.parent=parent
         self.id = str(dict["ID"])
+
+
+        if "group" not in dict:
+            raise Exception(f"SecurityObjective {dict.get('ID', 'undefined')} needs a 'group' attribute" + self.getFileAndLineErrorMessage())
+        
         for k, v in dict.items():
             if k == "contributesTo":
                     references = dict["contributesTo"]
@@ -440,7 +447,7 @@ class SecurityObjective(BaseThreatModelObject):
                             # self.contributesTo.append(copiedObject)
             else:
                 setattr(self, k, v)
-
+        
     def linkedImpactMDText(self):
         return  f"<code><a href=\"#{self.anchor}\">{self._id}</a></code>"
     
@@ -480,7 +487,7 @@ class Countermeasure(BaseThreatModelObject):
         required_keys = ["inPlace", "public", "description", "title"]
         for key in required_keys:
             if key not in dict:
-                raise Exception(f"Countermeasure {self.id} needs a '{key}' attribute")
+                raise Exception(f"Countermeasure {self.id} needs a '{key}' attribute" + self.getFileAndLineErrorMessage())
     
         for k, v in dict.items():
             setattr(self, k, v)
