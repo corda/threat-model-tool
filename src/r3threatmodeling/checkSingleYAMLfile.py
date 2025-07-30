@@ -23,7 +23,7 @@ def find_root_yaml(filepath):
             print(f"Error: Parent file not found: {current_filepath}")
             return None  # Or raise an exception
         except Exception as e:
-            print(f"Error parsing YAML: {e}")
+            print(f"Error parsing YAML {current_filepath}: {e}")
             return None
 
 def parse_threat_model(filepath):

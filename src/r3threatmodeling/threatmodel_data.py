@@ -289,6 +289,8 @@ class REFID(BaseThreatModelObject):
         Replace the REFID in the parent object with the actual object.
         """
         referenced = self.resolve()
+        if referenced is None:
+            raise BaseException(f"REFID: {self.REFID} not found in: {self.id} " + self.getFileAndLineErrorMessage())
         if copyReferenced:
             # if copyReferenced is True, we copy the referenced object
             # this is useful to avoid modifying the original object
