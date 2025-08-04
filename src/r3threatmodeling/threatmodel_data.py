@@ -32,9 +32,217 @@ def matchesAllPros(object, **kwargs):
     return True
 
 
-class BaseThreatModelObject:
+class TreeNode:
+    """
+    Base class for tree node functionality, handling parent-child relationships and ID management.
+    This class is designed to be reusable across different projects that need tree structures.
+    """
+    
+    def __init__(self, dict_data=None, parent=None):
+        """
+        Initialize a tree node with optional dictionary data and parent reference.
+        
+        Args:
+            dict_data: Dictionary containing node data (must have 'ID' key if provided)
+            parent: Parent node reference
+        """
+        self.parent = parent
+        
+        # Add this node to parent's children collection
+        if parent is not None:
+            if hasattr(parent, "children"):
+                parent.children.add(self)
+            else:
+                parent.children = {self}
+        
+        # Set ID from dict if provided
+        if dict_data and "ID" in dict_data:
+            self._id = dict_data["ID"]
+        else:
+            self._id = "undefined"
 
-    originDict= None
+    @property
+    def id(self):
+        """Get the full hierarchical ID of this node."""
+        if not hasattr(self, '_id'):
+            return None
+        
+        if self.parent is not None:
+            try:
+                return self.parent.id + "." + self._id
+            except:
+                # Fallback for cases where parent.id might not be available
+                return getattr(self.parent, '_id', 'unknown') + "." + self._id
+        else:
+            return self._id
+    
+    @id.setter
+    def id(self, value):
+        """Set the ID with validation for allowed characters."""
+        if not re.match("^[a-zA-Z0-9_]*$", value):
+            parent_id = self.parent.id if self.parent else "None"
+            raise ValueError(f"ID can only contain alphanumeric characters and underscores. Invalid ID: {value} (parent: {parent_id})")
+        self._id = value
+
+    @property
+    def anchor(self):
+        """Get the anchor part of the ID (excluding parent hierarchy)."""
+        full_id = self.id
+        if '.' in full_id:
+            return full_id[full_id.find('.')+1:]
+        return full_id
+
+    @property
+    def uri(self):
+        """Get the URI representation of this node."""
+        if not self.parent:
+            return self.id
+        
+        root = self.getRoot()
+        root_id = getattr(root, '_id', self.id)
+        return root_id + '/#' + self.anchor
+
+    def getRoot(self):
+        """Get the root node of this tree."""
+        if self.parent is None:
+            return self
+        else:
+            return self.parent.getRoot()
+    
+    def getAllUp(self, attr_name):
+        """Get all values of an attribute recursively from this node up to the root."""
+        if self.parent is None:
+            return getattr(self, attr_name, [])
+        else:
+            parent_attrs = self.parent.getAllUp(attr_name)
+            self_attrs = getattr(self, attr_name, [])
+            # Handle both list and non-list attributes
+            if isinstance(parent_attrs, list) and isinstance(self_attrs, list):
+                return parent_attrs + self_attrs
+            elif isinstance(parent_attrs, list):
+                return parent_attrs + [self_attrs] if self_attrs is not None else parent_attrs
+            elif isinstance(self_attrs, list):
+                return ([parent_attrs] if parent_attrs is not None else []) + self_attrs
+            else:
+                return [parent_attrs, self_attrs] if parent_attrs is not None and self_attrs is not None else ([parent_attrs] if parent_attrs is not None else [self_attrs] if self_attrs is not None else [])
+
+    def getFirstUp(self, attr_name):
+        """Get the first occurrence of an attribute going up the tree."""
+        if hasattr(self, attr_name):
+            return getattr(self, attr_name)
+        elif self.parent is None:
+            return None
+        else:
+            return self.parent.getFirstUp(attr_name)
+        
+    def getAllDown(self, attr_name):
+        """Get all values of an attribute recursively from this node down through all children."""
+        ret = getattr(self, attr_name, [])
+        
+        # Look for standard children collections
+        children_collections = []
+        if hasattr(self, 'children'):
+            children_collections.append(self.children)
+        
+        for children in children_collections:
+            if children:
+                for child in children:
+                    if hasattr(child, 'getAllDown'):
+                        child_attrs = child.getAllDown(attr_name)
+                        if isinstance(ret, list) and isinstance(child_attrs, list):
+                            ret = ret + child_attrs
+                        elif isinstance(ret, list):
+                            ret.append(child_attrs)
+                        else:
+                            ret = [ret, child_attrs] if child_attrs is not None else [ret]
+        
+        return ret
+
+    def getAllDownByType(self, type_class):
+        """Get all objects of a specific type in the tree rooted at this node."""
+        ret = []
+        
+        # Check if this node is of the requested type
+        if isinstance(self, type_class):
+            ret.append(self)
+
+        # Search through all attributes for child nodes and collections
+        for attr_name in dir(self):
+            if attr_name.startswith('_'):
+                continue
+            
+            try:
+                # Skip properties that might raise exceptions
+                attr_descriptor = getattr(type(self), attr_name, None)
+                if isinstance(attr_descriptor, property):
+                    continue
+                    
+                attr_value = getattr(self, attr_name)
+                
+                # Skip methods
+                if callable(attr_value):
+                    continue
+                
+                # Check collections
+                if isinstance(attr_value, (list, set)):
+                    for item in attr_value:
+                        if isinstance(item, type_class):
+                            ret.append(item)
+                        elif isinstance(item, TreeNode) and item is not self:
+                            ret.extend(item.getAllDownByType(type_class))
+                            
+            except Exception:
+                # Skip attributes that can't be accessed
+                continue
+
+        return ret
+
+    def getDescendantById(self, target_id):
+        """Get a direct descendant by ID within this node's immediate children."""
+        if not hasattr(self, 'children') or not self.children:
+            return None
+            
+        for child in self.children:
+            if hasattr(child, '_id') and child._id == target_id:
+                return child
+                
+        # Search recursively in children
+        for child in self.children:
+            if hasattr(child, 'getDescendantById'):
+                result = child.getDescendantById(target_id)
+                if result is not None:
+                    return result
+                    
+        return None
+    
+    def getDescendantFirstById(self, target_id):
+        """Get any descendant by ID within this tree, searching all levels."""
+        # First try direct descendants
+        result = self.getDescendantById(target_id)
+        if result is not None:
+            return result
+            
+        # Then search in any specialized child collections (to be overridden by subclasses)
+        return None
+
+
+class BaseThreatModelObject(TreeNode):
+    """
+    Base class for threat model objects, extending TreeNode with threat model specific functionality.
+    """
+
+    def __init__(self, dict_data=None, parent=None):
+        super().__init__(dict_data, parent)
+        
+        self.originDict = dict_data
+        self.description = ""
+        self.isReference = False
+        
+        # Set attributes from dictionary
+        if dict_data:
+            for k, v in dict_data.items():
+                if k != "ID":  # ID is handled by parent class
+                    setattr(self, k, v)
 
     def matchesVersion(self, appliesToVersion):
         if not self.versionsFilter:
@@ -57,133 +265,55 @@ class BaseThreatModelObject:
             raise BaseException(f"originDict not set by the object parser in: {self.id}")
 
     @property
-    def id(self):
-        if not hasattr(self, '_id'):
-            return None
-        
-        if self.parent is not None:
-            try:
-                lid = self.parent.id + "." + self._id
-            except:
-                #No idea why I need this... for countermeasure parsing etc...
-                return self.parent._id + "." + self._id
-            return lid
-        else:
-            #if isinstance(self, SecurityObjective):
-            #    prefix='SO'
-            #elif isinstance(self, SecurityObjective):
-            #    prefix=''
-            return self._id
-    @id.setter
-    def id(self, id):
-        if not re.match("^[a-zA-Z0-9_]*$", id):
-        # if " " in id:
-            raise BaseException(f"ID does support other chars than alphanumeric and _ , pls change this ID: {id} (parent: {self.parent.id} )")
-        self._id = id
-
-
-    @property
-    def anchor(self):
-        id = self.id
-        return id[id.find('.')+1:] #exclude the first TMID. from the anchor
-
-
-    @property
-    def uri(self):
-        if not self.parent:
-            return self.id
-        
-        root = self.getRoot()
-        return root._id + '/#' + self.anchor
-        
-    isReference = False 
-    
-
-    @property
     def versionsFilter(self):
         if not hasattr(self, '_versionsFilter'):
-            return self.getRoot().versionsFilter ##TODO check this function
+            return self.getRoot().versionsFilter if hasattr(self.getRoot(), 'versionsFilter') else None
         else:
             return self._versionsFilter
-
 
     @property
     def title(self):
         if not hasattr(self, '_title'):
-            return self.description[0:50] + "[...]"
+            description = getattr(self, 'description', '')
+            return description[0:50] + "[...]" if description else "No title"
         else:
             return self._title
+    
     @title.setter
     def title(self, title):
         self._title = title
 
-    def __init__(self):
-
-        return
-    def __init__(self, dict, parent):
-
-        # if "ID" in dict and dict["ID"] is not None and "." in dict["ID"]:
-        #     dict["ID"] = dict["ID"].replace(".","_").upper()
-
-        self.originDict = dict
-
-        self.description = ""
-        self.parent = parent
-
-        if hasattr(parent, "children"):
-            parent.children.add(self)
-        else:
-            parent.children = {self}
-
-        if "ID" in dict:
-            self._id = dict["ID"]
-        else:
-            self._id = "undefined"
-        for k, v in dict.items():
-            setattr(self, k, v)
-
-
     def printAsText(self):
-        return "\nID: " + self.id + " \nDescription: " + self.description
+        return "\nID: " + self.id + " \nDescription: " + getattr(self, 'description', '')
     
-    #Get all elements recursive form parents
-    def getAllUp(self, attrName):
-        if self.parent is None:
-            return getattr(self, attrName)
-        else:
-            return self.parent.getAllUp(attrName) + getattr(self, attrName)
-
-    def getFirstUp(self, attrName):
-        if self.parent is None:
-            if hasattr(self, attrName):
-                return getattr(self, attrName)
-            else:
-                return None
-        else:
-            return self.parent.getFirstUp(attrName)
-        
     def getAllDown(self, attrName):
+        """Override to handle threat model specific children collections."""
         ret = getattr(self, attrName, [])
-        for c in self.childrenTM:
-            ret = ret + c.getAllDown(attrName)
+        
+        # Handle standard children
+        if hasattr(self, 'children') and self.children:
+            for c in self.children:
+                if hasattr(c, 'getAllDown'):
+                    ret = ret + c.getAllDown(attrName)
+        
+        # Handle threat model specific children (childrenTM)
+        if hasattr(self, 'childrenTM') and self.childrenTM:
+            for c in self.childrenTM:
+                if hasattr(c, 'getAllDown'):
+                    ret = ret + c.getAllDown(attrName)
+        
         return ret
 
     def getAllDownByType(self, typeName):
-        
-        """
-        Get all objects of a specific type in the threat model and its children.
-        """
+        """Override to handle threat model specific collections and use BaseThreatModelObject for type checking."""
         ret = []
         try:
             if isinstance(self, typeName):
                 ret.append(self)
-            # for c in self.children:
-            #     ret = ret + c.getAllDownByType(typeName)
 
             for attr_name in dir(self):
                 if attr_name.startswith('_'):
                     continue
-                # Avoid calling properties that may raise or are not data attributes
                 try:
                     attr = getattr(type(self), attr_name, None)
                     if isinstance(attr, property):
@@ -191,7 +321,6 @@ class BaseThreatModelObject:
                     attr = getattr(self, attr_name)
                 except Exception:
                     continue
-                # Avoid calling methods
                 if callable(attr):
                     continue
                 if isinstance(attr, list):
@@ -199,76 +328,61 @@ class BaseThreatModelObject:
                         if isinstance(item, typeName):
                             ret.append(item)
                         elif isinstance(item, BaseThreatModelObject):
-                            # Avoid infinite recursion
                             if item is not self:
                                 ret = ret + item.getAllDownByType(typeName)
         except:
             raise BaseException(f"Error getting all down by type {typeName} in {self.id}")
 
         return ret
-
-    #get something by ID inside a specific TM object
-    def getDescendantById(self, id):
-        if not hasattr(self, 'children'):
-            return None
-        for x in self.children:
-            if x._id == id:
-                return x
-        for x in self.children:
-            res = x.getDescendantById(id)
-            if res != None:
-                return res
+    
+    def getDescendantFirstById(self, id):
+        """Override to handle threat model specific children (childrenTM)."""
+        res = self.getDescendantById(id)
+        if res is not None:
+            return res
+            
+        # Search in threat model specific children
+        if hasattr(self, 'childrenTM'):
+            for tm in self.childrenTM:
+                if hasattr(tm, 'getDescendantFirstById'):
+                    res = tm.getDescendantFirstById(id)
+                    if res is not None:
+                        return res
+        
         return None
 
     def getThreatModel(self):
-        """
-        Get the threat model object that contains this object.
-        """
-        if isinstance(self, ThreatModel):
+        """Get the threat model object that contains this object."""
+        # Import here to avoid circular import
+        if self.__class__.__name__ == 'ThreatModel':
             return self
         elif self.parent is None:
             return None
         else:
             return self.parent.getThreatModel()
-
-    def getRoot(self):
-        if (self.parent == None):
-            return self
-        else:
-            return self.parent.getRoot()
-        
-    #get an object by ID inside a TM and all its children 
-    def getDescendantFirstById(self, id):
-        res = self.getDescendantById(id)
-        if res != None:
-                return res
-        if not hasattr(self, 'childrenTM'):
-            return self.getDescendantById(id)
-        for tm in self.childrenTM:
-            res = tm.getDescendantFirstById(id)
-            if res != None:
-                return res
-        return None
     
     def getFileAndLineErrorMessage(self):
-
         line_number = None
         if hasattr(self, "originDict") and hasattr(self.originDict, "lc"):
             if hasattr(self.originDict, "lc") and hasattr(self.originDict.lc, "data"):
                 line_number = self.originDict.lc.line + 1
-                return f" (file: \"{self.getThreatModel().fileName}\", line {line_number})" if line_number is not None else ""
-        return f" (file: \"{self.getThreatModel().fileName}\""
+                threat_model = self.getThreatModel()
+                filename = threat_model.fileName if threat_model else "unknown"
+                return f" (file: \"{filename}\", line {line_number})" if line_number is not None else ""
+        threat_model = self.getThreatModel()
+        filename = threat_model.fileName if threat_model else "unknown"
+        return f" (file: \"{filename}\")"
 
 class REFID(BaseThreatModelObject):
     """
     This is a reference to an object in the threat model.
     It is used to link objects together, e.g. a countermeasure to a threat.
     """
-    def __init__(self, dict, parent):
-        super().__init__(dict, parent)
-        if "REFID" not in dict:
-            raise BaseException("REFID needs to be defined in: "+self.id)
-        self._id = "REFID_"+ dict["REFID"]
+    def __init__(self, dict_data, parent):
+        super().__init__(dict_data, parent)
+        if "REFID" not in dict_data:
+            raise BaseException("REFID needs to be defined in: " + str(self.id))
+        self._id = "REFID_" + dict_data["REFID"]
         # Store REFID in a map by ID on the root element
         root = self.getRoot()
         if not hasattr(root, "_refid_map"):
@@ -406,47 +520,20 @@ class SecurityObjective(BaseThreatModelObject):
     def treeImage(self, treeImage):
         self._treeImage = treeImage
     
-    def __init__(self):
-        return
-    def __init__(self, dict, parent):
-        # self.threats: list[Threat] = []
-    
-        # if "ID" in dict and dict["ID"] is not None and "." in dict["ID"]:
-        #     dict["ID"] = dict["ID"].replace(".","_").upper()
-        self.originDict = dict
+    def __init__(self, dict_data, parent):
+        super().__init__(dict_data, parent)
         self.contributesTo = []
+        self.scope = parent
 
-
-
-        self.parent = parent
-        if hasattr(parent, "children"):
-            parent.children.add(self)
-        else:
-            parent.children = {self}
-
-        self.scope=parent
-        self.parent=parent
-        self.id = str(dict["ID"])
-
-
-        if "group" not in dict:
-            raise Exception(f"SecurityObjective {dict.get('ID', 'undefined')} needs a 'group' attribute" + self.getFileAndLineErrorMessage())
+        if "group" not in dict_data:
+            raise Exception(f"SecurityObjective {dict_data.get('ID', 'undefined')} needs a 'group' attribute" + self.getFileAndLineErrorMessage())
         
-        for k, v in dict.items():
-            if k == "contributesTo":
-                    references = dict["contributesTo"]
-                    for dict2 in references:
-                        if "REFID" in dict2:
-                            self.contributesTo.append(REFID(dict2, self))
-                            # refID = dict2['REFID']
-                            # referenced = self.getRoot().getDescendantFirstById(refID)
-                            # if referenced == None:
-                            #     raise BaseException("REFID: "+ dict2['REFID'] +" not found in: "+self.id )
-                            # copiedObject  = copy.copy(referenced)
-                            # copiedObject.isReference = True
-                            # self.contributesTo.append(copiedObject)
-            else:
-                setattr(self, k, v)
+        # Handle contributesTo references
+        if "contributesTo" in dict_data:
+            references = dict_data["contributesTo"]
+            for dict2 in references:
+                if "REFID" in dict2:
+                    self.contributesTo.append(REFID(dict2, self))
         
     def linkedImpactMDText(self):
         return  f"<code><a href=\"#{self.anchor}\">{self._id}</a></code>"
@@ -465,32 +552,14 @@ class Scope(BaseThreatModelObject):
     pass
         
 class Countermeasure(BaseThreatModelObject):
-    def __init__(self):
-        return
-    def __init__(self, dict, threat):
-
-        self.originDict = dict
-
-        parent = threat
-        if hasattr(parent, "children"):
-            parent.children.add(self)
-        else:
-            parent.children = {self}
-
-        self.threat=threat
-        self.parent=threat
-        # if "ID" in dict and dict["ID"] is not None and "." in dict["ID"]:
-        #     dict["ID"] = dict["ID"].replace(".","_").upper()
-        self.id = str(dict["ID"])
-
+    def __init__(self, dict_data, threat):
+        super().__init__(dict_data, threat)
+        self.threat = threat
 
         required_keys = ["inPlace", "public", "description", "title"]
         for key in required_keys:
-            if key not in dict:
+            if key not in dict_data:
                 raise Exception(f"Countermeasure {self.id} needs a '{key}' attribute" + self.getFileAndLineErrorMessage())
-    
-        for k, v in dict.items():
-            setattr(self, k, v)
 
     def printAsText(self):
         return "\nID: " + self.id + " \nDescription: " + self.description 
@@ -548,6 +617,11 @@ class Threat(BaseThreatModelObject):
             return "**Attack:** " + self.attack + "<br/> **Impact:** " + self.impactDesc
         else:
             return "undefined"
+    
+    @description.setter
+    def description(self, value):
+        # Store the raw description if needed, but the getter will use computed value
+        self._description = value
         
     @property
     def attack_desc(self):
@@ -628,34 +702,20 @@ class Threat(BaseThreatModelObject):
                 ocmList.append(cm)
         return ocmList
 
-    def __init__(self):
-
-        return
-    def __init__(self, dict, tm, public=False):
-
-        self.originDict = dict
-
-        parent = tm
-        if hasattr(parent, "children"):
-            parent.children.add(self)
-        else:
-            parent.children = {self}
-
+    def __init__(self, dict_data, tm, public=False):
+        super().__init__(dict_data, tm)
+        
         self.countermeasures = []
         self.assets = []
         self.impactedSecObjs = []
         self.attackers = []
-
-        self.parent = tm 
         self.threatModel = tm
 
-        self.id = dict["ID"]
-       
-        dict.setdefault('CVSS', {'base':'TODO CVSS', 'vector':''})
-        dict.setdefault('fullyMitigated', False)
+        dict_data.setdefault('CVSS', {'base':'TODO CVSS', 'vector':''})
+        dict_data.setdefault('fullyMitigated', False)
 
             
-        for k, v in dict.items():
+        for k, v in dict_data.items():
             if k == "ticketLink":
                 if public:
                     pass
@@ -760,23 +820,18 @@ class Asset(BaseThreatModelObject):
             raise TypeError('Asset.inScope must be an boolean' + ", found value: " + value + " in " + self.id)
         self._inScope = value
     
-    def __init__(self, dict, parent):
-        super().__init__(dict, parent)
-        if 'type' not in dict:
+    def __init__(self, dict_data, parent):
+        super().__init__(dict_data, parent)
+        if 'type' not in dict_data:
             raise ValueError(f"Asset {self.id} must have a 'type' property")
             
-        if 'inScope' not in dict or not isinstance(dict['inScope'], bool):
+        if 'inScope' not in dict_data or not isinstance(dict_data['inScope'], bool):
             raise ValueError(f"Asset {self.id} must have a boolean 'inScope' property")
-        for k, v in dict.items():
-            setattr(self, k, v)
 
 class Attacker(BaseThreatModelObject):
-    def __init__(self, dict, parent):
-        super().__init__(dict, parent)
-        if not hasattr(self, 'title'):
-            raise BaseException(f"Attacker {self.id} must have a title")
-        for k, v in dict.items():
-            setattr(self, k, v)
+    def __init__(self, dict_data, parent):
+        super().__init__(dict_data, parent)
+        # Title is optional for attackers
 
 class Assumption(BaseThreatModelObject):
     pass
@@ -942,7 +997,7 @@ class ThreatModel(BaseThreatModelObject):
                 except Exception as e:
                     errorLink = ref.getFileAndLineErrorMessage()
                     raise BaseException(
-                        f"Error replacing REFID {ref.id} in threat model {self.id}: {e} in \n\{errorLink} " )
+                        f"Error replacing REFID {ref.id} in threat model {self.id}: {e} in \n{errorLink}" )
             
 
             self.checkThreatModelConsistency()
