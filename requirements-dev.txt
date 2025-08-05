@@ -1,0 +1,22 @@
+# Development requirements for threat-model-tool
+# Install with: pip install -r requirements-dev.txt
+
+# Include the main package requirements
+-r src/r3threatmodeling/requirements.txt
+
+# Development and testing tools
+pytest>=7.0.0
+pytest-cov
+black
+flake8
+mypy
+pre-commit
+
+# Documentation
+sphinx
+sphinx-rtd-theme
+
+# Build tools
+build
+twine
+wheel

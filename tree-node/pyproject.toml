@@ -1,0 +1,41 @@
+[project]
+name = "tree-node"
+version = "1.0.0"
+description = "A reusable tree structure implementation with parent-child relationships and ID management"
+readme = "README.md"
+authors = [
+    {name = "David Cervigni", email = "david.cervigni@r3.com"},
+    {name = "James Brown"}
+]
+license = {text = "Apache-2.0"}
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
+]
+keywords = ["tree", "node", "hierarchy", "data-structure"]
+
+[project.urls]
+Homepage = "https://github.com/corda/threat-model-tool"
+Documentation = "https://github.com/corda/threat-model-tool/tree/main/tree-node"
+Repository = "https://github.com/corda/threat-model-tool.git"
+Issues = "https://github.com/corda/threat-model-tool/issues"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
