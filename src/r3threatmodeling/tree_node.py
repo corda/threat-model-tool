@@ -28,10 +28,12 @@ class TreeNode:
         # Add this node to parent's children collection only if parent is a TreeNode
         if parent is not None and isinstance(parent, TreeNode):
             if hasattr(parent, "children"):
-                parent.children.add(self)
+                if not isinstance(parent.children, list):
+                    parent.children = list(parent.children)  # Convert to list if needed
+                parent.children.append(self)
             else:
-                parent.children = {self}
-        
+                parent.children = [self]  # Use list instead of set
+    
         # Set ID from dict if provided
         if dict_data and "ID" in dict_data:
             self._id = dict_data["ID"]
