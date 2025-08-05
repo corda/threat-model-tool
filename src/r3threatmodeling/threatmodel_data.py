@@ -48,8 +48,8 @@ class TreeNode:
         """
         self.parent = parent
         
-        # Add this node to parent's children collection
-        if parent is not None:
+        # Add this node to parent's children collection only if parent is a TreeNode
+        if parent is not None and isinstance(parent, TreeNode):
             if hasattr(parent, "children"):
                 parent.children.add(self)
             else:
@@ -215,15 +215,15 @@ class TreeNode:
                     
         return None
     
-    def getDescendantFirstById(self, target_id):
-        """Get any descendant by ID within this tree, searching all levels."""
-        # First try direct descendants
-        result = self.getDescendantById(target_id)
-        if result is not None:
-            return result
+    # def getDescendantFirstById(self, target_id):
+    #     """Get any descendant by ID within this tree, searching all levels."""
+    #     # First try direct descendants
+    #     result = self.getDescendantById(target_id)
+    #     if result is not None:
+    #         return result
             
-        # Then search in any specialized child collections (to be overridden by subclasses)
-        return None
+    #     # Then search in any specialized child collections (to be overridden by subclasses)
+    #     return None
 
 
 class BaseThreatModelObject(TreeNode):
@@ -241,8 +241,9 @@ class BaseThreatModelObject(TreeNode):
         # Set attributes from dictionary
         if dict_data:
             for k, v in dict_data.items():
-                if k != "ID":  # ID is handled by parent class
+                if k != "ID" and k != "children" and k != "parent":  # ID is handled by parent class, children by TreeNode, parent by constructor
                     setattr(self, k, v)
+                    
 
     def matchesVersion(self, appliesToVersion):
         if not self.versionsFilter:
@@ -285,71 +286,6 @@ class BaseThreatModelObject(TreeNode):
 
     def printAsText(self):
         return "\nID: " + self.id + " \nDescription: " + getattr(self, 'description', '')
-    
-    def getAllDown(self, attrName):
-        """Override to handle threat model specific children collections."""
-        ret = getattr(self, attrName, [])
-        
-        # Handle standard children
-        if hasattr(self, 'children') and self.children:
-            for c in self.children:
-                if hasattr(c, 'getAllDown'):
-                    ret = ret + c.getAllDown(attrName)
-        
-        # Handle threat model specific children (childrenTM)
-        if hasattr(self, 'childrenTM') and self.childrenTM:
-            for c in self.childrenTM:
-                if hasattr(c, 'getAllDown'):
-                    ret = ret + c.getAllDown(attrName)
-        
-        return ret
-
-    def getAllDownByType(self, typeName):
-        """Override to handle threat model specific collections and use BaseThreatModelObject for type checking."""
-        ret = []
-        try:
-            if isinstance(self, typeName):
-                ret.append(self)
-
-            for attr_name in dir(self):
-                if attr_name.startswith('_'):
-                    continue
-                try:
-                    attr = getattr(type(self), attr_name, None)
-                    if isinstance(attr, property):
-                        continue
-                    attr = getattr(self, attr_name)
-                except Exception:
-                    continue
-                if callable(attr):
-                    continue
-                if isinstance(attr, list):
-                    for item in attr:
-                        if isinstance(item, typeName):
-                            ret.append(item)
-                        elif isinstance(item, BaseThreatModelObject):
-                            if item is not self:
-                                ret = ret + item.getAllDownByType(typeName)
-        except:
-            raise BaseException(f"Error getting all down by type {typeName} in {self.id}")
-
-        return ret
-    
-    def getDescendantFirstById(self, id):
-        """Override to handle threat model specific children (childrenTM)."""
-        res = self.getDescendantById(id)
-        if res is not None:
-            return res
-            
-        # Search in threat model specific children
-        if hasattr(self, 'childrenTM'):
-            for tm in self.childrenTM:
-                if hasattr(tm, 'getDescendantFirstById'):
-                    res = tm.getDescendantFirstById(id)
-                    if res is not None:
-                        return res
-        
-        return None
 
     def getThreatModel(self):
         """Get the threat model object that contains this object."""
@@ -395,10 +331,9 @@ class REFID(BaseThreatModelObject):
         """
         root = self.getRoot()
         # refid = self._id.replace("REFID_", "")
-        return root.getDescendantFirstById(self.REFID)
+        return root.getDescendantById(self.REFID)
     
     def replaceInParent(self, copyReferenced=True):
-        
         """
         Replace the REFID in the parent object with the actual object.
         """
@@ -410,35 +345,54 @@ class REFID(BaseThreatModelObject):
             # this is useful to avoid modifying the original object
             referenced = copy.copy(referenced)
             referenced.isReference = True
-        if hasattr(self.parent, 'children'):
+        
+        replaced = False
+        
+        # Check TreeNode children set first
+        if hasattr(self.parent, 'children') and isinstance(self.parent.children, set):
             if self in self.parent.children:
                 self.parent.children.remove(self)
                 self.parent.children.add(referenced)
+                replaced = True
         
-        replaced = False
+        # Check all list attributes and replace all occurrences
         for attr_name in dir(self.parent):
             if attr_name.startswith('_'):
-              continue
-            # Avoid calling properties that may raise or are not data attributes
-
-            attr = getattr(type(self.parent), attr_name, None)
-            if isinstance(attr, property):
                 continue
-            attr = getattr(self.parent, attr_name)
-
-            # Avoid calling methods
-            if callable(attr):
+            
+            try:
+                attr = getattr(self.parent, attr_name)
+                if isinstance(attr, list):
+                    # Replace all occurrences of self in the list
+                    while self in attr:
+                        attr[attr.index(self)] = referenced
+                        replaced = True
+            except Exception as e:
+                # Skip attributes that cause errors (like properties)
                 continue
 
-            attr = getattr(self.parent, attr_name)
-            if isinstance(attr, list):
-                # Replace all occurrences of self in the list
-                while self in attr:
-                    attr[attr.index(self)] = referenced
+        # If we haven't replaced anything, check if the referenced object is already in place
+        # This handles cases where the REFID was already replaced in a previous call
+        if not replaced:
+            # Check if the referenced object is already in the children set
+            if hasattr(self.parent, 'children') and isinstance(self.parent.children, set):
+                if referenced in self.parent.children:
                     replaced = True
+            
+            # Check if the referenced object is already in any list attributes
+            for attr_name in dir(self.parent):
+                if attr_name.startswith('_'):
+                    continue
+                try:
+                    attr = getattr(self.parent, attr_name)
+                    if isinstance(attr, list) and referenced in attr:
+                        replaced = True
+                        break
+                except Exception as e:
+                    continue
 
         if not replaced:
-             raise BaseException("Could not replace REFID in parent: " + self.id)
+            raise BaseException(f"Could not replace REFID in parent: {self.id}" + self.getFileAndLineErrorMessage() + f" (line: {self.originDict.lc.line + 1 if hasattr(self.originDict, 'lc') else 'unknown'})")
 
 class TMCVSS(CVSS3):
 
@@ -505,7 +459,6 @@ class SecurityObjective(BaseThreatModelObject):
     priority = "High"
 
     inScope = True
-
 
     @property
     def treeImage(self):
@@ -739,12 +692,11 @@ class Threat(BaseThreatModelObject):
                 for cmData in v:
                     try:
                         if "REFID" in cmData:
-
                             self.impactedSecObjs.append(REFID(cmData, self))
                         else:
                             raise BaseException("REFID needed to reference an impacted Security Objective in: "+self.id )
-                    except: 
-                        raise BaseException(f"Problem in impactedSecObj definition reference in {self.id}, try using correct \"- REFID: \" " )
+                    except Exception as e: 
+                        raise BaseException(f"Problem in impactedSecObj definition reference in {self.id}, try using correct \"- REFID: \". Original error: {e}" )
 
             elif k == "assets":
                 if v is not None:
@@ -853,13 +805,14 @@ class ThreatModel(BaseThreatModelObject):
         yaml.dump(self.originDict, outputStream)
 
         if recursive:
-            for childrenTM in self.childrenTM:
-                childrenTM.dumpRecursive(prefix=prefix, encoding=encoding, recursive=recursive)
+            if hasattr(self, 'children') and self.children:
+                for child in self.children:
+                    if isinstance(child, ThreatModel):
+                        child.dumpRecursive(prefix=prefix, encoding=encoding, recursive=recursive)
 
     def assetDir(self):
         return os.path.dirname(self.fileName)+ "/assets"
-    def __init__(self):
-        return
+        
     def __init__(self, fileIn, parent = None, public=False, versionsFilterStr = None):
 
         if versionsFilterStr == None:      
@@ -867,27 +820,30 @@ class ThreatModel(BaseThreatModelObject):
         else:
             self._versionsFilter = list(semantic_version.Version.coerce(v) for v in versionsFilterStr.split(","))
             self.versionsFilterStr = versionsFilterStr #Populate for template only
-        self.fileName = fileIn.name
-
-        print ("processing:" + fileIn.name)
-        fileIn.seek(0)
-        if not fileIn.name.endswith('.yaml'):
-            print("input file needs to be .yaml")
-            exit(-2)
-
-        #tmDict = yaml.load(fileIn)
-        tmDict = try_load_threatmodel_yaml(fileIn.name)
+        
+        # Handle both file objects and string paths
+        if isinstance(fileIn, str):
+            self.fileName = fileIn
+            print ("processing:" + fileIn)
+            if not fileIn.endswith('.yaml'):
+                print("input file needs to be .yaml")
+                exit(-2)
+            tmDict = try_load_threatmodel_yaml(fileIn)
+        else:
+            # fileIn is a file object
+            self.fileName = fileIn.name
+            print ("processing:" + fileIn.name)
+            fileIn.seek(0)
+            if not fileIn.name.endswith('.yaml'):
+                print("input file needs to be .yaml")
+                exit(-2)
+            #tmDict = yaml.load(fileIn)
+            tmDict = try_load_threatmodel_yaml(fileIn.name)
         
         self.originDict = tmDict
 
-        self.childrenTM = []
-
-        #Parent First (this is recursive)
-        if parent is None:
-                self.parent = None
-        else:
-            parent.childrenTM.append(self)
-            self.parent = parent
+        # Initialize TreeNode with parent-child relationship
+        super().__init__(tmDict, parent)
 
         self.threats: list[Threat] = []
         self._id = tmDict["ID"]
@@ -963,7 +919,12 @@ class ThreatModel(BaseThreatModelObject):
                 for childrenDict in tmDict['children']:
                     try:
                         child_id = childrenDict['ID']
-                        base_path = os.path.dirname(fileIn.name)
+                        # Handle both file objects and string paths
+                        if isinstance(fileIn, str):
+                            base_path = os.path.dirname(fileIn)
+                        else:
+                            base_path = os.path.dirname(fileIn.name)
+                        
                         if child_id.endswith('.yaml'):
                             childrenFilename = os.path.join(base_path, child_id)
                         else:
@@ -972,7 +933,7 @@ class ThreatModel(BaseThreatModelObject):
                         print(f"Error processing child threat model: {e}")
                         raise BaseException(f"Error processing child threat models (check if children is an array e.g. - ID: ...)")
                     
-                    childTM = ThreatModel(open(childrenFilename, encoding="utf-8-sig"),
+                    childTM = ThreatModel(childrenFilename,
                         parent=self, public=public, versionsFilterStr=versionsFilterStr)
 
 
@@ -980,28 +941,32 @@ class ThreatModel(BaseThreatModelObject):
                 self.gantt=tmDict['gantt']
 
             else:
-                try:
-                    setattr(self, k, v)
-                except:
-                    raise BaseException(f"cannot set attribute {k} on {self.__class__}: {self.id} ")
+                # Skip 'children' as it's handled by TreeNode
+                if k != "children":
+                    try:
+                        setattr(self, k, v)
+                    except:
+                        raise BaseException(f"cannot set attribute {k} on {self.__class__}: {self.id} ")
 
         
 
         if self.isRoot():
             # resolve REFIDs in the threat model
             # Replace all objects of type REFID in the threat model tree
-            for ref in self.getAllDownByType(REFID):
+            # Use set to deduplicate REFID objects that appear in multiple collections
+            refids_to_replace = set(self.getAllDownByType(REFID))
+            for ref in refids_to_replace:
                 try:
                     ref: REFID
-                    ref.replaceInParent(copyReferenced=True)
+                    ref.replaceInParent()
                 except Exception as e:
                     errorLink = ref.getFileAndLineErrorMessage()
                     raise BaseException(
                         f"Error replacing REFID {ref.id} in threat model {self.id}: {e} in \n{errorLink}" )
-            
 
+            # try:
             self.checkThreatModelConsistency()
-
+ 
     def checkThreatModelConsistency(self):
         """
         Check the consistency of the threat model.
@@ -1038,7 +1003,6 @@ class ThreatModel(BaseThreatModelObject):
             print("Threat Model Consistency Warnings:")
             for warning in warnings:
                 print(f"WARNING!!! - {warning}")
-
 
     def printAsText(self):
         return "\nID: " + self._id + " \nDescription: " + self.description 
@@ -1105,17 +1069,21 @@ class ThreatModel(BaseThreatModelObject):
                 return x
         raise Exception("Asset with ID not found in "+ self._id+ ": " + id)
     
-    def getById(self, id):
-        return self.getRoot().getDescendantFirstById(id)
+    # def getById(self, id):
+    #     return self.getRoot().getDescendantById(id)
 
     def getChildrenTMbyID(self, id):
-        return next((tmo for tmo in self.childrenTM if tmo._id == id), None)
+        if hasattr(self, 'children') and self.children:
+            return next((tmo for tmo in self.children if isinstance(tmo, ThreatModel) and tmo._id == id), None)
+        return None
     
     def getDescendants(self):
         descendants = []
-        for child in self.childrenTM:
-            descendants.append(child)
-            descendants.extend(child.getDescendants())
+        if hasattr(self, 'children') and self.children:
+            for child in self.children:
+                if isinstance(child, ThreatModel):
+                    descendants.append(child)
+                    descendants.extend(child.getDescendants())
         return descendants
     @property
     def title(self):

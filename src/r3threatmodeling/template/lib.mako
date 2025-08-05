@@ -503,7 +503,7 @@ ${asset.propertiesHTML()}
 %endif
 %if hasattr(asset, "specifies"):
 <dt>Specifies, inherit analysis and attribute from:</dt>
-<% specifiedAsset = tmo.getById(asset.specifies) %>
+<% specifiedAsset = tmo.getRoot().getDescendantById(asset.specifies) %>
 <dd markdown="block"> ${specifiedAsset.title}  (<a href="#${specifiedAsset.anchor}">${specifiedAsset._id}</a>) </dd>
 %endif
 </dl>
