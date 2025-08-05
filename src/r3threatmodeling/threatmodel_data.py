@@ -9,7 +9,6 @@ from xml.etree.ElementPath import get_parent_map
 from ruamel.yaml import YAML
 from ruamel.yaml.error import YAMLError
 from collections import defaultdict
-#import yaml
 yaml=YAML(typ='rt')
 
 import os
@@ -518,22 +517,12 @@ class Countermeasure(BaseThreatModelObject):
         return "\nID: " + self.id + " \nDescription: " + self.description 
     
     def RAGStyle(self):
-        if not hasattr(self, "inPlace"):
-            return "countermeasureNIP"
-        if self.inPlace:
-            return "countermeasureIP"
-        return "countermeasureNIP"
+        return "countermeasureIP" if getattr(self, "inPlace", False) else "countermeasureNIP"
 
     def statusColors(self):
-        
-        inPlace = { 'border':'#82B366', 'fill':'#D5E8D4'}
-        notInPlace = { 'border':'#D6B656', 'fill':'#FFF2CC'}
-
-        if not hasattr(self, "inPlace"):
-            return notInPlace
-        if self.inPlace:
-            return inPlace
-        return notInPlace
+        inPlace = {'border': '#82B366', 'fill': '#D5E8D4'}
+        notInPlace = {'border': '#D6B656', 'fill': '#FFF2CC'}
+        return inPlace if getattr(self, "inPlace", False) else notInPlace
     
     #default value
     operational = False
