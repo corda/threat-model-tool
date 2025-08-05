@@ -19,7 +19,11 @@ import copy
 import semantic_version
 from cvss import CVSS3
 
-from .tree_node import TreeNode
+# Import TreeNode with fallback
+try:
+    from tree_node import TreeNode
+except ImportError:
+    from .tree_node import TreeNode
 
 ANY_VERSION_MATCHER = semantic_version.Spec(">0.0.0")
 

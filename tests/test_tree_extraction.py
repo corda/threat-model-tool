@@ -52,7 +52,7 @@ def test_threat_model_integration():
     print("Testing TreeNode integration with threat model classes...")
     
     from r3threatmodeling.threatmodel_data import BaseThreatModelObject
-    from r3threatmodeling.tree_node import TreeNode
+    from r3threatmodeling import TreeNode
     
     # Create a BaseThreatModelObject (which extends TreeNode)
     obj = BaseThreatModelObject({'ID': 'test_object'})
@@ -75,18 +75,18 @@ def test_package_imports():
     """Test that TreeNode can be imported from package level."""
     print("Testing package-level imports...")
     
-    # Test direct import from tree_node module
-    from r3threatmodeling.tree_node import TreeNode
-    node1 = TreeNode({'ID': 'direct'})
-    assert node1.id == 'direct'
+    # Test import from package __init__ (which now imports from extracted module)
+    from r3threatmodeling import TreeNode
+    node1 = TreeNode({'ID': 'package'})
+    assert node1.id == 'package'
     
-    # Test import from package __init__
-    from r3threatmodeling import TreeNode as TreeNodePackage
-    node2 = TreeNodePackage({'ID': 'package'})
-    assert node2.id == 'package'
+    # Test direct import from extracted tree_node module
+    from tree_node import TreeNode as TreeNodeDirect
+    node2 = TreeNodeDirect({'ID': 'direct'})
+    assert node2.id == 'direct'
     
     # Verify they're the same class
-    assert TreeNode is TreeNodePackage
+    assert TreeNode is TreeNodeDirect
     
     print("✓ Package import test passed")
 

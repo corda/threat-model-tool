@@ -1,22 +1,97 @@
 # Structured Threat Models *WORK IN PROGRESS*
 
-## Development setup
-Run from [github.com:corda/threat-model-tool](https://github.com/corda/threat-model-tool) checkout directory:
+## Development Setup
+
+### Prerequisites
+- Python 3.10 or higher
+- pip
+
+### Option 1: Full Development Setup (Recommended)
+
+For development of both the threat modeling tools and the TreeNode library:
+
 ```bash
-pip3 install develop
+# Clone the repository
+git clone https://github.com/corda/threat-model-tool.git
+cd threat-model-tool
+
+# Install the extracted TreeNode package in development mode
+cd tree-node
+pip install -e .
+cd ..
+
+# Install the main r3threatmodeling package in development mode
+pip install -e .
 ```
 
-Run from the [github.com:corda/threat-modeling.git](https://github.com/corda/threat-modeling) checkout directory:
+### Option 2: Main Package Only
+
+If you only need the threat modeling functionality:
+
 ```bash
-pip3 install -e ../threat-model-tool
+# From the repository root
+pip install -e .
 ```
+
+### Option 3: Production Installation
+
+For production use or to install from a different location:
+
+```bash
+# Install from PyPI (when published)
+pip install r3threatmodeling
+
+# Or install from repository
+pip install git+https://github.com/corda/threat-model-tool.git
+```
+
+### Verification
+
+Test your installation:
+
+```bash
+# Test TreeNode import
+python -c "from tree_node import TreeNode; print('✓ TreeNode OK')"
+
+# Test r3threatmodeling import  
+python -c "from r3threatmodeling import TreeNode; print('✓ r3threatmodeling OK')"
+
+# Run tests
+python -m pytest tests/ -v
+```
+
+## Project Structure
+
+This repository contains two main packages:
+
+### 1. `tree-node/` - Standalone Tree Structure Library
+- **Purpose**: Reusable tree node implementation with hierarchical ID management
+- **Independence**: Zero dependencies, can be used in any Python project
+- **Features**: Parent-child relationships, tree traversal, ID validation
+- **Documentation**: See [tree-node/README.md](tree-node/README.md)
+
+### 2. `src/r3threatmodeling/` - Threat Modeling Tools
+- **Purpose**: Structured threat modeling and report generation
+- **Dependencies**: Uses the extracted `tree-node` package
+- **Features**: YAML-based threat models, report generation, analysis tools
 
 ## Create a distribution 
 
+### Build both packages:
+
 ```bash
+# Build TreeNode package
+cd tree-node
+python3 -m build
+cd ..
+
+# Build main package
 python3 -m pip install --upgrade build
 python3 -m build
-pip install dist/r3threatmodeling-0.1.0-py3-none-any.whl
+
+# Install both
+pip install tree-node/dist/tree_node-1.0.0-py3-none-any.whl
+pip install dist/r3threatmodeling-0.3.3-py3-none-any.whl
 ```
 
 
