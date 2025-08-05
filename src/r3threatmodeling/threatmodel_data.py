@@ -19,6 +19,8 @@ import copy
 import semantic_version
 from cvss import CVSS3
 
+from .tree_node import TreeNode
+
 ANY_VERSION_MATCHER = semantic_version.Spec(">0.0.0")
 
 def matchesAllPros(object, **kwargs):
@@ -29,200 +31,6 @@ def matchesAllPros(object, **kwargs):
         except:
             return False
     return True
-
-
-class TreeNode:
-    """
-    Base class for tree node functionality, handling parent-child relationships and ID management.
-    This class is designed to be reusable across different projects that need tree structures.
-    """
-    
-    def __init__(self, dict_data=None, parent=None):
-        """
-        Initialize a tree node with optional dictionary data and parent reference.
-        
-        Args:
-            dict_data: Dictionary containing node data (must have 'ID' key if provided)
-            parent: Parent node reference
-        """
-        self.parent = parent
-        
-        # Add this node to parent's children collection only if parent is a TreeNode
-        if parent is not None and isinstance(parent, TreeNode):
-            if hasattr(parent, "children"):
-                parent.children.add(self)
-            else:
-                parent.children = {self}
-        
-        # Set ID from dict if provided
-        if dict_data and "ID" in dict_data:
-            self._id = dict_data["ID"]
-        else:
-            self._id = "undefined"
-
-    @property
-    def id(self):
-        """Get the full hierarchical ID of this node."""
-        if not hasattr(self, '_id'):
-            return None
-        
-        if self.parent is not None:
-            try:
-                return self.parent.id + "." + self._id
-            except:
-                # Fallback for cases where parent.id might not be available
-                return getattr(self.parent, '_id', 'unknown') + "." + self._id
-        else:
-            return self._id
-    
-    @id.setter
-    def id(self, value):
-        """Set the ID with validation for allowed characters."""
-        if not re.match("^[a-zA-Z0-9_]*$", value):
-            parent_id = self.parent.id if self.parent else "None"
-            raise ValueError(f"ID can only contain alphanumeric characters and underscores. Invalid ID: {value} (parent: {parent_id})")
-        self._id = value
-
-    @property
-    def anchor(self):
-        """Get the anchor part of the ID (excluding parent hierarchy)."""
-        full_id = self.id
-        if '.' in full_id:
-            return full_id[full_id.find('.')+1:]
-        return full_id
-
-    @property
-    def uri(self):
-        """Get the URI representation of this node."""
-        if not self.parent:
-            return self.id
-        
-        root = self.getRoot()
-        root_id = getattr(root, '_id', self.id)
-        return root_id + '/#' + self.anchor
-
-    def getRoot(self):
-        """Get the root node of this tree."""
-        if self.parent is None:
-            return self
-        else:
-            return self.parent.getRoot()
-    
-    def getAllUp(self, attr_name):
-        """Get all values of an attribute recursively from this node up to the root."""
-        if self.parent is None:
-            return getattr(self, attr_name, [])
-        else:
-            parent_attrs = self.parent.getAllUp(attr_name)
-            self_attrs = getattr(self, attr_name, [])
-            # Handle both list and non-list attributes
-            if isinstance(parent_attrs, list) and isinstance(self_attrs, list):
-                return parent_attrs + self_attrs
-            elif isinstance(parent_attrs, list):
-                return parent_attrs + [self_attrs] if self_attrs is not None else parent_attrs
-            elif isinstance(self_attrs, list):
-                return ([parent_attrs] if parent_attrs is not None else []) + self_attrs
-            else:
-                return [parent_attrs, self_attrs] if parent_attrs is not None and self_attrs is not None else ([parent_attrs] if parent_attrs is not None else [self_attrs] if self_attrs is not None else [])
-
-    def getFirstUp(self, attr_name):
-        """Get the first occurrence of an attribute going up the tree."""
-        if hasattr(self, attr_name):
-            return getattr(self, attr_name)
-        elif self.parent is None:
-            return None
-        else:
-            return self.parent.getFirstUp(attr_name)
-        
-    def getAllDown(self, attr_name):
-        """Get all values of an attribute recursively from this node down through all children."""
-        ret = getattr(self, attr_name, [])
-        
-        # Look for standard children collections
-        children_collections = []
-        if hasattr(self, 'children'):
-            children_collections.append(self.children)
-        
-        for children in children_collections:
-            if children:
-                for child in children:
-                    if hasattr(child, 'getAllDown'):
-                        child_attrs = child.getAllDown(attr_name)
-                        if isinstance(ret, list) and isinstance(child_attrs, list):
-                            ret = ret + child_attrs
-                        elif isinstance(ret, list):
-                            ret.append(child_attrs)
-                        else:
-                            ret = [ret, child_attrs] if child_attrs is not None else [ret]
-        
-        return ret
-
-    def getAllDownByType(self, type_class):
-        """Get all objects of a specific type in the tree rooted at this node."""
-        ret = []
-        
-        # Check if this node is of the requested type
-        if isinstance(self, type_class):
-            ret.append(self)
-
-        # Search through all attributes for child nodes and collections
-        for attr_name in dir(self):
-            if attr_name.startswith('_'):
-                continue
-            
-            try:
-                # Skip properties that might raise exceptions
-                attr_descriptor = getattr(type(self), attr_name, None)
-                if isinstance(attr_descriptor, property):
-                    continue
-                    
-                attr_value = getattr(self, attr_name)
-                
-                # Skip methods
-                if callable(attr_value):
-                    continue
-                
-                # Check collections
-                if isinstance(attr_value, (list, set)):
-                    for item in attr_value:
-                        if isinstance(item, type_class):
-                            ret.append(item)
-                        elif isinstance(item, TreeNode) and item is not self:
-                            ret.extend(item.getAllDownByType(type_class))
-                            
-            except Exception:
-                # Skip attributes that can't be accessed
-                continue
-
-        return ret
-
-    def getDescendantById(self, target_id):
-        """Get a direct descendant by ID within this node's immediate children."""
-        if not hasattr(self, 'children') or not self.children:
-            return None
-            
-        for child in self.children:
-            if hasattr(child, '_id') and child._id == target_id:
-                return child
-                
-        # Search recursively in children
-        for child in self.children:
-            if hasattr(child, 'getDescendantById'):
-                result = child.getDescendantById(target_id)
-                if result is not None:
-                    return result
-                    
-        return None
-    
-    # def getDescendantFirstById(self, target_id):
-    #     """Get any descendant by ID within this tree, searching all levels."""
-    #     # First try direct descendants
-    #     result = self.getDescendantById(target_id)
-    #     if result is not None:
-    #         return result
-            
-    #     # Then search in any specialized child collections (to be overridden by subclasses)
-    #     return None
 
 
 class BaseThreatModelObject(TreeNode):
@@ -920,7 +728,7 @@ class ThreatModel(BaseThreatModelObject):
                             childrenFilename = os.path.join(base_path, child_id, child_id + ".yaml")
                     except Exception as e:
                         print(f"Error processing child threat model: {e}")
-                        raise BaseException(f"Error processing child threat models (check if children is an array e.g. - ID: ...)")
+                        raise BaseException(f"Error processing child threat models (check if children is an array e.g. - ID: ...) at line {childrenDict.lc.line + 1 if hasattr(childrenDict, 'lc') else 'unknown'}")
                     
                     childTM = ThreatModel(childrenFilename,
                         parent=self, public=public, versionsFilterStr=versionsFilterStr)
