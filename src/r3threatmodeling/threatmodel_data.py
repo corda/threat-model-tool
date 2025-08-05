@@ -1,10 +1,3 @@
-"""
-R3 Threat Modeling 
-"""
-
-"""
-    
-"""
 from xml.etree.ElementPath import get_parent_map
 from ruamel.yaml import YAML
 from ruamel.yaml.error import YAMLError
@@ -20,10 +13,8 @@ import semantic_version
 from cvss import CVSS3
 
 # Import TreeNode with fallback
-try:
-    from tree_node import TreeNode
-except ImportError:
-    from .tree_node import TreeNode
+
+from tree_node import TreeNode
 
 ANY_VERSION_MATCHER = semantic_version.Spec(">0.0.0")
 
