@@ -7,8 +7,6 @@ from cvss import CVSS3  # assuming same import used elsewhere
 # Reuse existing helpers from your project
 from r3threatmodeling.template_utils import (
     unmark,
-    mermaid_escape,
-    getShortDescForMermaid,
     createTitleAnchorHash,
     createObjectAnchorHash,
     makeMarkdownLinkedHeader,
@@ -34,39 +32,30 @@ def wrap_text(input_str: str, columns: int = 80, str_size: int = 77 * 4) -> str:
 def true_or_false_mark(value: bool) -> str:
     return "<span style=\"color:green;\">&#10004;</span>" if value else "&#10060;"
 
-def render_mermaid_threat_tree(threat) -> str:
-    head = """flowchart BT
-
-    classDef threat fill:#F8CECC,stroke:#B85450
-    classDef attack fill:#F5F5F5,stroke:#666666
-    classDef countermeasureIP fill:#D5E8D4,stroke:#82B366
-    classDef countermeasureNIP fill:#FFF2CC,stroke:#D6B656  
-    classDef default text-align:left
-"""
-    lines = ["```mermaid", head]
-    lines.append(
-        f'    T1["<b>Threat:</b> {mermaid_escape(threat.threatGeneratedTitle())}'
-        f'\n    <b>Impact:</b> {mermaid_escape(valueOr(threat, "impact_desc", "TOO add impact info"))} \n    "]:::threat'
+def render_threat_simple_block(threat) -> str:
+    """Return a simplified textual block (replacing previous diagram)."""
+    impact = valueOr(threat, "impact_desc", "(impact TBD)")
+    attack = getattr(threat, "attack", "(attack TBD)")
+    return (
+        f"**Threat:** {threat.threatGeneratedTitle() if hasattr(threat,'threatGeneratedTitle') else threat.title}\n\n"
+        f"**Attack:** {attack}\n\n"
+        f"**Impact:** {impact}"
     )
-    lines.append(
-        f'    A1["<b>Attack:</b> {getShortDescForMermaid(threat.attack, 290)}"]:::attack --exploits--> T1'
-    )
-    if getattr(threat, "countermeasures", []):
-        for cm in threat.countermeasures:
-            if getattr(cm, "description", None):
-                style = cm.RAGStyle() if hasattr(cm, "RAGStyle") else "countermeasureIP"
-                lines.append(
-                    f'    C{cm.id}["<b>Countermeasure:</b> {mermaid_escape(cm.title)}"]:::{style} --mitigates--> A1'
-                )
-    lines.append("```")
-    return "\n".join(lines)
 
 def render_text_security_objectives_tree(security_objectives: Iterable[SecurityObjective]) -> str:
-    out, current = [], None
+    """Render grouped security objectives without spurious heading markers.
+
+    Previously a literal '## end' was appended between groups which leaked into the
+    generated markdown report as an unintended heading. We now just insert a blank
+    line to visually separate groups.
+    """
+    out: List[str] = []
+    current: Optional[str] = None
     for so in security_objectives:
         if current != so.group:
             if current is not None:
-                out.append("## end")
+                # blank line to separate previous group from the next
+                out.append("")
             current = so.group
             out.append(f"**{current}:**")
         out.append(f"- <a href=\"#{so.anchor}\">{so.title}</a>")
@@ -197,24 +186,23 @@ def render_threat(threat, header_level: int = 1, ctx=None) -> str:
     lines = []
     css_class = "proposal" if hasattr(threat, "proposal") else "current"
     lines.append(f"<div markdown=\"1\" class='{css_class}'>")
-    lines.append(f"<a id=\"{threat._id}\"></a>")
-    # Primary heading for the threat (anchor + ID + generated title)
-    lines.append(f"## Threat ID: {threat._id}")
-    # Compose a human-friendly summary line (threatType + optional assets)
+    # Primary heading using shared makeMarkdownLinkedHeader logic to preserve flexible nesting
     try:
-        generated = threat.threatGeneratedTitle()
+        heading_text = threat.threatGeneratedTitle()
     except Exception:
-        generated = getattr(threat, 'threatType', threat.title)
-    title = f"{threat.title} (<code>{threat._id}</code>)"
-    lines.append(f"### {generated}")
-    lines.append(makeMarkdownLinkedHeader(header_level + 2, title, ctx, tmObject=threat))
+        heading_text = threat.title
+    title_with_code = f"{heading_text} (<code>{threat._id}</code>)"
+    # Historically threats used (header_level + 2) offset in Mako templates
+    lines.append(makeMarkdownLinkedHeader(header_level + 2, title_with_code, ctx, tmObject=threat))
     if hasattr(threat, "proposal"):
         lines.append(f"From proposal: {threat.proposal}")
-    # Mermaid + image
-    lines.append("<div style=\"text-align: center;\">")
-    lines.append(render_mermaid_threat_tree(threat))
-    lines.append(f"<img src=\"img/threatTree/{threat._id}.svg\"/>")
-    lines.append("</div>")
+    # Diagram(s): restore per–threat SVG (generated during build) + keep simple textual summary
+    # SVG path aligns with legacy mako template: img/threatTree/{THREAT_ID}.svg
+    lines.append('<div style="text-align: center;">')
+    lines.append(f'<img src="img/threatTree/{threat._id}.svg" alt="Threat diagram {threat._id}"/>')
+    lines.append('</div>')
+    # Simple textual block below the diagram
+    lines.append(render_threat_simple_block(threat))
     # Details
     lines.append("<dl markdown=\"block\">")
     if hasattr(threat, "appliesToVersions"):
@@ -447,11 +435,6 @@ def render_tm_report_part(
         lines.append(PAGEBREAK)
         lines.append("<hr/>")
         lines.append(makeMarkdownLinkedHeader(header_level + 1, tmo.title + " Analysis", ctx))
-        lines.append(
-            "## > **Note** This section documents the work performed to identify threats and thier mitigations.#\n"
-            "## > It may contains notes from the analysis sessions.\n"
-            "## > This analysis section may be omitted in future reports."
-        )
         lines.append(tmo.analysis)
     # Threats
     if len(tmo.threats) > 0:

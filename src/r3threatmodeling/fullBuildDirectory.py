@@ -9,11 +9,6 @@ import time
 from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler, PatternMatchingEventHandler
 import traceback
-## Mako imports (to be removed once index/conf templates migrated)
-from mako.exceptions import RichTraceback
-from mako.lookup import TemplateLookup
-from mako.template import Template
-import markdown
 
 from r3threatmodeling import fullBuildSingleTM
 from .threatmodel_data import *
@@ -29,31 +24,97 @@ def dir_path(path):
     else:
         raise argparse.ArgumentTypeError(f"--TMDirectory:{path} is not a valid path")
 
-def generateFromTMList(tm_list, outputDir, outFile , template = "index_tm_list", pdfArtifactLink=None):
-    # template = "index_tm_list"
-    try:
-        mdTemplate = Template(
-            filename =  os.path.join(os.path.dirname(__file__),
-                'template/'+template+'.mako'),
-                lookup=TemplateLookup(
-                    directories=['.', 
-                                os.path.join(os.path.dirname(__file__),'/template/'), "/"]
-                                , output_encoding='utf-8', preprocessor=[lambda x: x.replace("\r\n", "\n")]
-                ))
-        
-        outText = mdTemplate.render(tm_list=tm_list, mainLinks=[], outputDir=outputDir)
-        outputFilename = outMDPath = os.path.join(outputDir, outFile)  
-        with open(outputFilename, 'w') as f:
-            print(f"OUTPUT: {f.name}") 
-            f.write(outText)
-    except:
-        # print(mako_exceptions.text_error_template().render())
-        traceback = RichTraceback()
-        for (filename, lineno, function, line) in traceback.traceback:
-            print("File %s, line %s, in %s" % (filename, lineno, function))
-            print(line, "\n")
-        print("%s: %s" % (str(traceback.error.__class__.__name__), traceback.error))  
+def generateFromTMList(tm_list, outputDir, outFile , pdfArtifactLink=None):
+    """Generate a simple Markdown index for a list of threat models (no templates)."""
+    lines = ["# Threat Models Index", ""]
+    if pdfArtifactLink:
+        lines.append(f"PDF Artifact: {pdfArtifactLink}\n")
+    for tm in tm_list:
+        tm_id = getattr(tm, '_id', 'UNKNOWN')
+        title = getattr(tm, 'title', tm_id)
+        lines.append(f"* [{title}]({tm_id}/{tm_id}.html)")
+    outText = "\n".join(lines) + "\n"
+    os.makedirs(outputDir, exist_ok=True)
+    outputFilename = os.path.join(outputDir, outFile)
+    with open(outputFilename, 'w') as f:
+        print(f"OUTPUT: {f.name}")
+        f.write(outText)
     return
+
+
+def generate_mkdocs_config(tm_list, outputDir, filename="mkdocs.yml"):
+    """Generate a MkDocs configuration file approximating the legacy Mako template.
+
+    Sections included (mirroring original template intent):
+      - site_name
+      - use_directory_urls (set false as in template)
+      - nav (Home + one entry per TM -> <ID>/index.md)
+      - theme (readthedocs)
+      - markdown_extensions (toc, md_in_html, attr_list)
+      - plugins (left mostly empty / placeholder for future enablement)
+      - extra_css / extra_javascript
+    """
+    def yaml_quote(s: str) -> str:
+        if s is None:
+            return '""'
+        if any(c in s for c in [':', '{', '}', '[', ']', ',', '&', '*', '#', '!', '|', '>', "'", '"', '%', '@', '`']):
+            return '"' + s.replace('"', '\\"') + '"'
+        return s
+
+    lines = [
+        "site_name: Threat Models",
+        "docs_dir: docs",
+        "use_directory_urls: false",
+        "nav:",
+        "  - Home: index.md",
+    ]
+
+    # Stable ordering: by title (fallback ID)
+    for tm in sorted(tm_list, key=lambda x: (x.get('title') or x.get('ID') or x.get('name') or '')):
+        title = tm.get('title') or tm.get('ID') or tm.get('name') or 'UNKNOWN'
+        tm_id = tm.get('ID') or tm.get('name') or 'UNKNOWN'
+        lines.append(f"  - {yaml_quote(title)}: {tm_id}/index.md")
+
+    # Theme (basic built-in theme to avoid dependency issues)
+    lines += [
+        "",
+        "theme:",
+        "  name: readthedocs",
+    ]
+
+    # Markdown extensions
+    lines += [
+        "markdown_extensions:",
+        "  - toc:",
+        "      baselevel: 1",
+        "      toc_depth: 5",
+        "  - md_in_html",
+        "  - attr_list",
+    ]
+
+    # Plugins (keep minimal; user can extend later) - search is default if omitted; we keep placeholder
+    lines += [
+        "plugins:",
+        "  - search",
+    ]
+
+    # Static assets
+    lines += [
+        "extra_css:",
+        "  - css/mkdocs.css",
+        "  - css/threatmodel.css",
+        "extra_javascript:",
+        "  - js/tm.js",
+        "  - javascript/readthedocs.js",
+    ]
+
+    content = "\n".join(lines) + "\n"
+    os.makedirs(outputDir, exist_ok=True)
+    path = os.path.join(outputDir, filename)
+    with open(path, "w") as fh:
+        print(f"OUTPUT: {fh.name}")
+        fh.write(content)
+    return path
 
 def main():
     CLI=argparse.ArgumentParser()
@@ -208,20 +269,20 @@ def main():
         # fullBuildSingleTM.generateSingleTM(open(rootTMYaml), TMoutputDir + "/full", assetDir, template, ancestorData, browserSync , generatePDF=generatePDF, pdfHeaderNote=pdfHeaderNote, public=False)
 
     if MKDocsSiteDir:
-
         os.makedirs(MKDocsSiteDir, exist_ok=True)
         os.makedirs(MKDocsDir, exist_ok=True)
-
-        generateFromTMList(tm_list, MKDocsDir, outFile="mkdocs.yml", template="conf_MKDOCS")    
-        generateFromTMList(tm_list, outputDir, outFile="index.md", template="index_MKDOCS", pdfArtifactLink=None)
-
+        # Proper MkDocs YAML config
+        generate_mkdocs_config(tm_list, MKDocsDir, filename="mkdocs.yml")
+        generateFromTMList(tm_list, outputDir, outFile="index.md", pdfArtifactLink=None)
         if pdfArtifactLink:
-            #unzip
+            # Future: unzip artifact into site
             pass
-
         oldwd = os.getcwd()
         os.chdir(MKDocsDir)
-        os.system(f"mkdocs build --clean --config-file mkdocs.yml --site-dir={MKDocsSiteDir}")
+        if shutil.which("mkdocs"):
+            os.system(f"mkdocs build --clean --config-file mkdocs.yml --site-dir={MKDocsSiteDir}")
+        else:
+            print("WARNING: 'mkdocs' executable not found on PATH. Skipping site build. Install mkdocs to generate the static site.")
         os.chdir(oldwd)
 
 

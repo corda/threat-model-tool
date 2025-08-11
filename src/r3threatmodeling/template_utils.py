@@ -56,18 +56,6 @@ def valueOr(o, a, alt):
     else:
         return alt
     
-def mermaid_escape(text):
-    text = re.sub(r"\(RFI[\s:]*(.*)\)", "", text)
-    text = html.escape(markdown_to_text(text).replace("\"","'").replace(";","&semi;").replace("(", "&lpar;").replace(")", "&rpar;"))
-    return text
-
-
-def getShortDescForMermaid(attack, strSize):
-    # try:
-        if len(attack) >= strSize:
-            return mermaid_escape(attack)[:strSize]+ "[...]"
-        else:
-            return mermaid_escape(attack)
 
 def markdown_to_text(text):
     return __md.convert(text)

@@ -132,52 +132,67 @@ def render_testing_guide(tmo: ThreatModel, ctx=None, header_level: int = 1, prin
     return "\n".join(lines)
 
 
-def render_full_report(tmo: ThreatModel, ctx=None, ancestor_data: bool = True) -> str:
+def render_full_report(
+    tmo: ThreatModel,
+    ctx=None,
+    ancestor_data: bool = True,
+    header_level: int = 1,
+) -> str:
     lines = []
-    lines.append(render_tm_report_part(tmo, ancestor_data, toc=True, summary=True, header_level=1, ctx=ctx))
+    lines.append(render_tm_report_part(tmo, ancestor_data, toc=True, summary=True, header_level=header_level, ctx=ctx))
     for descendant in tmo.getDescendantsTM():
-        lines.append(render_tm_report_part(descendant, ancestor_data=False, header_level=1, ctx=ctx))
+        lines.append(render_tm_report_part(descendant, ancestor_data=False, header_level=header_level, ctx=ctx))
     lines.append(PAGEBREAK)
-    lines.append(makeMarkdownLinkedHeader(2, "Annex 1 Operational Hardening", ctx))
-    lines.append(render_operational_hardening(tmo, ctx, header_level=2, print_toc=False))
+    lines.append(makeMarkdownLinkedHeader(header_level + 1, "Annex 1 Operational Hardening", ctx))
+    lines.append(render_operational_hardening(tmo, ctx, header_level=header_level + 1, print_toc=False))
     lines.append(PAGEBREAK)
-    lines.append(makeMarkdownLinkedHeader(2, "Annex 2: Key Summary", ctx))
-    lines.append(render_keys_summary(tmo, ctx, header_level=2, print_toc=False))
+    lines.append(makeMarkdownLinkedHeader(header_level + 1, "Annex 2: Key Summary", ctx))
+    lines.append(render_keys_summary(tmo, ctx, header_level=header_level + 1, print_toc=False))
     if hasattr(tmo, "ISO27001Ref") and getattr(tmo, "ISO27001Ref"):
         from r3threatmodeling.ISO27001Report1 import render_summary  # local import to avoid cycles
         lines.append(PAGEBREAK)
-        lines.append(render_summary(tmo, ctx, headerLevel=2))
+        # Keep ISO report aligned one level deeper than base annex heading
+        lines.append(render_summary(tmo, ctx, headerLevel=header_level + 1))
     return "\n".join(lines)
 
-
-def render_mkdocs_report(tmo: ThreatModel, ctx=None, ancestor_data: bool = True) -> str:
+def render_mkdocs_report(
+    tmo: ThreatModel,
+    ctx=None,
+    ancestor_data: bool = True,
+    header_level: int = 1,
+) -> str:
     lines = []
-    lines.append(render_tm_report_part(tmo, ancestor_data, toc=False, summary=True, header_level=1, ctx=ctx))
+    lines.append(render_tm_report_part(tmo, ancestor_data, toc=False, summary=True, header_level=header_level, ctx=ctx))
     for descendant in tmo.getDescendantsTM():
-        lines.append(render_tm_report_part(descendant, ancestor_data=False, header_level=2, ctx=ctx))
-    lines.append(makeMarkdownLinkedHeader(2, "Requests For Information", ctx))
+        # Descendants keep same base level for consistency (adjust if nesting desired)
+        lines.append(render_tm_report_part(descendant, ancestor_data=False, header_level=header_level, ctx=ctx))
+    lines.append(makeMarkdownLinkedHeader(header_level + 1, "Requests For Information", ctx))
     lines.append("__RFI_PLACEHOLDER__")
     lines.append(PAGEBREAK)
-    lines.append(render_operational_hardening(tmo, ctx, header_level=2, print_toc=False))
+    lines.append(render_operational_hardening(tmo, ctx, header_level=header_level + 1, print_toc=False))
     lines.append(PAGEBREAK)
-    lines.append(render_testing_guide(tmo, ctx, header_level=2, print_toc=False))
+    lines.append(render_testing_guide(tmo, ctx, header_level=header_level + 1, print_toc=False))
     lines.append(PAGEBREAK)
-    lines.append(render_keys_summary(tmo, ctx, header_level=2, print_toc=False))
+    lines.append(render_keys_summary(tmo, ctx, header_level=header_level + 1, print_toc=False))
     if hasattr(tmo, "ISO27001Ref") and getattr(tmo, "ISO27001Ref"):
         from r3threatmodeling.ISO27001Report1 import render_summary
         lines.append(PAGEBREAK)
-        lines.append(render_summary(tmo, ctx, headerLevel=2))
+        lines.append(render_summary(tmo, ctx, headerLevel=header_level + 1))
     return "\n".join(lines)
 
-
-def render_compact_report(tmo: ThreatModel, ctx=None, ancestor_data: bool = True) -> str:
+def render_compact_report(
+    tmo: ThreatModel,
+    ctx=None,
+    ancestor_data: bool = True,
+    header_level: int = 1,
+) -> str:
     lines = []
-    lines.append(render_tm_report_part(tmo, ancestor_data, toc=False, summary=False, header_level=1, ctx=ctx))
+    lines.append(render_tm_report_part(tmo, ancestor_data, toc=False, summary=False, header_level=header_level, ctx=ctx))
     for descendant in tmo.getDescendantsTM():
-        lines.append(render_tm_report_part(descendant, ancestor_data=False, header_level=1, ctx=ctx))
+        lines.append(render_tm_report_part(descendant, ancestor_data=False, header_level=header_level, ctx=ctx))
     lines.append(PAGEBREAK)
-    lines.append(makeMarkdownLinkedHeader(2, "Annex 1: Keys Summary", ctx))
-    lines.append(render_keys_summary(tmo, ctx, header_level=2, print_toc=False))
+    lines.append(makeMarkdownLinkedHeader(header_level + 1, "Annex 1: Keys Summary", ctx))
+    lines.append(render_keys_summary(tmo, ctx, header_level=header_level + 1, print_toc=False))
     return "\n".join(lines)
 
 TEMPLATE_MAPPING = {
@@ -189,8 +204,9 @@ TEMPLATE_MAPPING = {
 }
 
 
-def render_template_by_name(name: str, tmo: ThreatModel, ancestor_data: bool, ctx=None) -> str:
+def render_template_by_name(name: str, tmo: ThreatModel, ancestor_data: bool, ctx=None, header_level: int = 1) -> str:
     func = TEMPLATE_MAPPING.get(name)
     if not func:
         raise ValueError(f"Unknown template name (Python renderer): {name}")
-    return func(tmo, ctx=ctx, ancestor_data=ancestor_data)
+    # All mapped functions now share a header_level param for consistent nesting control
+    return func(tmo, ctx=ctx, ancestor_data=ancestor_data, header_level=header_level)

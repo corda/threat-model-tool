@@ -13,11 +13,6 @@ from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler, PatternMatchingEventHandler
 import traceback
 
-from mako.exceptions import RichTraceback
-from mako.lookup import TemplateLookup
-from mako.template import Template
-import markdown
-
 from .threatmodel_data import *
 from markdown import Markdown
 from .template_utils import *
@@ -79,12 +74,8 @@ def generate(tmo, outputDir, outputFilename = "secObjectives.puml", template="se
         with open(outputPath, "w") as f:
             print(f"OUTPUT: {f.name}")
             f.write(outText)
-    except Exception:
-        traceback_info = RichTraceback()
-        for (filename, lineno, function, line) in traceback_info.traceback:
-            print(f"File {filename}, line {lineno}, in {function}")
-            print(line, "\n")
-        print(f"{traceback_info.error.__class__.__name__}: {traceback_info.error}")
+    except Exception as e:
+        print(f"Error generating sec objectives diagram: {e}")
 
 
 def main():

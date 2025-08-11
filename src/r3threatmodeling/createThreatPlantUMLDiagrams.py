@@ -3,50 +3,33 @@
 # from lib2to3.pygram import pattern_symbols
 # from pathvalidate import sanitize_filename
 import os
-from tokenize import String
-import yaml
-import sys
 import argparse
-import time
-import logging
-from watchdog.observers import Observer
-from watchdog.events import LoggingEventHandler, PatternMatchingEventHandler
 import traceback
 
-from mako.exceptions import RichTraceback
-from mako.lookup import TemplateLookup
-from mako.template import Template
-import markdown
-
 from .threatmodel_data import *
-from markdown import Markdown
-from .template_utils import *
 
 
 
-def generate(tmo, outputDir, template="threatPlantUMLDiagram"):
-    try:
-        mdTemplate = Template(
-            filename =  os.path.join(os.path.dirname(__file__),
-                'template/'+template+'.mako'),
-                lookup=TemplateLookup(
-                    directories=['.', 
-                                os.path.join(os.path.dirname(__file__),'/template/'), "/"]
-                                , output_encoding='utf-8', preprocessor=[lambda x: x.replace("\r\n", "\n")]
-                ))
-        
-        for threat in tmo.getAllDown("threats"):
-            mermaidText = mdTemplate.render(threat=threat)
-            mermaidFileName = outMDPath = os.path.join(outputDir, threat._id + ".puml")   
-            with open(mermaidFileName, 'w') as f:
-                f.write(mermaidText)
-    except:
-        # print(mako_exceptions.text_error_template().render())
-        traceback = RichTraceback()
-        for (filename, lineno, function, line) in traceback.traceback:
-            print("File %s, line %s, in %s" % (filename, lineno, function))
-            print(line, "\n")
-        print("%s: %s" % (str(traceback.error.__class__.__name__), traceback.error))
+def generate(tmo, outputDir):
+    """Generate per-threat PlantUML attack tree skeletons (pure Python)."""
+    os.makedirs(outputDir, exist_ok=True)
+    for threat in tmo.getAllDown("threats"):
+        lines = ["@startuml", '! Simple placeholder diagram (template removed)']
+        title = getattr(threat, 'title', threat._id)
+        lines.append(f'title {threat._id} - {title}')
+        # Basic node with impacted security objectives
+        impacted = getattr(threat, 'impactedSecObj', []) or []
+        if impacted:
+            for so in impacted:
+                try:
+                    so_id = so._id
+                except AttributeError:
+                    so_id = str(so)
+                lines.append(f':{so_id}:')
+        lines.append('@enduml')
+        out_file_name = os.path.join(outputDir, threat._id + '.puml')
+        with open(out_file_name, 'w') as f:
+            f.write("\n".join(lines))
 
 def main():
 
@@ -73,12 +56,9 @@ def main():
 
     args = CLI.parse_args()
 
-    template = "threatPlantUMLDiagram"
- 
     tmo = ThreatModel(args.rootTMYaml)
     outputDir = args.outputDir
-
-    generate(tmo, outputDir, template)
+    generate(tmo, outputDir)
 
     return 
 
