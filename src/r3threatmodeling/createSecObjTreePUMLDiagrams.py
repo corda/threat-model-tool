@@ -39,10 +39,9 @@ def generate(tmo, outputDir, template="secObjTreePlantUMLDiagram"):
             mermaidFileName = outMDPath = os.path.join(outputDir, secObj._id + ".puml")   
             with open(mermaidFileName, 'w') as f:
                 f.write(text)
-        if hasattr(tmo, 'childrenTM'):
-            for child in tmo.childrenTM:
-                # parentOutputDir = os.path.join(base_outputDir, tmo._id)
-                generate(child, outputDir, template)      
+        for child in tmo.getDescendantsTM():
+            # parentOutputDir = os.path.join(base_outputDir, tmo._id)
+            generate(child, outputDir, template)      
     except:
         # print(mako_exceptions.text_error_template().render())
         traceback = RichTraceback()
