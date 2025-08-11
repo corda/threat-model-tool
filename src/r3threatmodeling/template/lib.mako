@@ -585,7 +585,7 @@ ${PAGEBREAK}
 ${makeMarkdownLinkedHeader(headerLevel+1, tmo.title +  ' - scope of analysis', ctx, tmObject=None)}
 
 % if hasattr(tmo.scope, "description") and tmo.scope.description: 
-${makeMarkdownLinkedHeader(headerLevel+2, 'Overview', ctx)}
+${makeMarkdownLinkedHeader(headerLevel+2,  tmo.title + 'Overview', ctx)}
 ${tmo.scope.description} 
 % endif
 ##@James: removed 'fmt' description ... was it to fix multiline RFIs ?
