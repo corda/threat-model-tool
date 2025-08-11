@@ -62,7 +62,7 @@ def generateSingleTM(rootTMYaml, base_outputDir, assetDir, template, ancestorDat
     threatTree_outputDir = outputDir+'/img/threatTree'
     os.makedirs(threatTree_outputDir, exist_ok=True)
     createThreatPlantUMLDiagrams.generate(tmo, threatTree_outputDir)
-    PUMLCommand = f"docker run --rm -v {os.path.realpath(threatTree_outputDir)}:/data plantuml/plantuml:sha-d2b2bcf *.puml -svg -v"
+    PUMLCommand = f"docker run --rm -v {os.path.realpath(threatTree_outputDir)}:/data plantuml/plantuml:sha-d2b2bcf \\*.puml -svg -v"
     print(f" executing: {PUMLCommand}")
     os.system(PUMLCommand)
     
@@ -70,7 +70,7 @@ def generateSingleTM(rootTMYaml, base_outputDir, assetDir, template, ancestorDat
     secObjectives_outputDir = outputDir+'/img/secObjectives'
     os.makedirs(secObjectives_outputDir, exist_ok=True)
     createSecObjTreePUMLDiagrams.generate(tmo, secObjectives_outputDir)
-    PUMLCommand = f"docker run --rm -v {os.path.realpath(secObjectives_outputDir)}:/data plantuml/plantuml:sha-d2b2bcf *.puml -svg -v"
+    PUMLCommand = f"docker run --rm -v {os.path.realpath(secObjectives_outputDir)}:/data plantuml/plantuml:sha-d2b2bcf \\*.puml -svg -v"
     print(f" executing: {PUMLCommand}")
     os.system(PUMLCommand)
 
@@ -85,7 +85,7 @@ def generateSingleTM(rootTMYaml, base_outputDir, assetDir, template, ancestorDat
     print(f"Generate Sec Obj hierarchy diagram")
     os.makedirs(img_outputDir, exist_ok=True)
     createSecObjectivesPlantUML.generate(tmo, img_outputDir)
-    PUMLCommand = f"docker run --rm -v {os.path.realpath(img_outputDir)}:/data plantuml/plantuml:sha-d2b2bcf *.puml -svg -v"
+    PUMLCommand = f"docker run --rm -v {os.path.realpath(img_outputDir)}:/data plantuml/plantuml:sha-d2b2bcf \\*.puml -svg -v"
     print(f" executing: {PUMLCommand}")
     os.system(PUMLCommand)
 
