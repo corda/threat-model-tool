@@ -629,11 +629,11 @@ ${lib.renderSecurityObjective(securityObjective)}
   % endif ##ancestorData
 
 
-% if len(tmo.getDescendants()) > 0:
+% if len(tmo.getDescendantsTM()) > 0:
 
   ${makeMarkdownLinkedHeader(headerLevel+2, 'Linked threat Models', ctx, skipTOC = False)}
 
-% for ltm in tmo.getDescendants():
+% for ltm in tmo.getDescendantsTM():
   - **${ltm.title}** (ID: ${ltm.id})
 % endfor
 % endif

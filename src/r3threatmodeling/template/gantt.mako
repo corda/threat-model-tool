@@ -11,7 +11,7 @@ gantt
     dateFormat  YYYY-MM-DD
     excludes weekends
     section ${tmo.title}
-% for descendantTM in tmo.getDescendants():
+% for descendantTM in tmo.getDescendantsTM():
 %if hasattr(descendantTM, "gantt"): 
 ${descendantTM.title}     : ${descendantTM.gantt['status']}, ${descendantTM.gantt['startDate']}, ${descendantTM.gantt['endDate']}
 ## %else:

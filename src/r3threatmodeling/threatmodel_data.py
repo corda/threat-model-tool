@@ -869,13 +869,13 @@ class ThreatModel(BaseThreatModelObject):
             return next((tmo for tmo in self.children if isinstance(tmo, ThreatModel) and tmo._id == id), None)
         return None
     
-    def getDescendants(self):
+    def getDescendantsTM(self):
         descendants = []
         if hasattr(self, 'children') and self.children:
             for child in self.children:
                 if isinstance(child, ThreatModel):
                     descendants.append(child)
-                    descendants.extend(child.getDescendants())
+                    descendants.extend(child.getDescendantsTM())
         return descendants
     @property
     def title(self):

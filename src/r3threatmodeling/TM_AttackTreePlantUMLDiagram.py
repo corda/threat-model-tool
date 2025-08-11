@@ -186,7 +186,7 @@ def generate_attackTree_for_whole_threat_model(tmo, praram_outputDir):
         print(tb)
         raise e
 
-def generateAttackTreePerSingleTM(tmo, base_outputDir):
+def generateAttackTreePerSingleTM(tmo: ThreatModel, base_outputDir):
     """
     Generates a PlantUML file for each ThreatModel object (tmo),
     then recurses through any child threat models. This replaces
@@ -211,10 +211,9 @@ def generateAttackTreePerSingleTM(tmo, base_outputDir):
             pumlFile.write(pumlText)
 
         # Recurse if child ThreatModels exist
-        if hasattr(tmo, 'childrenTM'):
-            for child in tmo.childrenTM:
-                # parentOutputDir = os.path.join(base_outputDir, tmo._id)
-                generateAttackTreePerSingleTM(child, base_outputDir)
+        for child in tmo.getDescendantsTM():
+            # parentOutputDir = os.path.join(base_outputDir, tmo._id)
+            generateAttackTreePerSingleTM(child, base_outputDir)
 
     except Exception as e:
         tb = traceback.format_exc()

@@ -397,11 +397,11 @@ class ThreatModel(_BaseTMObj):
         ts = [t for t in self.getAllDown('threats') if (t.fullyMitigated is fullyMitigated and t.operational is operational)]
         return sorted(ts, key=lambda x: x.getSmartScoreVal(), reverse=True)
 
-    def getDescendants(self):
+    def getDescendantsTM(self):
         descendants = []
         for child in getattr(self, "childrenTM", []):
             descendants.append(child)
-            descendants.extend(child.getDescendants())
+            descendants.extend(child.getDescendantsTM())
         return descendants
 
     def isRoot(self):

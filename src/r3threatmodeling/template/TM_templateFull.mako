@@ -13,7 +13,7 @@
 
 ${lib.renderTMReportPart(tmo, ancestorData, toc = True, summary=True, )}
 
-% for descendantTM in tmo.getDescendants():
+% for descendantTM in tmo.getDescendantsTM():
   ${lib.renderTMReportPart(descendantTM, ancestorData=False)}
 % endfor
 

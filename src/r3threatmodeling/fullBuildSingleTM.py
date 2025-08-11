@@ -42,7 +42,7 @@ def generateSingleTM(rootTMYaml, base_outputDir, assetDir, template, ancestorDat
     report_generator.generate(tmo, template, ancestorData, outputDir, browserSync, fileName, assetDir)
 
 
-    for tm in tmo.getDescendants() + [tmo]:
+    for tm in tmo.getDescendantsTM() + [tmo]:
         asset_path = tm.assetDir()
         if os.path.isdir(asset_path):
             shutil.copytree(asset_path, outputDir, dirs_exist_ok=True)
