@@ -605,8 +605,10 @@ ${makeMarkdownLinkedHeader(headerLevel+2, 'References', ctx)}
 ${makeMarkdownLinkedHeader(headerLevel+2, tmo.title + ' security objectives', ctx)}
 
 ${renderTextSecurityObjectivesTree(tmo.securityObjectives)}
-  **Diagram:**
-  <img src="img/secObjectives.svg"/>
+% if tmo.parent is None:
+**Diagram:**
+<img src="img/secObjectives.svg"/>
+% endif
 ## ${renderMermaidSecurityObjectivesTree(tmo.securityObjectives)}
   **Details:**
     % for securityObjective in sorted(tmo.securityObjectives, key=lambda obj: obj.title):

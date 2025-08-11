@@ -21,32 +21,70 @@ import markdown
 from .threatmodel_data import *
 from markdown import Markdown
 from .template_utils import *
+import re
 
 
 def generate(tmo, outputDir, outputFilename = "secObjectives.puml", template="secObjectivesPlantUMLDiagram"):
+    """
+    Direct (non-Mako) implementation of the previous template logic.
+    Builds a PlantUML (DOT) diagram showing security objectives and their contributesTo links.
+    """
     try:
-        mdTemplate = Template(
-            filename =  os.path.join(os.path.dirname(__file__),
-                'template/'+template+'.mako'),
-                lookup=TemplateLookup(
-                    directories=['.', 
-                                os.path.join(os.path.dirname(__file__),'/template/'), "/"]
-                                , output_encoding='utf-8', preprocessor=[lambda x: x.replace("\r\n", "\n")]
-                ))
-        
-        outText = mdTemplate.render(tmo=tmo)
-        outputFilename = outMDPath = os.path.join(outputDir, outputFilename)  
+        lines = []
+        lines.append("@startuml")
+        lines.append("digraph G {")
+        lines.append(' rankdir="BT";')
+        lines.append(' ranksep=2;')
+        lines.append('  node [fontname="Arial" fontsize="14" color=LightGray style=filled shape="box"];')
+        lines.append("")  # blank line
 
-        with open(outputFilename, 'w') as f:
-            print(f"OUTPUT: {f.name}") 
+        security_objectives = list(getattr(tmo, "securityObjectives", []))
+
+        # Collect edges and group membership
+        edges = []
+        groups = {}
+        group_members = {}
+        for so in security_objectives:
+            group = getattr(so, "group", "") or ""
+            groups[so._id] = group
+            group_members.setdefault(group, []).append(so._id)
+            for parentSO in getattr(so, "contributesTo", []) or []:
+                # Proper DOT edge with label
+                edges.append((so._id, parentSO._id))
+
+        # Emit groups (one subgraph per group)
+        for group, members in group_members.items():
+            # Sanitize cluster id (Graphviz id rules)
+            cluster_id_raw = re.sub(r"\s+", "_", group) if group else "Ungrouped"
+            cluster_id = re.sub(r"[^A-Za-z0-9_]", "_", cluster_id_raw)
+            label = group.replace('"', '\\"')
+            node_list = " ".join(f"\"{m}\";" for m in members)
+            lines.append(f"subgraph cluster_{cluster_id} {{  label = \"{label}\";  {node_list} }}")
+
+        # Emit edges after clusters
+        for child, parent in edges:
+            lines.append(f"\"{child}\" -> \"{parent}\" [label = \"contributes to\"]")
+
+        # Close (commented-out legacy threat-to-secObj block retained as comments to keep parity)
+        lines.append("")
+        lines.append("## (threat -> secObj edges omitted)")
+        lines.append("")
+        lines.append("}")
+        lines.append("@enduml")
+
+        outText = "\n".join(lines)
+
+        os.makedirs(outputDir, exist_ok=True)
+        outputPath = os.path.join(outputDir, outputFilename)
+        with open(outputPath, "w") as f:
+            print(f"OUTPUT: {f.name}")
             f.write(outText)
-    except:
-        # print(mako_exceptions.text_error_template().render())
-        traceback = RichTraceback()
-        for (filename, lineno, function, line) in traceback.traceback:
-            print("File %s, line %s, in %s" % (filename, lineno, function))
+    except Exception:
+        traceback_info = RichTraceback()
+        for (filename, lineno, function, line) in traceback_info.traceback:
+            print(f"File {filename}, line {lineno}, in {function}")
             print(line, "\n")
-        print("%s: %s" % (str(traceback.error.__class__.__name__), traceback.error))
+        print(f"{traceback_info.error.__class__.__name__}: {traceback_info.error}")
 
 
 def main():
