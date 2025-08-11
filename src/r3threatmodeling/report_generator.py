@@ -7,14 +7,16 @@ import time
 from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler, PatternMatchingEventHandler
 import traceback
-from mako.exceptions import RichTraceback
-from mako.lookup import TemplateLookup
-from mako.template import Template
+## Mako imports removed after migration to pure Python renderers
+## from mako.exceptions import RichTraceback
+## from mako.lookup import TemplateLookup
+## from mako.template import Template
 import markdown
 
 from .threatmodel_data import *
 from markdown import Markdown
 from .template_utils import *
+from .template.renderers import render_template_by_name
 
 from pathlib import Path
 import shutil
@@ -63,25 +65,12 @@ def generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, 
     mdOutFileName = baseFileName + ".md"
     htmlOutFileName = baseFileName + ".html"
     try:
-        mdTemplate = Template(
-        filename=  os.path.join(os.path.dirname(__file__),
-            'template/'+template+'.mako'),
-            lookup=TemplateLookup(
-                directories=['.', 
-                             os.path.join(os.path.dirname(__file__),'/template/'), "/"]
-                            , output_encoding='utf-8', preprocessor=[lambda x: x.replace("\r\n", "\n")]
-            ))
-        # ancestorData = True
-        mdReport = mdTemplate.render(tmo=tmo, ancestorData=ancestorData, ctx={})
-    except:
-        # print(mako_exceptions.text_error_template().render())
-        traceback = RichTraceback()
-        for (filename, lineno, function, line) in traceback.traceback:
-            print("File %s, line %s, in %s" % (filename, lineno, function))
-            print(line, "\n")
-        print("%s: %s" % (str(traceback.error.__class__.__name__), traceback.error))
-        return 
-        # raise BaseException("Template rendering error")
+        ctx = {}
+        mdReport = render_template_by_name(template, tmo, ancestorData, ctx=ctx)
+    except Exception as e:
+        print(f"Template rendering error (Python renderer) for template {template}: {e}")
+        traceback.print_exc()
+        return
 
     mdReport = createTableOfContent(mdReport)
 

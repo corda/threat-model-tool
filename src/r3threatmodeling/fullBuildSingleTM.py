@@ -7,9 +7,10 @@ import time
 from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler, PatternMatchingEventHandler
 import traceback
-from mako.exceptions import RichTraceback
-from mako.lookup import TemplateLookup
-from mako.template import Template
+## Mako imports removed after migration to pure Python renderers
+## from mako.exceptions import RichTraceback
+## from mako.lookup import TemplateLookup
+## from mako.template import Template
 import markdown
 import importlib_resources
 

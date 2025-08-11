@@ -9,6 +9,7 @@ import time
 from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler, PatternMatchingEventHandler
 import traceback
+## Mako imports (to be removed once index/conf templates migrated)
 from mako.exceptions import RichTraceback
 from mako.lookup import TemplateLookup
 from mako.template import Template
