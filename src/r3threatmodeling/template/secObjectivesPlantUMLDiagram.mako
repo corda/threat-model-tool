@@ -30,7 +30,7 @@ ${PlantUML_AT_HEAD}
 % for i, so in enumerate(tmo.securityObjectives):
     % for parentSO in so.contributesTo:
 "${so._id}" -> "${parentSO._id}" ## [label = "contributes to"]
-subgraph cluster_${re.sub("\s", "_", so.group)} {  label = "${so.group}";  "${so._id}"; }
+subgraph cluster_${re.sub(r"\s+", "_", so.group)} {  label = "${so.group}";  "${so._id}"; }
     % endfor
 % endfor
 ## % for i, threat in enumerate(tmo.getAllDown('threats')):

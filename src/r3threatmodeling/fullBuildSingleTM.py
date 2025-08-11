@@ -78,9 +78,10 @@ def generateSingleTM(rootTMYaml, base_outputDir, assetDir, template, ancestorDat
 
     print("Generate per TM full attack trees diagrams")
     TM_AttackTreePlantUMLDiagram.generate_attackTree_for_whole_threat_model(tmo, img_outputDir)
+   
     TM_AttackTreePlantUMLDiagram.generateAttackTreePerSingleTM(tmo, img_outputDir)
 
-    print(f"Generate Sec Obj attack tree diagrams")
+    print(f"Generate Sec Obj attack tree diagram")
     os.makedirs(img_outputDir, exist_ok=True)
     createSecObjectivesPlantUML.generate(tmo, img_outputDir)
     PUMLCommand = f"docker run --rm -v {os.path.realpath(img_outputDir)}:/data plantuml/plantuml:sha-d2b2bcf *.puml -svg -v"
