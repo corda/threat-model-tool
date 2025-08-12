@@ -157,15 +157,18 @@ def render_full_report(
 
 def render_mkdocs_report(
     tmo: ThreatModel,
-    ctx=None,
+    ctx={},
     ancestor_data: bool = True,
     header_level: int = 1,
 ) -> str:
+
+    ctx.setdefault('useMarkDown_attr_list_ext', True)
+
     lines = []
     lines.append(render_tm_report_part(tmo, ancestor_data, toc=False, summary=True, header_level=header_level, ctx=ctx))
     for descendant in tmo.getDescendantsTM():
         # Descendants keep same base level for consistency (adjust if nesting desired)
-        lines.append(render_tm_report_part(descendant, ancestor_data=False, header_level=header_level, ctx=ctx))
+        lines.append(render_tm_report_part(descendant, ancestor_data=False, header_level=header_level + 1, ctx=ctx))
     lines.append(makeMarkdownLinkedHeader(header_level + 1, "Requests For Information", ctx))
     lines.append("__RFI_PLACEHOLDER__")
     lines.append(PAGEBREAK)

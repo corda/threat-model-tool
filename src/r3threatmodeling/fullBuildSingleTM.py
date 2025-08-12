@@ -14,7 +14,7 @@ import traceback
 import markdown
 import importlib_resources
 
-from r3threatmodeling import fullBuildSinglePDF, TM_AttackTreePlantUMLDiagram ,createThreatPlantUMLDiagrams, createSecObjTreePUMLDiagrams, createSecObjectivesPlantUML, report_generator
+from . import fullBuildSinglePDF, TM_AttackTreePlantUMLDiagram ,createThreatPlantUMLDiagrams, createSecObjTreePUMLDiagrams, createSecObjectivesPlantUML, report_generator
 
 from .threatmodel_data import *
 from markdown import Markdown

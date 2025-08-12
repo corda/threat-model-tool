@@ -187,11 +187,8 @@ def render_threat(threat, header_level: int = 1, ctx=None) -> str:
     css_class = "proposal" if hasattr(threat, "proposal") else "current"
     lines.append(f"<div markdown=\"1\" class='{css_class}'>")
     # Primary heading using shared makeMarkdownLinkedHeader logic to preserve flexible nesting
-    try:
-        heading_text = threat.threatGeneratedTitle()
-    except Exception:
-        heading_text = threat.title
-    title_with_code = f"{heading_text} (<code>{threat._id}</code>)"
+
+    title_with_code = f"{threat.title} (<code>{threat._id}</code>)"
     # Historically threats used (header_level + 2) offset in Mako templates
     lines.append(makeMarkdownLinkedHeader(header_level + 2, title_with_code, ctx, tmObject=threat))
     if hasattr(threat, "proposal"):
@@ -370,7 +367,7 @@ def render_tm_report_part(
     lines.append(PAGEBREAK)
     lines.append(makeMarkdownLinkedHeader(header_level + 1, tmo.title + " - scope of analysis", ctx))
     if hasattr(tmo.scope, "description") and tmo.scope.description:
-        lines.append(makeMarkdownLinkedHeader(header_level + 2, tmo.title + "Overview", ctx))
+        lines.append(makeMarkdownLinkedHeader(header_level + 2, tmo.title + " Overview", ctx))
         lines.append(tmo.scope.description)
     if hasattr(tmo.scope, "references"):
         lines.append(makeMarkdownLinkedHeader(header_level + 2, "References", ctx))
@@ -404,8 +401,7 @@ def render_tm_report_part(
         lines.append(makeMarkdownLinkedHeader(header_level + 2, "Diagrams", ctx))
         lines.append(tmo.scope.diagram)
     # Attackers
-    lines.append("> **Note** This section contains the list of attackers, personas, roles and potential threat agents considered to be within the scope of analysis.")
-    lines.append("###  Defined in this threat model")
+
     if len(tmo.attackers) > 0:
         lines.append(PAGEBREAK)
         lines.append(makeMarkdownLinkedHeader(header_level + 2, tmo.title + " Threat Actors", ctx))
