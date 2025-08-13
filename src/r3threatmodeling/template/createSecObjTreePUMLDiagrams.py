@@ -6,7 +6,7 @@ import os
 import argparse
 import traceback
 
-from .threatmodel_data import *
+from ..threatmodel_data import *
 from .template_utils import unmark
 import textwrap
 import html

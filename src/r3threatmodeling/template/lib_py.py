@@ -1,16 +1,15 @@
 from __future__ import annotations
 import html, textwrap
 from datetime import datetime
+import html, textwrap
 from typing import List, Iterable, Optional
 
-from cvss import CVSS3  # assuming same import used elsewhere
-# Reuse existing helpers from your project
-from r3threatmodeling.template_utils import (
+# Reuse existing helpers from your project (explicit imports to avoid wildcard / linter issues)
+from .template_utils import (
     unmark,
-    createTitleAnchorHash,
-    createObjectAnchorHash,
-    makeMarkdownLinkedHeader,
     valueOr,
+    makeMarkdownLinkedHeader,
+    createObjectAnchorHash,
     renderNestedMarkdownList,
 )
 
@@ -32,15 +31,15 @@ def wrap_text(input_str: str, columns: int = 80, str_size: int = 77 * 4) -> str:
 def true_or_false_mark(value: bool) -> str:
     return "<span style=\"color:green;\">&#10004;</span>" if value else "&#10060;"
 
-def render_threat_simple_block(threat) -> str:
-    """Return a simplified textual block (replacing previous diagram)."""
-    impact = valueOr(threat, "impact_desc", "(impact TBD)")
-    attack = getattr(threat, "attack", "(attack TBD)")
-    return (
-        f"**Threat:** {threat.threatGeneratedTitle() if hasattr(threat,'threatGeneratedTitle') else threat.title}\n\n"
-        f"**Attack:** {attack}\n\n"
-        f"**Impact:** {impact}"
-    )
+# def render_threat_simple_block(threat) -> str:
+#     """Return a simplified textual block (replacing previous diagram)."""
+#     impact = valueOr(threat, "impact_desc", "(impact TBD)")
+#     attack = getattr(threat, "attack", "(attack TBD)")
+#     return (
+#         # f"**Threat:** {threat.threatGeneratedTitle() if hasattr(threat,'threatGeneratedTitle') else threat.title}\n\n"
+#         f"**Attack:** {attack}\n\n"
+#         f"**Impact:** {impact}"
+#     )
 
 def render_text_security_objectives_tree(security_objectives: Iterable[SecurityObjective]) -> str:
     """Render grouped security objectives without spurious heading markers.
@@ -57,8 +56,8 @@ def render_text_security_objectives_tree(security_objectives: Iterable[SecurityO
                 # blank line to separate previous group from the next
                 out.append("")
             current = so.group
-            out.append(f"**{current}:**")
-        out.append(f"- <a href=\"#{so.anchor}\">{so.title}</a>")
+            out.append(f"**{current}:**\n")
+        out.append(f"- <a href=\"#{so.anchor}\">{so.title}</a>\n")
     return "\n".join(out)
 
 def executive_summary(tmo: ThreatModel, header_level: int = 1, ctx=None) -> str:
@@ -66,9 +65,7 @@ def executive_summary(tmo: ThreatModel, header_level: int = 1, ctx=None) -> str:
     mitigated = tmo.getThreatsByFullyMitigated(True)
     unmitigated = tmo.getThreatsByFullyMitigated(False)
     lines = [
-        makeMarkdownLinkedHeader(header_level + 1, "Executive Summary", ctx, skipTOC=False),
-        "> This section contains an executive summary of the identified threats and their mitigation status",
-    ]
+        makeMarkdownLinkedHeader(header_level + 1, "Executive Summary", ctx, skipTOC=False) ]
     if len(unmit_no_op) < 1:
         lines.append("**No unmitigated threats without operational countermeasures were identified**")
     else:
@@ -111,10 +108,10 @@ def threats_summary(tmo: ThreatModel, header_level: int = 1, ctx=None) -> str:
     mitigated = tmo.getThreatsByFullyMitigated(True)
     unmit = tmo.getThreatsByFullyMitigated(False)
     all_count = len(tmo.getAllDown("threats"))
-    lines = [
-        makeMarkdownLinkedHeader(header_level + 1, "Threats Summary", ctx, skipTOC=False),
-        "> This section contains an executive summary of the threats and their mitigation status",
-    ]
+    lines = []
+    lines.append(makeMarkdownLinkedHeader(header_level + 1, "Threats Summary", ctx, skipTOC=False))
+    lines.append("\n> This section contains an executive summary of the threats and their mitigation status.\n")
+
     if len(mitigated) < 1 and len(unmit) < 1:
         lines.append("**No threat identified or listed **")
     else:
@@ -183,24 +180,26 @@ def render_countermeasure(countermeasure) -> str:
     return "\n".join(lines)
 
 def render_threat(threat, header_level: int = 1, ctx=None) -> str:
-    lines = []
+    """Render a threat block matching the Mako template (without mermaid diagram)."""
+    lines: list[str] = []
     css_class = "proposal" if hasattr(threat, "proposal") else "current"
     lines.append(f"<div markdown=\"1\" class='{css_class}'>")
-    # Primary heading using shared makeMarkdownLinkedHeader logic to preserve flexible nesting
-
+    # Anchor and legacy headings
+    lines.append(f"<a id=\"{threat._id}\"></a>")
+    if hasattr(threat, "threatDesc"):
+        try:
+            lines.append(f"## {threat.threatDesc()}")
+        except Exception:
+            pass
     title_with_code = f"{threat.title} (<code>{threat._id}</code>)"
-    # Historically threats used (header_level + 2) offset in Mako templates
     lines.append(makeMarkdownLinkedHeader(header_level + 2, title_with_code, ctx, tmObject=threat))
     if hasattr(threat, "proposal"):
         lines.append(f"From proposal: {threat.proposal}")
-    # Diagram(s): restore per–threat SVG (generated during build) + keep simple textual summary
-    # SVG path aligns with legacy mako template: img/threatTree/{THREAT_ID}.svg
+    # Centered static SVG (mermaid omitted by request)
     lines.append('<div style="text-align: center;">')
-    lines.append(f'<img src="img/threatTree/{threat._id}.svg" alt="Threat diagram {threat._id}"/>')
+    lines.append(f'<img src="img/threatTree/{threat._id}.svg"/>')
     lines.append('</div>')
-    # Simple textual block below the diagram
-    lines.append(render_threat_simple_block(threat))
-    # Details
+    # Definition list details
     lines.append("<dl markdown=\"block\">")
     if hasattr(threat, "appliesToVersions"):
         lines.append("<dt>Applies To Versions</dt>")
@@ -219,26 +218,38 @@ def render_threat(threat, header_level: int = 1, ctx=None) -> str:
             )
     if hasattr(threat, "conditional"):
         lines.append(f"<dt>Threat condition:</dt><dd markdown=\"block\">{threat.conditional}</dd>")
-    lines.append(f"<dt>Threat Description</dt><dd markdown=\"block\">{threat.attack}</dd>")
+    lines.append(f"<dt>Threat Description</dt><dd markdown=\"block\">{getattr(threat, 'attack', '')}</dd>")
     if hasattr(threat, "impact_desc"):
         lines.append(f"<dt>Impact</dt><dd markdown=\"block\">{threat.impact_desc}</dd>")
+    if hasattr(threat, "attackType"):
+        lines.append("<dt>Attack type</dt>")
+        lines.append(f"<dd markdown=\"block\">{threat.attackType}</dd>")
     if threat.cvssObject:
         cvss = threat.cvssObject
-        lines.append("<dt>CVSS</dt><dd>")
+        lines.append("<dt>CVSS</dt>")
         lines.append(
+            "<dd>\n"
             f"<strong>{cvss.getSmartScoreType()}:</strong> {cvss.getSmartScoreDesc()} <br/>\n"
-            f"<strong>Vector:</strong><code>{cvss.clean_vector()}</code>"
+            f"<strong>Vector:</strong><code>{cvss.clean_vector()}</code>\n"
+            "</dd>"
         )
-        lines.append("</dd>")
     if hasattr(threat, "compliance"):
-        lines.append("Compliance:\n" + renderNestedMarkdownList(threat.compliance, -1, firstIndent=None))
+        lines.append(
+            "Compliance:\n" + renderNestedMarkdownList(threat.compliance, -1, firstIndent=None)
+        )
     lines.append("</dl>")
     if getattr(threat, "ticketLink", None):
         safe = html.escape(threat.ticketLink)
-        lines.append(f"<dt><strong>Ticket link:</strong><a href=\"{safe}\"> {safe}  </a> </dt>")
+        lines.append(
+            f"<dt><strong>Ticket link:</strong><a href=\"{safe}\"> {safe}  </a> </dt><dd markdown=\"block\"></dd>"
+        )
     cms = getattr(threat, "countermeasures", [])
     if cms:
-        lines.append(makeMarkdownLinkedHeader(header_level + 3, f"Counter-measures for {threat._id} ", ctx, True))
+        lines.append(
+            makeMarkdownLinkedHeader(
+                header_level + 3, f"Counter-measures for {threat._id} ", ctx, True
+            )
+        )
         lines.append("<dl markdown=\"block\">")
         for cm in cms:
             lines.append(render_countermeasure(cm))
@@ -258,13 +269,13 @@ def render_security_objective(so: SecurityObjective, header_level: int = 1, ctx=
     if hasattr(so, "icon"):
         lines.append(f"<img src=\"{so.icon}\"/><br/>")
     lines.append(so.description)
-    lines.append(f"**Priority:** {so.priority}")
+    lines.append(f"**Priority:** {so.priority}\n")
     if getattr(so, "contributesTo", []):
-        lines.append("**Contributes to:**")
+        lines.append("**Contributes to:**\n")
         for c in so.contributesTo:
-            lines.append(f"- {c.contributedToMDText()}")
+            lines.append(f"- {c.contributedToMDText()}\n")
     if getattr(so, "treeImage", False):
-        lines.append("**Attack tree:**")
+        lines.append("**Attack tree:**\n")
         lines.append(f"<img src=\"img/secObjectives/{so._id}.svg\"/>")
         lines.append("<img src=\"img/legend_SecObjTree.svg\" width=\"400\"/>")
     lines.append("<hr/>")
@@ -343,18 +354,18 @@ def render_tm_report_part(
     css = "proposal" if hasattr(tmo, "proposal") else "current"
     lines.append(f"<div markdown=\"block\" class='{css}'>")
     if hasattr(tmo, "proposal"):
-        lines.append(f"From proposal: {tmo.proposal}")
+        lines.append(f"From proposal: {tmo.proposal}\n")
     lines.append(makeMarkdownLinkedHeader(header_level, tmo.title, ctx, skipTOC=False, tmObject=tmo))
     if hasattr(tmo, "version"):
-        lines.append(f"Version: {tmo.version}")
+        lines.append(f"Version: {tmo.version}\n")
     if hasattr(tmo, "status"):
-        lines.append(f"Status: {tmo.status}")
+        lines.append(f"Status: {tmo.status}\n")
     if toc:
-        lines.append(f"Last update: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        lines.append(f"Last update: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
     if hasattr(tmo, "authors"):
-        lines.append(f"Authors: {tmo.authors}")
+        lines.append(f"Authors: {tmo.authors}\n")
     if hasattr(tmo, "versionsFilterStr"):
-        lines.append(f"Versions in scope: {tmo.versionsFilterStr}")
+        lines.append(f"Versions in scope: {tmo.versionsFilterStr}\n")
     if toc:
         lines.append(PAGEBREAK)
         lines.append(makeMarkdownLinkedHeader(header_level + 1, "Table of contents", ctx, skipTOC=True))
@@ -405,7 +416,7 @@ def render_tm_report_part(
     if len(tmo.attackers) > 0:
         lines.append(PAGEBREAK)
         lines.append(makeMarkdownLinkedHeader(header_level + 2, tmo.title + " Threat Actors", ctx))
-        lines.append("> Actors, agents, users and attackers may be used as synonymous.")
+        lines.append("> Actors, agents, users and attackers may be used as synonymous.\n")
         for attacker in tmo.attackers:
             lines.append(render_attacker(attacker, header_level, ctx))
     if ancestor_data and tmo.parent is not None and len(tmo.parent.getAllAttackers()) > 0:
@@ -442,7 +453,7 @@ def render_tm_report_part(
         lines.append(PAGEBREAK)
         lines.append("<hr/>")
         lines.append(makeMarkdownLinkedHeader(header_level + 1, tmo.title + " Threats", ctx))
-        lines.append("> **Note** This section contains the threat and mitigations identified during the analysis phase.")
+        lines.append("\n> **Note** This section contains the threat and mitigations identified during the analysis phase.")
         for i, threat in enumerate(tmo.threats):
             if i > 1:
                 lines.append("<hr/>")

@@ -2,7 +2,7 @@ import re
 import html
 from markdown import Markdown
 from io import StringIO
-from .threatmodel_data import *
+from ..threatmodel_data import *
 
 #from r3threatmodeling.template_utils import BaseThreatModelObject
 

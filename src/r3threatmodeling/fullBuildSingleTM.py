@@ -14,11 +14,12 @@ import traceback
 import markdown
 import importlib_resources
 
-from . import fullBuildSinglePDF, TM_AttackTreePlantUMLDiagram ,createThreatPlantUMLDiagrams, createSecObjTreePUMLDiagrams, createSecObjectivesPlantUML, report_generator
+from . import fullBuildSinglePDF, report_generator
+from .template import TM_AttackTreePlantUMLDiagram, createThreatPlantUMLDiagrams, createSecObjTreePUMLDiagrams, createSecObjectivesPlantUML
 
 from .threatmodel_data import *
 from markdown import Markdown
-from .template_utils import *
+from .template.template_utils import *
 
 from pathlib import Path
 import shutil

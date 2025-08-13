@@ -8,7 +8,7 @@ import traceback
 import textwrap
 import html
 
-from .threatmodel_data import *
+from ..threatmodel_data import *
 
 
 
@@ -55,7 +55,7 @@ def _secure_obj_list(threat):
 def _build_threat_puml(threat):
     threat_id = threat._id
     title = _sanitize(getattr(threat, 'title', threat_id))
-    impact_desc = _wrap_text(getattr(threat, 'impactDesc', '') or '')
+    # impact_desc = _wrap_text(getattr(threat, 'impactDesc', '') or '')
     attack_text = _wrap_text(getattr(threat, 'attack', '') or '')
     sec_objs = _secure_obj_list(threat)
 
@@ -66,7 +66,7 @@ def _build_threat_puml(threat):
     lines.append('    label= ')
     lines.append('    <<table border="0" cellborder="0" cellspacing="0">')
     lines.append(f'     <tr><td align="center"><b>Threat</b><br/> {_wrap_text(title)}</td></tr>')
-    lines.append(f'     <tr><td align="center"><b>Impact</b><br/>{impact_desc}</td></tr>')
+    # lines.append(f'     <tr><td align="center"><b>Impact</b><br/>{impact_desc}</td></tr>')
     if sec_objs:
         lines.append('     <tr><td><table border="0" cellborder="0" cellspacing="8"><tr>')
         for so in sec_objs:
@@ -99,7 +99,8 @@ def _build_threat_puml(threat):
             desc = getattr(cm, 'description', None)
             if desc is None:
                 continue
-            cm_title = _wrap_text(getattr(cm, 'title', f'CM {i}'))
+            raw_cm_title = getattr(cm, 'title', f'CM {i}')
+            cm_title = _sanitize(_wrap_text(raw_cm_title))
             fill, border = _countermeasure_colors(cm)
             lines.append(f'"{threat_id}_countermeasure{i}" [ ')
             lines.append(f'       fillcolor="{fill}", style=filled, shape=polygon, color="{border}", label =     ')

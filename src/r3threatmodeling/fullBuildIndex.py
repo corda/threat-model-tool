@@ -16,7 +16,7 @@ import markdown
 from r3threatmodeling import fullBuildSingleTM, report_generator
 from .threatmodel_data import *
 from markdown import Markdown
-from .template_utils import *
+from .template.template_utils import *
 
 from pathlib import Path
 import shutil

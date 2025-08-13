@@ -17,8 +17,10 @@ The lower-level building blocks already exist in lib_py (render_tm_report_part e
 """
 from __future__ import annotations
 from typing import Iterable, List
+import os
 
-from ..template_utils import makeMarkdownLinkedHeader
+
+from .template_utils import makeMarkdownLinkedHeader
 from .lib_py import (
     render_tm_report_part,
     PAGEBREAK,
@@ -63,12 +65,12 @@ def render_operational_hardening(tmo: ThreatModel, ctx=None, header_level: int =
         op_line = ""
         operator = getattr(cm, "operator", None)
         if operator and operator != "UNDEFINED":
-            op_line = f"**Operated by:** {operator}<br/>"
-        cond_line = f"**Valid when:** {cond}<br/>" if cond else ""
+            op_line = f"**Operated by:** {operator}"
+        cond_line = f"**Valid when:** {cond}" if cond else ""
         lines.append(
             f"<tr markdown=\"block\"><td>{i+1}</td><td markdown=\"block\">**Title (ID):** {cm.title} (`{cm._id}`)<br/>\n"
-            f"**Mitigates:** <a href=\"#{parent_anchor}\">{parent_title}</a> (`{parent_id}`)<br/><br/>\n"
-            f"**Description:**\n{cond_line}{cm.description}\n<br/>{op_line}</td></tr>"
+            f"**Mitigates:** <a href=\"#{parent_anchor}\">{parent_title}</a> (`{parent_id}`)<br/>\n"
+            f"**Description:**\n{cond_line}\n<br/>{cm.description}\n<br/>{op_line}</td></tr>"
         )
     lines.append("</tbody></table>")
     return "\n".join(lines)
@@ -213,3 +215,96 @@ def render_template_by_name(name: str, tmo: ThreatModel, ancestor_data: bool, ct
         raise ValueError(f"Unknown template name (Python renderer): {name}")
     # All mapped functions now share a header_level param for consistent nesting control
     return func(tmo, ctx=ctx, ancestor_data=ancestor_data, header_level=header_level)
+
+
+# ---------------------------------------------------------------------------
+# Site / index auxiliary generators (moved from fullBuildDirectory.py)
+# ---------------------------------------------------------------------------
+def generate_mkdocs_config(tm_list, output_dir, filename: str = "mkdocs.yml"):
+    """Write a minimal MkDocs configuration file for the provided TM list.
+
+    Parameters:
+        tm_list: iterable of dicts with at least 'ID' (or 'name') and optional 'title'.
+        output_dir: destination directory where the mkdocs.yml will be written.
+        filename: config file name (default 'mkdocs.yml').
+
+    Returns: absolute path of the written config file.
+    """
+    def yaml_quote(s: str) -> str:
+        if s is None:
+            return '""'
+        if any(c in s for c in [':', '{', '}', '[', ']', ',', '&', '*', '#', '!', '|', '>', "'", '"', '%', '@', '`']):
+            return '"' + s.replace('"', '\\"') + '"'
+        return s
+
+    lines = [
+        "site_name: Threat Models",
+        "docs_dir: docs",
+        "use_directory_urls: false",
+        "nav:",
+        "  - Home: index.md",
+    ]
+
+    for tm in sorted(tm_list, key=lambda x: (x.get('title') or x.get('ID') or x.get('name') or '')):
+        title = tm.get('title') or tm.get('ID') or tm.get('name') or 'UNKNOWN'
+        tm_id = tm.get('ID') or tm.get('name') or 'UNKNOWN'
+        lines.append(f"  - {yaml_quote(title)}: {tm_id}/index.md")
+
+    lines += [
+        "",
+        "theme:",
+        "  name: readthedocs",
+        "markdown_extensions:",
+        "  - toc:",
+        "      baselevel: 1",
+        "      toc_depth: 5",
+        "  - md_in_html",
+        "  - attr_list",
+        "plugins:",
+        "  - search",
+        "extra_css:",
+        "  - css/mkdocs.css",
+        "  - css/threatmodel.css",
+        "extra_javascript:",
+        "  - js/tm.js",
+        "  - javascript/readthedocs.js",
+    ]
+
+    content = "\n".join(lines) + "\n"
+    os.makedirs(output_dir, exist_ok=True)
+    path = os.path.join(output_dir, filename)
+    with open(path, "w") as fh:
+        print(f"OUTPUT: {fh.name}")
+        fh.write(content)
+    return path
+
+
+def generate_index_markdown(tm_list, output_dir, filename: str = "index.md", pdf_artifact_link: str | None = None):
+    """Generate a simple Markdown index referencing each generated TM.
+
+    Parameters:
+        tm_list: iterable of dicts describing threat models (expects 'ID' & 'title').
+        output_dir: directory where index file is written.
+        filename: output markdown filename (default index.md).
+        pdf_artifact_link: optional link shown at top of the index.
+    """
+    lines = ["# Threat Models Index", ""]
+    if pdf_artifact_link:
+        lines.append(f"PDF Artifact: {pdf_artifact_link}\n")
+    for tm in tm_list:
+        tm_id = tm.get('ID') or tm.get('name') or 'UNKNOWN'
+        title = tm.get('title') or tm_id
+        lines.append(f"* [{title}]({tm_id}/{tm_id}.html)")
+    out_text = "\n".join(lines) + "\n"
+    os.makedirs(output_dir, exist_ok=True)
+    out_path = os.path.join(output_dir, filename)
+    with open(out_path, 'w') as f:
+        print(f"OUTPUT: {f.name}")
+        f.write(out_text)
+    return out_path
+
+
+# Backward compatibility wrappers (legacy names / parameter order)
+def generateFromTMList(tm_list, outputDir, outFile, pdfArtifactLink=None):  # pragma: no cover - thin wrapper
+    return generate_index_markdown(tm_list, outputDir, filename=outFile, pdf_artifact_link=pdfArtifactLink)
+

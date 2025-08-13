@@ -13,7 +13,7 @@ from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler, PatternMatchingEventHandler
 import traceback
 
-from .threatmodel_data import *
+from ..threatmodel_data import *
 from markdown import Markdown
 from .template_utils import *
 import re

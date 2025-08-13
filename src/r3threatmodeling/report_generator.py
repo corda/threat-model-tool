@@ -16,7 +16,7 @@ import markdown
 
 from .threatmodel_data import *
 from markdown import Markdown
-from .template_utils import *
+from .template.template_utils import *
 from .template.renderers import render_template_by_name
 
 from pathlib import Path
