@@ -10,13 +10,13 @@ import time
 import logging
 from io import StringIO
 
-from .template_utils import makeMarkdownLinkedHeader
+from .template.template_utils import makeMarkdownLinkedHeader
 import traceback
 import html
 
 from .threatmodel_data import *
 # from markdown import Markdown
-from .template_utils import *
+from .template.template_utils import *
 
 
 

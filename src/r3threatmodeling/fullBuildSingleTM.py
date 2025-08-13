@@ -7,17 +7,19 @@ import time
 from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler, PatternMatchingEventHandler
 import traceback
-from mako.exceptions import RichTraceback
-from mako.lookup import TemplateLookup
-from mako.template import Template
+## Mako imports removed after migration to pure Python renderers
+## from mako.exceptions import RichTraceback
+## from mako.lookup import TemplateLookup
+## from mako.template import Template
 import markdown
 import importlib_resources
 
-from r3threatmodeling import fullBuildSinglePDF, TM_AttackTreePlantUMLDiagram ,createThreatPlantUMLDiagrams, createSecObjTreePUMLDiagrams, createSecObjectivesPlantUML, report_generator
+from . import fullBuildSinglePDF, report_generator
+from .template import TM_AttackTreePlantUMLDiagram, createThreatPlantUMLDiagrams, createSecObjTreePUMLDiagrams, createSecObjectivesPlantUML
 
 from .threatmodel_data import *
 from markdown import Markdown
-from .template_utils import *
+from .template.template_utils import *
 
 from pathlib import Path
 import shutil

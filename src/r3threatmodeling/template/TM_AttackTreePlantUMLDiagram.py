@@ -12,7 +12,7 @@ import logging
 import traceback
 import html
 
-from .threatmodel_data import *
+from ..threatmodel_data import *
 # from markdown import Markdown
 from .template_utils import *
 

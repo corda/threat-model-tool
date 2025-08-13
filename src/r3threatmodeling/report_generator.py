@@ -7,14 +7,17 @@ import time
 from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler, PatternMatchingEventHandler
 import traceback
-from mako.exceptions import RichTraceback
-from mako.lookup import TemplateLookup
-from mako.template import Template
+import re
+## Mako imports removed after migration to pure Python renderers
+## from mako.exceptions import RichTraceback
+## from mako.lookup import TemplateLookup
+## from mako.template import Template
 import markdown
 
 from .threatmodel_data import *
 from markdown import Markdown
-from .template_utils import *
+from .template.template_utils import *
+from .template.renderers import render_template_by_name
 
 from pathlib import Path
 import shutil
@@ -36,26 +39,20 @@ def make_handler(files, func, *args):
 
     return Handler(patterns=patterns) 
 
-PRE_MERMAID = "<!-- mermaid start. Do not delete this comment-->\n```mermaid"
-AFTER_MERMAID = "```\n<!-- mermaid end. comment needed to it covert to HTML-->"
+"""Report generation utilities."""
 
 
 def prepare_output_directory(outputDir, assetDir = None):
-
-  os.makedirs(outputDir, exist_ok=True)
-
-  if not assetDir:
-    assetDir = []    
-
-  # copy the basic assets first that are defined by this tool
-  assetDir.insert(0, Path(__file__).parent / "assets")
-
-  # copy everything from assets into destination 
-  for asset in assetDir:
-    shutil.copytree(asset, outputDir, dirs_exist_ok = True)
+    os.makedirs(outputDir, exist_ok=True)
+    # Assets removed; keep optional external assets if explicitly provided and exist
+    if assetDir:
+        for asset in assetDir:
+            asset_path = Path(asset)
+            if asset_path.exists():
+                shutil.copytree(asset_path, outputDir, dirs_exist_ok=True)
 
 
-def generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, assetDir, public=False ):
+def generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, assetDir, public=False, baseHeaderLevel: int = 1 ):
 
     if baseFileName is None:
         baseFileName = tmo._id
@@ -63,31 +60,18 @@ def generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, 
     mdOutFileName = baseFileName + ".md"
     htmlOutFileName = baseFileName + ".html"
     try:
-        mdTemplate = Template(
-        filename=  os.path.join(os.path.dirname(__file__),
-            'template/'+template+'.mako'),
-            lookup=TemplateLookup(
-                directories=['.', 
-                             os.path.join(os.path.dirname(__file__),'/template/'), "/"]
-                            , output_encoding='utf-8', preprocessor=[lambda x: x.replace("\r\n", "\n")]
-            ))
-        # ancestorData = True
-        mdReport = mdTemplate.render(tmo=tmo, ancestorData=ancestorData, ctx={})
-    except:
-        # print(mako_exceptions.text_error_template().render())
-        traceback = RichTraceback()
-        for (filename, lineno, function, line) in traceback.traceback:
-            print("File %s, line %s, in %s" % (filename, lineno, function))
-            print(line, "\n")
-        print("%s: %s" % (str(traceback.error.__class__.__name__), traceback.error))
-        return 
-        # raise BaseException("Template rendering error")
+        ctx = {}
+        mdReport = render_template_by_name(template, tmo, ancestorData, ctx=ctx, header_level=baseHeaderLevel)
+    except Exception as e:
+        print(f"Template rendering error (Python renderer) for template {template}: {e}")
+        traceback.print_exc()
+        return
 
     mdReport = createTableOfContent(mdReport)
 
     mdReport = createRFIs(mdReport)
 
-    # mdReport = "\n".join(process_mermaidInclude(mdReport.splitlines(), assetDir[1]))
+    # No diagram specific post-processing required
 
 
     postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileName, mdReport, assetDir)
@@ -164,6 +148,7 @@ def main():
     CLI.set_defaults(ancestorData=True)
 
     CLI.add_argument('--baseFileName', default=None, required=False)
+    CLI.add_argument('--baseHeaderLevel', type=int, default=1, required=False, help='Base markdown header level for top-level sections (Python renderer)')
 
     args = CLI.parse_args()
     # TMIDs = args.TMID
@@ -253,28 +238,18 @@ def processSingleTMID(tmoRoot, TMID, args):
         tmo = tmo.getChildrenTMbyID(idPathPart)
         
 
-    generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, assetDir, public )
+    generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, assetDir, public, baseHeaderLevel=args.baseHeaderLevel )
     return
 
 def postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileName, mdReport, assetDir):
     if not assetDir:
         assetDir = 'assets'
-    mermaidHtmlTags = mdReport.replace(#FIX mermaid diagrams for html
-                PRE_MERMAID, "<div class=mermaid>").replace(AFTER_MERMAID,"</div>")
 
-    #TOC is freezing the rendering together with attr list ... htmlReport = markdown.markdown(mermaidHtmlTags, extensions=['md_in_html', 'attr_list', 'toc'])
-    htmlReport = markdown.markdown(mermaidHtmlTags, extensions=['md_in_html', 'attr_list'])
+    htmlReport = markdown.markdown(mdReport, extensions=['md_in_html', 'attr_list'])
     baseHTML = """<!DOCTYPE html>
         <html>
         <head>
-        <style>
-        @media print {
-            .pagebreak {
-                clear: both;
-                min-height: 1px;
-                page-break-after: always;
-            }
-        }</style>
+        <meta charset=\"utf-8\" />
         <link rel="stylesheet" href="css/tm.css">
         </head>
         <body>%BODY%</body>
@@ -288,12 +263,7 @@ def postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileNa
         document.write("<script async src='http://HOST:3000/browser-sync/browser-sync-client.js?v=2.27.10'></script>".replace("HOST", location.hostname));//]]></script>
     </body> """)
         
-#     mermaid_script = """
-# <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-# <script>mermaid.initialize({startOnLoad:true, securityLevel: 'loose'});
-# </script>
-# """
-#     htmlReport=htmlReport.replace("</body>",    mermaid_script + "</body>")    
+    # (Diagram scripting removed)
 
 
     outMDPath = os.path.join(outputDir, mdOutFileName)
@@ -353,53 +323,6 @@ def createRFIs(mdData):
     return newstring.replace("__RFI_PLACEHOLDER__", rfi)
 
 
-INC_SYNTAX = re.compile(r"{mermaid!\s*(.+?)\s*!((\blines\b)=([0-9 -]+))?\}")
-HEADING_SYNTAX = re.compile("^#+")
-
-
-
-def process_mermaidInclude(lines, base_path, encoding = "utf-8"):
-    done = False
-    bonusHeading = ""
-    while not done:
-        for loc, line in enumerate(lines):
-            m = INC_SYNTAX.search(line)
-
-            while m:
-                filename = m.group(1)
-                filename = os.path.expanduser(filename)
-                if not os.path.isabs(filename):
-                    filename = os.path.normpath(
-                        os.path.join(base_path.__str__(), filename)
-                    )
-                try:
-                    with open(filename, "r", encoding=encoding) as r:
-                        original_text = process_mermaidInclude(r.readlines(), base_path, encoding)
-
-                except Exception as e:
-                    # if not self.throwException:
-                    print(
-                        "Warning: could not find file {}. Ignoring "
-                        " try using --assetDir option \n"
-                        "include statement. Error: {}".format(filename, e)
-                    )
-                    lines[loc] = INC_SYNTAX.sub("", line)
-                    break
-
-                text = original_text
-
-                if len(text) == 0:
-                    text.append("")
-
-                text.append(AFTER_MERMAID)
-                text.insert(0, PRE_MERMAID)
-                del lines[loc]
-                lines[loc:loc] =text 
-                m = INC_SYNTAX.search("")
-
-        else:
-            done = True
-    return lines
 
 if __name__ == "__main__":
     main()

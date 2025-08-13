@@ -9,15 +9,12 @@ import time
 from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler, PatternMatchingEventHandler
 import traceback
-from mako.exceptions import RichTraceback
-from mako.lookup import TemplateLookup
-from mako.template import Template
-import markdown
 
 from r3threatmodeling import fullBuildSingleTM
+from r3threatmodeling.template.renderers import generate_mkdocs_config, generateFromTMList
 from .threatmodel_data import *
 from markdown import Markdown
-from .template_utils import *
+from .template.template_utils import *
 
 from pathlib import Path
 import shutil
@@ -28,31 +25,6 @@ def dir_path(path):
     else:
         raise argparse.ArgumentTypeError(f"--TMDirectory:{path} is not a valid path")
 
-def generateFromTMList(tm_list, outputDir, outFile , template = "index_tm_list", pdfArtifactLink=None):
-    # template = "index_tm_list"
-    try:
-        mdTemplate = Template(
-            filename =  os.path.join(os.path.dirname(__file__),
-                'template/'+template+'.mako'),
-                lookup=TemplateLookup(
-                    directories=['.', 
-                                os.path.join(os.path.dirname(__file__),'/template/'), "/"]
-                                , output_encoding='utf-8', preprocessor=[lambda x: x.replace("\r\n", "\n")]
-                ))
-        
-        outText = mdTemplate.render(tm_list=tm_list, mainLinks=[], outputDir=outputDir)
-        outputFilename = outMDPath = os.path.join(outputDir, outFile)  
-        with open(outputFilename, 'w') as f:
-            print(f"OUTPUT: {f.name}") 
-            f.write(outText)
-    except:
-        # print(mako_exceptions.text_error_template().render())
-        traceback = RichTraceback()
-        for (filename, lineno, function, line) in traceback.traceback:
-            print("File %s, line %s, in %s" % (filename, lineno, function))
-            print(line, "\n")
-        print("%s: %s" % (str(traceback.error.__class__.__name__), traceback.error))  
-    return
 
 def main():
     CLI=argparse.ArgumentParser()
@@ -207,20 +179,20 @@ def main():
         # fullBuildSingleTM.generateSingleTM(open(rootTMYaml), TMoutputDir + "/full", assetDir, template, ancestorData, browserSync , generatePDF=generatePDF, pdfHeaderNote=pdfHeaderNote, public=False)
 
     if MKDocsSiteDir:
-
         os.makedirs(MKDocsSiteDir, exist_ok=True)
         os.makedirs(MKDocsDir, exist_ok=True)
-
-        generateFromTMList(tm_list, MKDocsDir, outFile="mkdocs.yml", template="conf_MKDOCS")    
-        generateFromTMList(tm_list, outputDir, outFile="index.md", template="index_MKDOCS", pdfArtifactLink=None)
-
+        # Proper MkDocs YAML config
+        generate_mkdocs_config(tm_list, MKDocsDir, filename="mkdocs.yml")
+        generateFromTMList(tm_list, outputDir, outFile="index.md", pdfArtifactLink=None)
         if pdfArtifactLink:
-            #unzip
+            # Future: unzip artifact into site
             pass
-
         oldwd = os.getcwd()
         os.chdir(MKDocsDir)
-        os.system(f"mkdocs build --clean --config-file mkdocs.yml --site-dir={MKDocsSiteDir}")
+        if shutil.which("mkdocs"):
+            os.system(f"mkdocs build --clean --config-file mkdocs.yml --site-dir={MKDocsSiteDir}")
+        else:
+            print("WARNING: 'mkdocs' executable not found on PATH. Skipping site build. Install mkdocs to generate the static site.")
         os.chdir(oldwd)
 
 
