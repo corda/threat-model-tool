@@ -110,7 +110,7 @@ def threats_summary(tmo: ThreatModel, header_level: int = 1, ctx=None) -> str:
     all_count = len(tmo.getAllDown("threats"))
     lines = []
     lines.append(makeMarkdownLinkedHeader(header_level + 1, "Threats Summary", ctx, skipTOC=False))
-    lines.append("\n> This section contains an executive summary of the threats and their mitigation status.\n")
+    lines.append("\n This section contains an executive summary of the threats and their mitigation status.\n")
 
     if len(mitigated) < 1 and len(unmit) < 1:
         lines.append("**No threat identified or listed **")

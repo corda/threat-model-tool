@@ -250,18 +250,7 @@ def postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileNa
         <html>
         <head>
         <meta charset=\"utf-8\" />
-        <style>
-        /* Minimal inline styling retained after asset purge */
-        body { font-family: Arial, Helvetica, sans-serif; line-height: 1.35; margin: 2rem; }
-        h1,h2,h3,h4 { margin-top: 1.2em; }
-        table { border-collapse: collapse; }
-        table, th, td { border: 1px solid #999; padding: 4px 8px; }
-        code { background: #f5f5f5; padding: 2px 4px; }
-        @media print {
-            .pagebreak { clear: both; min-height: 1px; page-break-after: always; }
-            a { text-decoration: none; color: black; }
-        }
-        </style>
+        <link rel="stylesheet" href="css/tm.css">
         </head>
         <body>%BODY%</body>
         </html>
