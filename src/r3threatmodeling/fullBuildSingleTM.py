@@ -43,6 +43,17 @@ def generateSingleTM(rootTMYaml, base_outputDir, assetDir, template, ancestorDat
 
     report_generator.generate(tmo, template, ancestorData, outputDir, browserSync, fileName, assetDir)
 
+    # Copy module assets first (will be overridden by TM-specific assets if they exist)
+    module_assets_path = importlib_resources.files('r3threatmodeling').joinpath('assets')
+    if module_assets_path.is_dir():
+        # Copy specific subdirectories from module assets
+        for subdir in ['css', 'img']:
+            module_subdir_path = module_assets_path.joinpath(subdir)
+            if module_subdir_path.is_dir():
+                target_subdir = os.path.join(outputDir, subdir)
+                shutil.copytree(module_subdir_path, target_subdir, dirs_exist_ok=True)
+
+
 
     for tm in tmo.getDescendantsTM() + [tmo]:
         asset_path = tm.assetDir()
