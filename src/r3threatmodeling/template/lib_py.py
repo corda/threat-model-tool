@@ -372,7 +372,7 @@ def render_tm_report_part(
     if toc:
         lines.append(PAGEBREAK)
         lines.append(makeMarkdownLinkedHeader(header_level + 1, "Table of contents", ctx, skipTOC=True))
-        lines.append("<div markdown=\"1\">__TOC_PLACEHOLDER__\n\n</div>")
+        lines.append("""<div markdown=\"1\">\n\n__TOC_PLACEHOLDER__\n\n</div>""")
         lines.append(PAGEBREAK)
     if summary:
         lines.append(executive_summary(tmo, header_level, ctx))
@@ -451,7 +451,9 @@ def render_tm_report_part(
         lines.append(PAGEBREAK)
         lines.append("<hr/>")
         lines.append(makeMarkdownLinkedHeader(header_level + 1, tmo.title + " Attack tree", ctx))
-        lines.append(f'<object type="image/svg+xml" style="width:100%; height:auto;" data="img/{tmo._id}_ATTACKTREE.svg"></object>')
+        lines.append(f'''<object type="image/svg+xml" style="width:100%; height:auto;" data="img/{tmo._id}_ATTACKTREE.svg">
+                     <img src="img/{tmo._id}_ATTACKTREE.svg" alt="${tmo.title} attack tree" style="width:600; height:auto;" />
+                     </object>''')
         lines.append('<img src="img/legend_AttackTree.svg" width="600"/>')
         lines.append(PAGEBREAK)
         lines.append("<hr/>")
