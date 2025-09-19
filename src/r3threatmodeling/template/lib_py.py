@@ -266,9 +266,9 @@ def render_security_objective(so: SecurityObjective, header_level: int = 1, ctx=
     title = f"{so.title} (<code>{so._id}</code>)"
     lines = [makeMarkdownLinkedHeader(header_level + 3, title, ctx, tmObject=so)]
     if hasattr(so, "proposal"):
-        lines.append(f"From proposal: {so.proposal}")
+        lines.append(f"From proposal: {so.proposal}<br/>")
     if getattr(so, "inScope", True) is False:
-        lines.append("(Not in scope)")
+        lines.append("(Not in scope)<br/>")
     if hasattr(so, "icon"):
         lines.append(f"<img src=\"{so.icon}\"/><br/>")
     lines.append(so.description)
