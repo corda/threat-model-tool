@@ -6,6 +6,7 @@ from typing import List, Iterable, Optional
 
 # Reuse existing helpers from your project (explicit imports to avoid wildcard / linter issues)
 from .template_utils import (
+    is_heading_numbering_enabled,
     unmark,
     valueOr,
     makeMarkdownLinkedHeader,
@@ -365,7 +366,8 @@ def render_tm_report_part(
 ) -> str:
     lines: List[str] = []
     
-    if tmo.isRoot():
+    defaultEnable_heading_numbering = is_heading_numbering_enabled()
+    if defaultEnable_heading_numbering and tmo.isRoot():
         disable_heading_numbering()
 
 
@@ -391,8 +393,9 @@ def render_tm_report_part(
         lines.append(makeMarkdownLinkedHeader(header_level + 1, "Table of contents", ctx, skipTOC=True))
         lines.append("""<div markdown=\"1\">\n\n__TOC_PLACEHOLDER__\n\n</div>""")
         lines.append(PAGEBREAK)
-    
-    enable_heading_numbering()
+
+    if defaultEnable_heading_numbering and tmo.isRoot():
+        enable_heading_numbering()
 
     if summary:
         if toc:

@@ -141,6 +141,8 @@ def main():
     fileName = args.fileName
     if(args.headerNumbering):
         HeadingNumberer.enable()
+    else:
+        HeadingNumberer.disable()
 
     TMDir = args.TMDirectory
 
