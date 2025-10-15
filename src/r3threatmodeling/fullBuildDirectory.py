@@ -108,6 +108,10 @@ def main():
     CLI.add_argument('--MKDocsSiteDir',  required=False)
     CLI.add_argument('--MKDocsDir',  required=False)
 
+    CLI.add_argument('--no-headerNumbering', dest='headerNumbering', action='store_false')
+    CLI.set_defaults(headerNumbering=True)
+
+
     CLI.add_argument(
     "--fileName",
     default=None, 
@@ -135,6 +139,8 @@ def main():
     pdfArtifactLink = args.pdfArtifactLink
     public = True if args.visibility == "public" else False
     fileName = args.fileName
+    if(args.headerNumbering):
+        HeadingNumberer.enable()
 
     TMDir = args.TMDirectory
 

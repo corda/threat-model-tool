@@ -13,6 +13,7 @@ import re
 ## from mako.lookup import TemplateLookup
 ## from mako.template import Template
 import markdown
+import hashlib, base64
 
 from .threatmodel_data import *
 from markdown import Markdown
@@ -21,6 +22,15 @@ from .template.renderers import render_template_by_name
 
 from pathlib import Path
 import shutil
+
+
+# def linkhash(title):
+#     # Create a SHA-256 hash of the title
+#     sha256_hash = hashlib.sha256(title.encode('utf-8')).digest()
+#     # Encode the hash in base64
+#     b64_hash = base64.b64encode(sha256_hash).decode('utf-8')
+#     # Return the first 10 characters for brevity
+#     return b64_hash[:10]
 
 def make_handler(files, func, *args):
     class Handler(PatternMatchingEventHandler):
@@ -278,6 +288,22 @@ def postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileNa
     with open(outMDPath, 'w') as outFile:
         outFile.write(mdReport)
 
+# "1 -    Executive Summary  <a name='executive-summary'></a>"
+# "<a href='#executive-summary'>1 -    Executive Summary  </a>"
+def transform_named_anchor_html(text):
+    return re.sub(r"(.*?)<a name='(.*?)'></a>", r"<a href='#\2'>\1</a>", text)
+
+def transform_named_anchor_md(text):
+    m = re.search(
+        r"(?s)^(?P<text>.*?)(?:\s*<a\s+(?:name|id)\s*=\s*['\"](?P<name>[^'\"]+)['\"][^>]*>\s*</a>\s*)$",
+        text,
+    )
+    if m:
+        t = m.group('text').rstrip()
+        name = m.group('name')
+        return f"[{t}](#{name})"
+    return text
+
 #Credits to https://github.com/exhesham/python-markdown-index-generator/blob/master/markdown_toc.py
 def createTableOfContent(mdData):
     toc = ""
@@ -286,10 +312,27 @@ def createTableOfContent(mdData):
         if SKIP_TOC not in line:
             if re.match(r'^#+ ', line):
                 title = re.sub('#','',line).strip()
+                title = transform_named_anchor_md(title)
+
+                level = line.count('#')
                 hash = createTitleAnchorHash(title)
-                manipulated_line = '**[%s](#%s)**' % (title, hash)
-                tabs = re.sub('#','  ',line.strip()[:line.strip().index(' ')+1])
-                toc += (tabs+ '* ' + manipulated_line + "\n")
+                # hash = linkhash(title)
+                # md_toc_entry_with_link = f'<h{level+2}>[%s](#%s)</h{level+2}>' % (title, hash)
+
+
+                if level < 2:
+                    md_toc_entry_with_link = '**[%s](#%s)**' % (title, hash)
+                    md_toc_entry_with_link = '**%s**' % (title)
+                elif level == 2:
+                    md_toc_entry_with_link = '***[%s](#%s)***' % (title, hash)
+                    md_toc_entry_with_link = '***%s***' % (title)
+
+                else:
+                    md_toc_entry_with_link = '[%s](#%s)' % (title, hash)
+                    md_toc_entry_with_link = '%s' % (title)
+
+                tabs = re.sub('#','&nbsp;&nbsp;',line.strip()[:line.strip().index(' ')+1])
+                toc += (tabs+ ' ' + md_toc_entry_with_link + "\n\n")
     return mdData.replace("__TOC_PLACEHOLDER__", toc)
 
 def createRFIs(mdData):

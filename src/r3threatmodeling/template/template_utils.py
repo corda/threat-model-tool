@@ -198,7 +198,7 @@ def makeMarkdownLinkedHeader(level, title, ctx, skipTOC = False, tmObject = None
     # Get heading number if enabled
     heading_number = _heading_numberer.get_number(level)
     if heading_number:
-        numbered_title = f"{heading_number}     {title}"
+        numbered_title = f"{heading_number} -    {title}"
     else:
         numbered_title = title
 
@@ -223,8 +223,8 @@ def makeMarkdownLinkedHeader(level, title, ctx, skipTOC = False, tmObject = None
 
     else:
         code = f"""
-<a name='{ahref}'></a>
-{'#' * level} {numbered_title.rstrip()} {'  <div class=\'skipTOC\'></div>' if skipTOC else ''}
+
+{'#' * level} {numbered_title.rstrip()} {'  <div class=\'skipTOC\'></div>' if skipTOC else ''} <a id='{ahref}'></a>
 """
         # if skipTOC:
         #     code += " <div class='" + SKIP_TOC + "'></div>"
