@@ -11,6 +11,8 @@ from .template_utils import (
     makeMarkdownLinkedHeader,
     createObjectAnchorHash,
     renderNestedMarkdownList,
+    enable_heading_numbering,
+    disable_heading_numbering
 )
 
 # Domain type hints (lightweight; actual classes come from existing model)
@@ -362,11 +364,18 @@ def render_tm_report_part(
     ctx=None,
 ) -> str:
     lines: List[str] = []
+    
+    if tmo.isRoot():
+        disable_heading_numbering()
+
+
     css = "proposal" if hasattr(tmo, "proposal") else "current"
     lines.append(f"<div markdown=\"block\" class='{css}'>")
     if hasattr(tmo, "proposal"):
         lines.append(f"From proposal: {tmo.proposal}\n")
-    lines.append(makeMarkdownLinkedHeader(header_level, tmo.title, ctx, skipTOC=False, tmObject=tmo))
+    
+    lines.append(makeMarkdownLinkedHeader(header_level, tmo.title, ctx, skipTOC=tmo.isRoot(), tmObject=tmo))
+    
     if hasattr(tmo, "version"):
         lines.append(f"Version: {tmo.version}\n")
     if hasattr(tmo, "status"):
@@ -382,10 +391,15 @@ def render_tm_report_part(
         lines.append(makeMarkdownLinkedHeader(header_level + 1, "Table of contents", ctx, skipTOC=True))
         lines.append("""<div markdown=\"1\">\n\n__TOC_PLACEHOLDER__\n\n</div>""")
         lines.append(PAGEBREAK)
+    
+    enable_heading_numbering()
+
     if summary:
+        if toc:
+            header_level = header_level - 1 # this to have a TOC numbering starting from here as 1. (after the title and the toc itself that skipTOC)
         lines.append(executive_summary(tmo, header_level, ctx))
         lines.append(PAGEBREAK)
-        lines.append(threats_summary(tmo, header_level, ctx))
+        lines.append(threats_summary(tmo, header_level + 1 , ctx))
     lines.append(PAGEBREAK)
     lines.append(makeMarkdownLinkedHeader(header_level + 1, tmo.title + " - scope of analysis", ctx))
     if hasattr(tmo.scope, "description") and tmo.scope.description:
