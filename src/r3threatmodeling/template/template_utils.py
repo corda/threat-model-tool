@@ -8,6 +8,79 @@ from ..threatmodel_data import *
 
 # globalMarkDown_attr_list_ext = True ## for MKDOCS metadata headers
 
+
+class HeadingNumberer:
+    """
+    Singleton class to track heading numbers across document generation.
+    Maintains a hierarchical counter for headings (e.g., 1, 1.1, 1.1.1).
+    """
+    _instance = None
+    _enabled = True
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(HeadingNumberer, cls).__new__(cls)
+            cls._instance.reset()
+        return cls._instance
+    
+    def reset(self):
+        """Reset all counters to start fresh."""
+        self.counters = [0] * 10  # Support up to 10 levels of nesting
+        
+    def get_number(self, level):
+        """
+        Get the current number for a given level and increment it.
+        Also resets all deeper level counters.
+        
+        Args:
+            level: The heading level (1 for h1, 2 for h2, etc.)
+            
+        Returns:
+            str: The formatted number string (e.g., "1.2.3")
+        """
+        if not self._enabled:
+            return ""
+            
+        # Adjust for 0-based indexing
+        idx = level - 1
+        
+        if idx < 0 or idx >= len(self.counters):
+            return ""
+        
+        # Increment current level
+        self.counters[idx] += 1
+        
+        # Reset all deeper levels
+        for i in range(idx + 1, len(self.counters)):
+            self.counters[i] = 0
+        
+        # Build the number string (e.g., "1.2.3")
+        number_parts = []
+        for i in range(idx + 1):
+            if self.counters[i] > 0:
+                number_parts.append(str(self.counters[i]))
+        
+        return ".".join(number_parts)
+    
+    @classmethod
+    def enable(cls):
+        """Enable heading numbering."""
+        cls._enabled = True
+        
+    @classmethod
+    def disable(cls):
+        """Disable heading numbering."""
+        cls._enabled = False
+        
+    @classmethod
+    def is_enabled(cls):
+        """Check if heading numbering is enabled."""
+        return cls._enabled
+
+
+# Global instance
+_heading_numberer = HeadingNumberer()
+
 def unmark_element(element, stream=None):
     if stream is None:
         stream = StringIO()
@@ -122,6 +195,13 @@ def makeMarkdownLinkedHeader(level, title, ctx, skipTOC = False, tmObject = None
     else:
         ahref=createTitleAnchorHash(title)
 
+    # Get heading number if enabled
+    heading_number = _heading_numberer.get_number(level)
+    if heading_number:
+        numbered_title = f"{heading_number} -    {title}"
+    else:
+        numbered_title = title
+
     #
     # Create a 'clean' version of the title for the TOC
     # specify this title using the "data-toc-label" attribute 
@@ -129,26 +209,25 @@ def makeMarkdownLinkedHeader(level, title, ctx, skipTOC = False, tmObject = None
     #
     # i.e. <h2 data-toc-label='Alternate title for TOC'>Heading Title</h2>    
     #
-    toc_title = CLEAN_RE.sub('', title).rstrip()
+    toc_title = CLEAN_RE.sub('', numbered_title).rstrip()
 
     # if not useMarkDownHeaders and not tmObject:
-    #     code=  "<a name='"+ahref + "'></a>\n\n" + level * "#" + " " + title.rstrip()
+    #     code=  "<a name='"+ahref + "'></a>\n\n" + level * "#" + " " + numbered_title.rstrip()
     #     code += f" {{: data-toc-label=\"{toc_title}\"}}"
     # else:
-        # code=  "<a name='"+ahref + "'></a>\n\n" + f"<H{level} id=\"{ahref}\" >" + title.rstrip() + f"</H{level}>"
+        # code=  "<a name='"+ahref + "'></a>\n\n" + f"<H{level} id=\"{ahref}\" >" + numbered_title.rstrip() + f"</H{level}>"
 
     if useMarkDown_attr_list_ext: #RENAME TO useMKDOCSsyntax
-        # code = f"<H{level} id=\"{ahref}\" data-toc-label=\"{toc_title}\">" + title.rstrip() + f"</H{level}>"
-        code = level * "#" + " " + title.rstrip() + f" {{: data-toc-label=\"{toc_title}\" id=\"{ahref}\" }}"
+        # code = f"<H{level} id=\"{ahref}\" data-toc-label=\"{toc_title}\">" + numbered_title.rstrip() + f"</H{level}>"
+        code = level * "#" + " " + numbered_title.rstrip() + f" {{: data-toc-label=\"{toc_title}\" id=\"{ahref}\" }}"
 
     else:
         code = f"""
-<a name='{ahref}'></a>
-{'#' * level} {title.rstrip()}
+
+{'#' * level} {numbered_title.rstrip()} {'  <div class=\'skipTOC\'></div>' if skipTOC else ''} <a id='{ahref}'></a>
 """
-        
-        if skipTOC:
-            code += " <div class='" + SKIP_TOC + "'></div>"
+        # if skipTOC:
+        #     code += " <div class='" + SKIP_TOC + "'></div>"
 
     return "\n" + code + "\n"
     
@@ -171,3 +250,21 @@ def trueorFalseMark(value: bool) -> str:
         return '<span style="color:green;">&#10004;</span>'
     else:
         return '&#10060;'
+
+
+# Helper functions for heading numbering
+def enable_heading_numbering():
+    """Enable automatic heading numbering (1, 1.1, 1.1.1, etc.)"""
+    HeadingNumberer.enable()
+    
+def disable_heading_numbering():
+    """Disable automatic heading numbering"""
+    HeadingNumberer.disable()
+    
+def reset_heading_numbers():
+    """Reset heading counters to start from 1 again"""
+    _heading_numberer.reset()
+    
+def is_heading_numbering_enabled():
+    """Check if heading numbering is currently enabled"""
+    return HeadingNumberer.is_enabled()

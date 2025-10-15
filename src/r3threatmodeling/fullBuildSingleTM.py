@@ -203,6 +203,9 @@ def main():
 
     CLI.add_argument('--baseFileName', default=None, required=False)
 
+    CLI.add_argument('--no-headerNumbering', dest='headerNumbering', action='store_false')
+    CLI.set_defaults(headerNumbering=True)
+
     args = CLI.parse_args()
     outputDir = args.outputDir
     watchFiles = args.watchFiles
@@ -216,6 +219,9 @@ def main():
     generatePDF = args.generatePDF
     public = True if args.visibility == "public" else False
     versionsFilterStr = args.versionsFilter
+
+    if(args.headerNumbering):
+        HeadingNumberer.enable()
     generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData, browserSync, public = public, generatePDF=generatePDF, versionsFilterStr=versionsFilterStr)
 
 if __name__ == "__main__":

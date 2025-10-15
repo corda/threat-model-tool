@@ -20,7 +20,7 @@ from typing import Iterable, List
 import os
 
 
-from .template_utils import makeMarkdownLinkedHeader
+from .template_utils import makeMarkdownLinkedHeader, reset_heading_numbers, disable_heading_numbering
 from .lib_py import (
     render_tm_report_part,
     PAGEBREAK,
@@ -211,6 +211,7 @@ TEMPLATE_MAPPING = {
 
 def render_template_by_name(name: str, tmo: ThreatModel, ancestor_data: bool, ctx=None, header_level: int = 1) -> str:
     func = TEMPLATE_MAPPING.get(name)
+    reset_heading_numbers()  # ensure numbering restarts for each new render
     if not func:
         raise ValueError(f"Unknown template name (Python renderer): {name}")
     # All mapped functions now share a header_level param for consistent nesting control
