@@ -222,12 +222,10 @@ def makeMarkdownLinkedHeader(level, title, ctx, skipTOC = False, tmObject = None
         code = level * "#" + " " + numbered_title.rstrip() + f" {{: data-toc-label=\"{toc_title}\" id=\"{ahref}\" }}"
 
     else:
-        code = f"""
-
-{'#' * level} {numbered_title.rstrip()} {'  <div class=\'skipTOC\'></div>' if skipTOC else ''} <a id='{ahref}'></a>
-"""
-        # if skipTOC:
-        #     code += " <div class='" + SKIP_TOC + "'></div>"
+        # Build the header without embedding backslashes inside f-string expressions
+        skip_html = "  <div class='skipTOC'></div>" if skipTOC else ""
+        header = "#" * level + " " + numbered_title.rstrip()
+        code = "\n\n" + header + ((" " + skip_html) if skip_html else "") + " <a id='" + ahref + "'></a>\n"
 
     return "\n" + code + "\n"
     
