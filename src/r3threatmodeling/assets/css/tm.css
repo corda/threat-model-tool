@@ -411,11 +411,10 @@ pre code, pre tt {
 @page 
 { 
     size: A4 portrait;
-    /* margin: 1cm;  */
-    margin-left: 0.4cm;
-    margin-top: 1.2cm;
-    margin-right: 0.4cm;
-    margin-bottom: 1.2cm;
+    margin-top: 1.54cm;
+    margin-right: 2.54cm;
+    margin-bottom: 4cm;
+    margin-left: 1.54cm;
 }
 
 @media print {

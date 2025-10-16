@@ -41,12 +41,6 @@ async function printPDF(aurl, headerNote) {
     `,
       format: 'A4',
       preferCSSPageSize: true,
-      // margin: {
-      //   bottom: 70, // minimum required for footer msg to display
-      //   left: 25,
-      //   right: 35,
-      //   top: 30,
-      // },
       printBackground: true,
     }
     

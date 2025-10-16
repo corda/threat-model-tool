@@ -176,18 +176,18 @@ def render_countermeasure(countermeasure) -> str:
     public = true_or_false_mark(countermeasure.public)
     
     if(countermeasure.parent.fullyMitigated and not countermeasure.inPlace):
-        lines.append(f"<dd markdown=\"block\"><strong>Countermeasure in place?</strong> {ip} (not chosen as threat is mitigated by other countermeasures) ")
+        lines.append(f"<dd markdown=\"block\"><strong>Countermeasure in place?</strong> {ip} (not chosen as threat is mitigated by other countermeasures)</dd>")
     else:
-        lines.append(f"<dd markdown=\"block\"><strong>Countermeasure in place?</strong> {ip} ")
+        lines.append(f"<dd markdown=\"block\"><strong>Countermeasure in place?</strong> {ip}</dd>")
 
-    lines.append(f"<br/><strong>Disclosable?</strong> {public}")
+    lines.append(f"<dd markdown=\"block\"><br/><strong>Disclosable?</strong> {public}")
 
     op = ""
     if getattr(countermeasure, "operational", False):
         op_mark = "<span style=\"color:green;\">&#10004;</span>"
         operator = f" (operated by {countermeasure.operator})" if hasattr(countermeasure, "operator") else ""
         op = f" <strong>Is operational?</strong>{op_mark}{operator}"
-    lines.append("{op}</dd>")
+    lines.append(f"{op}</dd>")
 
     return "\n".join(lines)
 
