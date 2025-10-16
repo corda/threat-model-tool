@@ -6,7 +6,10 @@ import yaml
 import re
 from os import path
 from pathlib import Path
-from PyPDF2 import PdfMerger
+import pikepdf
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 def generatePDF(rootTMYaml, outputDir, outputName = None, headerNote=""):
 
@@ -42,34 +45,26 @@ file://{userDir}/{outputDir}/{tmID}.html {outputDir}/{outputName}.pdf '{headerNo
 
     assetDir0 = os.path.dirname(rootTMYaml.name) + "/assets"
     if Path(f"{assetDir0}/PDF_sections_2").exists():
-
         pre_pdf_files = sorted(Path(f"{assetDir0}/PDF_sections_2").glob("pre_??_*.pdf"))
         post_pdf_files = sorted(Path(f"{assetDir0}/PDF_sections_2").glob("post_??_*.pdf"))
-
         original_pdf = Path(outputDir) / f"{outputName}.pdf"
+        
+        new_pdf = Path(outputDir) / f"final_{outputName}.pdf"
 
-        merger = PdfMerger()
-
-        try:
-            # Append pre PDF files
-            for pdf_file in pre_pdf_files:
-                merger.append(str(pdf_file))
-
-            # Append the original PDF
-            merger.append(str(original_pdf))
-
-            # Append post PDF files
+        tmp_merged = original_pdf.with_name(f"{original_pdf.stem}.merged{original_pdf.suffix}")
+        with pikepdf.open(original_pdf) as merged_pdf:
+            for pdf_file in reversed(pre_pdf_files):
+                with pikepdf.open(pdf_file) as pdf:
+                    for page in reversed(pdf.pages):
+                        merged_pdf.pages.insert(0, page)
             for pdf_file in post_pdf_files:
-                merger.append(str(pdf_file))
-
-            # Write merged PDF to a temporary file and atomically replace original
-            tmp_merged = original_pdf.with_name(f"{original_pdf.stem}.merged{original_pdf.suffix}")
-            with open(tmp_merged, "wb") as fout:
-                merger.write(fout)
-
-            shutil.move(str(tmp_merged), str(original_pdf))
-        finally:
-            merger.close()
+                with pikepdf.open(pdf_file) as pdf:
+                    merged_pdf.pages.extend(pdf.pages)
+            merged_pdf.save(tmp_merged)
+        shutil.move(str(tmp_merged), str(new_pdf))
+        logging.info(f"Final PDF with pre and post sections saved as {new_pdf}")
+    else:
+        print(f"No PDF files found in {assetDir0}/PDF_sections_2")
 
 def main():
     CLI=argparse.ArgumentParser()
