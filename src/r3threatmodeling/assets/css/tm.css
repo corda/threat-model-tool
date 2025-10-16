@@ -417,6 +417,14 @@ pre code, pre tt {
     margin-bottom: 1.2cm;
 }
 
+@media print {
+  .pagebreak {
+      clear: both;
+      min-height: 1px;
+      page-break-after: always;
+  }
+}
+
 div.proposal {
   border: 4px solid #b28aec;
   padding: 20px;

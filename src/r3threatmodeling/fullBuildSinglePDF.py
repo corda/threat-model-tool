@@ -4,6 +4,9 @@ import importlib_resources
 import shutil
 import yaml
 import re
+from os import path
+from pathlib import Path
+from PyPDF2 import PdfMerger
 
 def generatePDF(rootTMYaml, outputDir, outputName = None, headerNote=""):
 
@@ -32,6 +35,41 @@ def generatePDF(rootTMYaml, outputDir, outputName = None, headerNote=""):
 file://{userDir}/{outputDir}/{tmID}.html {outputDir}/{outputName}.pdf '{headerNote}'"
     print(f"Executing command: {PDF_command}")
     os.system(PDF_command)
+
+    # Post-process the generated PDF report
+    # Include md from <main folder>/assets/markdown_sections_1/pre_NN_*.md on top of the document
+    # Include md from <main folder>/assets/markdown_sections_1/post_NN_*.md at the end of the document
+
+    assetDir0 = os.path.dirname(rootTMYaml.name) + "/assets"
+    if Path(f"{assetDir0}/PDF_sections_2").exists():
+
+        pre_pdf_files = sorted(Path(f"{assetDir0}/PDF_sections_2").glob("pre_??_*.pdf"))
+        post_pdf_files = sorted(Path(f"{assetDir0}/PDF_sections_2").glob("post_??_*.pdf"))
+
+        original_pdf = Path(outputDir) / f"{outputName}.pdf"
+
+        merger = PdfMerger()
+
+        try:
+            # Append pre PDF files
+            for pdf_file in pre_pdf_files:
+                merger.append(str(pdf_file))
+
+            # Append the original PDF
+            merger.append(str(original_pdf))
+
+            # Append post PDF files
+            for pdf_file in post_pdf_files:
+                merger.append(str(pdf_file))
+
+            # Write merged PDF to a temporary file and atomically replace original
+            tmp_merged = original_pdf.with_name(f"{original_pdf.stem}.merged{original_pdf.suffix}")
+            with open(tmp_merged, "wb") as fout:
+                merger.write(fout)
+
+            shutil.move(str(tmp_merged), str(original_pdf))
+        finally:
+            merger.close()
 
 def main():
     CLI=argparse.ArgumentParser()

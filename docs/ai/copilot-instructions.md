@@ -4935,4 +4935,12 @@ Context: threat modeling and its terminilogy
         There is not "details:", use only "description:"
     Context: order of main YAML attributes
         ID, title, version: , children, authors, scope, analysis, threats
-
+    Context: how to interpret and read the final report
+        What is the risk of a missing mitigation? it depends, if the threat is mitigated (status) then the countermeasure is not chosen.
+        If the threat is not mitigated (status) then the countermeasure is missing and it is a risk.
+        The risk level is determined by the impact and the likelihood of the threat. The impact is determined by the security objective impacted and the impact description.
+        The likelihood is determined by the attacker capability and the countermeasure effectiveness.
+        The risk level is determined by the combination of impact and likelihood (CVSS)
+        The impact is a qualitative description of the risk, the attack is a qualitative description of the likelihood/process of attack.
+        The CVSS gives quantitative values for impact and likelihood.
+        

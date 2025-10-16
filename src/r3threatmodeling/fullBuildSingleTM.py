@@ -217,12 +217,13 @@ def main():
     assetDir = args.assetDir
     rootTMYaml = args.rootTMYaml
     generatePDF = args.generatePDF
+    pdfHeaderNote = args.pdfHeaderNote
     public = True if args.visibility == "public" else False
     versionsFilterStr = args.versionsFilter
 
     if(args.headerNumbering):
         HeadingNumberer.enable()
-    generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData, browserSync, public = public, generatePDF=generatePDF, versionsFilterStr=versionsFilterStr)
+    generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData, browserSync, public = public, generatePDF=generatePDF, pdfHeaderNote=pdfHeaderNote, versionsFilterStr=versionsFilterStr)
 
 if __name__ == "__main__":
     main()

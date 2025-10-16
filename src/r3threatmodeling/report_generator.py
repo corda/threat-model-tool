@@ -77,6 +77,37 @@ def generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, 
         traceback.print_exc()
         return
 
+    # Post-process the generated markdown report
+    # Include md from <main folder>/assets/markdown_sections_1/pre_NN_*.md on top of the document
+    # Include md from <main folder>/assets/markdown_sections_1/post_NN_*.md at the end of the document
+
+    assetDir0 = os.getcwd() + os.sep + tmo.fileName.replace(tmo.fileName.split('/')[-1],'assets')
+    if Path(f"{assetDir0}/markdown_sections_1").exists():
+
+        #detele previoud __TOC_PLACEHOLDER__ from template rendering
+        mdReport = mdReport.replace("__TOC_PLACEHOLDER__", "")
+
+        pre_md_files = sorted(Path(f"{assetDir0}/markdown_sections_1").glob("pre_??_*.md"), reverse=True)
+        post_md_files = sorted(Path(f"{assetDir0}/markdown_sections_1").glob("post_??_*.md"), reverse=True)
+
+        for md_file in pre_md_files:
+            with open(md_file, "r") as f:
+                mdReport = f.read() + "\n" + mdReport
+
+        for md_file in post_md_files:
+            with open(md_file, "r") as f:
+                mdReport = mdReport + "\n" + f.read()
+        
+
+
+        # for md_file in pre_md_files:
+        #     with open(md_file, "r") as f:
+        #         mdReport = f.read() + "\n" + mdReport
+
+        # for md_file in post_md_files:
+        #     with open(md_file, "r") as f:
+        #         mdReport = mdReport + "\n" + f.read()
+
     mdReport = createTableOfContent(mdReport)
 
     mdReport = createRFIs(mdReport)
