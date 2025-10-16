@@ -196,11 +196,14 @@ def makeMarkdownLinkedHeader(level, title, ctx, skipTOC = False, tmObject = None
         ahref=createTitleAnchorHash(title)
 
     # Get heading number if enabled
-    heading_number = _heading_numberer.get_number(level)
-    if heading_number:
-        numbered_title = f"{heading_number} -    {title}"
-    else:
-        numbered_title = title
+    # THIS IS A WIP FORCING DISABLING THE NUMBERING DURING START
+    # heading_number = _heading_numberer.get_number(level)
+    # if heading_number:
+    #     numbered_title = f"{heading_number} -    {title}"
+    # else:
+    numbered_title = title
+    # THIS IS A WIP FORCING DISABLING THE NUMBERING DURING END 
+
 
     #
     # Create a 'clean' version of the title for the TOC

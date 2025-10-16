@@ -99,14 +99,65 @@ def generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, 
                 mdReport = mdReport + "\n" + f.read()
         
 
+    # Add numbering to all titles using the HeadingNumberer if enabled
+    # Add numbering to all titles using the HeadingNumberer if enabled
+    # We'll walk the markdown line-by-line, skip fenced code blocks, and
+    # prefix headings with hierarchical numbers when HeadingNumberer is enabled.
+    try:
+        # reset counters at start of document
+        reset_heading_numbers()
+        if is_heading_numbering_enabled():
+            new_lines = []
+            in_fence = False
+            number_started = False
+            fence_pattern = re.compile(r'^\s*(```|~~~)')
+            # match headings like '# Title' or '## Title'
+            heading_pattern = re.compile(r'^(?P<hashes>#{1,6})\s+(?P<title>.*)')
 
-        # for md_file in pre_md_files:
-        #     with open(md_file, "r") as f:
-        #         mdReport = f.read() + "\n" + mdReport
+            for line in mdReport.splitlines():
+                # always detect fenced code block start/end (so we don't mis-detect placeholders inside code)
+                if fence_pattern.match(line):
+                    in_fence = not in_fence
+                    new_lines.append(line)
+                    continue
 
-        # for md_file in post_md_files:
-        #     with open(md_file, "r") as f:
-        #         mdReport = mdReport + "\n" + f.read()
+                # If we haven't reached the TOC placeholder yet, copy lines unchanged
+                if not number_started:
+                    if "__TOC_PLACEHOLDER__" in line:
+                        # start numbering from here; reset counters so TOC headings start at 1
+                        number_started = True
+                        reset_heading_numbers()
+                    new_lines.append(line)
+                    continue
+
+                if in_fence:
+                    new_lines.append(line)
+                    continue
+
+                m = heading_pattern.match(line)
+                if m:
+                    level = len(m.group('hashes'))
+                    title = m.group('title').strip()
+
+                    # if title already starts with a numbering like '1.' or '1.2 '
+                    if re.match(r'^\d+(?:[\.\d]*\s*-?\s*)', title):
+                        # leave as-is
+                        new_lines.append(line)
+                    else:
+                        # get next number for this level
+                        num = HeadingNumberer().get_number(level)
+                        if num:
+                            numbered_title = f"{num} {title}"
+                        else:
+                            numbered_title = title
+                        new_lines.append(f"{m.group('hashes')} {numbered_title}")
+                else:
+                    new_lines.append(line)
+
+            mdReport = '\n'.join(new_lines)
+    except Exception:
+        # numbering should not break report generation; log and continue
+        traceback.print_exc()
 
     mdReport = createTableOfContent(mdReport)
 
