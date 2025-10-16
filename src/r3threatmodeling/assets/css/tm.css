@@ -17,6 +17,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+@import url('https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300&display=swap');
+
 
 body {
   font-family: Helvetica, arial, sans-serif;
@@ -422,6 +424,70 @@ pre code, pre tt {
       clear: both;
       min-height: 1px;
       page-break-after: always;
+  }
+
+
+body {
+  font-family: 'Readex Pro', Calibri, Arial, sans-serif;
+    font-size: 12pt;
+    line-height: 2;
+    color: #111;
+    background: white;
+  }
+
+ h1{
+  /* font-size: 28px; */
+  color: rgb(188, 44, 48);
+ }
+
+  h2, h3, h4 {
+    color: #111;
+    font-weight: 700;
+    -webkit-font-smoothing: auto;
+  }
+
+  h1 {
+    font-size: 22pt;
+    margin-top: 0;
+    margin-bottom: 12pt;
+  }
+
+  h2 {
+    font-size: 18pt;
+    border-top: none;
+    padding-top: 8pt;
+    margin-top: 28pt;
+  }
+
+  h3 {
+    font-size: 14pt;
+    margin-top: 18pt;
+  }
+
+  p {
+    margin: 8pt 0;
+  }
+
+  ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 12pt 0;
+  }
+
+  ul li {
+    position: relative;
+    padding-left: 16pt;
+    margin: 6pt 0;
+  }
+
+  ul li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    top: 0.2em;
+    color: rgb(188, 44, 48);
+    font-size: 14pt;
+    line-height: 1;
   }
 }
 

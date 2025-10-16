@@ -180,7 +180,7 @@ def render_countermeasure(countermeasure) -> str:
     else:
         lines.append(f"<dd markdown=\"block\"><strong>Countermeasure in place?</strong> {ip}</dd>")
 
-    lines.append(f"<dd markdown=\"block\"><br/><strong>Disclosable?</strong> {public}")
+    # lines.append(f"<dd markdown=\"block\"><br/><strong>Disclosable?</strong> {public}") TODO: re-evluate if needed
 
     op = ""
     if getattr(countermeasure, "operational", False):
@@ -403,7 +403,8 @@ def render_tm_report_part(
         lines.append(executive_summary(tmo, header_level, ctx))
         lines.append(PAGEBREAK)
         lines.append(threats_summary(tmo, header_level + 1 , ctx))
-    lines.append(PAGEBREAK)
+    # lines.append(PAGEBREAK)
+    
     lines.append(makeMarkdownLinkedHeader(header_level + 1, tmo.title + " - scope of analysis", ctx))
     if hasattr(tmo.scope, "description") and tmo.scope.description:
         lines.append(makeMarkdownLinkedHeader(header_level + 2, tmo.title + " Overview", ctx))
@@ -458,7 +459,7 @@ def render_tm_report_part(
             lines.append(f"<dl markdown=\"block\"><dt>{a._id}</dt><dd>{a.description} </dd></dl>")
     # Assets
     if len(tmo.assets) > 0:
-        lines.append(PAGEBREAK)
+        # lines.append(PAGEBREAK)
         lines.append(makeMarkdownLinkedHeader(header_level + 2, "Assets", ctx))
         lines.append(makeMarkdownLinkedHeader(header_level + 3, "Summary Table", ctx))
         lines.append(render_asset_table(tmo.assets))
@@ -467,13 +468,13 @@ def render_tm_report_part(
             lines.append(render_asset(asset, header_level, ctx, tmo))
     # Analysis
     if hasattr(tmo, "analysis") and tmo.analysis and len(tmo.analysis.strip()) > 5:
-        lines.append(PAGEBREAK)
+        # lines.append(PAGEBREAK)
         lines.append("<hr/>")
         lines.append(makeMarkdownLinkedHeader(header_level + 1, tmo.title + " Analysis", ctx))
         lines.append(tmo.analysis)
     # Threats
     if len(tmo.threats) > 0:
-        lines.append(PAGEBREAK)
+        # lines.append(PAGEBREAK)
         lines.append("<hr/>")
         lines.append(makeMarkdownLinkedHeader(header_level + 1, tmo.title + " Attack tree", ctx))
         lines.append(f'''<object type="image/svg+xml" style="width:100%; height:auto;" data="img/{tmo._id}_ATTACKTREE.svg">
