@@ -69,7 +69,12 @@ def generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, 
 
     mdOutFileName = baseFileName + ".md"
     htmlOutFileName = baseFileName + ".html"
+
+    assetDir0 = os.getcwd() + os.sep + tmo.fileName.replace(tmo.fileName.split('/')[-1],'assets')
+
     try:
+        if Path(f"{assetDir0}/markdown_sections_1").exists():
+            baseHeaderLevel = baseHeaderLevel + 1
         ctx = {}
         mdReport = render_template_by_name(template, tmo, ancestorData, ctx=ctx, header_level=baseHeaderLevel)
     except Exception as e:
@@ -81,11 +86,22 @@ def generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, 
     # Include md from <main folder>/assets/markdown_sections_1/pre_NN_*.md on top of the document
     # Include md from <main folder>/assets/markdown_sections_1/post_NN_*.md at the end of the document
 
-    assetDir0 = os.getcwd() + os.sep + tmo.fileName.replace(tmo.fileName.split('/')[-1],'assets')
     if Path(f"{assetDir0}/markdown_sections_1").exists():
 
         #detele previoud __TOC_PLACEHOLDER__ from template rendering
         mdReport = mdReport.replace("__TOC_PLACEHOLDER__", "")
+    
+        # Remove any stray "#Table of content" heading line (case-insensitive, with or without space after '#')
+        mdReport = re.sub(r'(?im)^\s*#\s*table\s+of\s+content\s*\r?\n?', '', mdReport)
+
+        # Collapse repeated pagebreak divs with no intervening content into a single pagebreak.
+        # This targets sequences like: <div class="pagebreak"></div>\n\n<div class="pagebreak"></div>
+        try:
+            pagebreak_seq_re = re.compile(r'(?:<div\s+[^>]*class=["\']pagebreak["\'][^>]*>\s*</div>\s*){2,}', re.IGNORECASE)
+            mdReport = pagebreak_seq_re.sub('<div class="pagebreak"></div>\n', mdReport)
+        except Exception:
+            traceback.print_exc()
+
 
         pre_md_files = sorted(Path(f"{assetDir0}/markdown_sections_1").glob("pre_??_*.md"), reverse=True)
         post_md_files = sorted(Path(f"{assetDir0}/markdown_sections_1").glob("post_??_*.md"), reverse=True)
@@ -98,6 +114,7 @@ def generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, 
             with open(md_file, "r") as f:
                 mdReport = mdReport + "\n" + f.read()
         
+    
 
     # Add numbering to all titles using the HeadingNumberer if enabled
     # Add numbering to all titles using the HeadingNumberer if enabled
@@ -373,7 +390,7 @@ def postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileNa
 # "1 -    Executive Summary  <a name='executive-summary'></a>"
 # "<a href='#executive-summary'>1 -    Executive Summary  </a>"
 def transform_named_anchor_html(text):
-    return re.sub(r"(.*?)<a name='(.*?)'></a>", r"<a href='#\2'>\1</a>", text)
+    return re.sub(r"(.*?)<a name='(.*?)' class='tocLink'></a>", r"<a href='#\2'>\1</a>", text)
 
 def transform_named_anchor_md(text):
     m = re.search(
@@ -383,7 +400,7 @@ def transform_named_anchor_md(text):
     if m:
         t = m.group('text').rstrip()
         name = m.group('name')
-        return f"[{t}](#{name})"
+        return f"[{t}](#{name}){{.tocLink}}"
     return text
 
 #Credits to https://github.com/exhesham/python-markdown-index-generator/blob/master/markdown_toc.py
@@ -391,9 +408,19 @@ def createTableOfContent(mdData):
     toc = ""
     lines = mdData.split('\n')
     for line in lines:
-        if SKIP_TOC not in line:
+        if SKIP_TOC not in line or True: # SKIP_TOC removed to always process all lines
             if re.match(r'^#+ ', line):
                 title = re.sub('#','',line).strip()
+                # Ensure header line has a unique anchor at its end (if not already present)
+                anchor_pat = re.compile(r"<a\s+(?:name|id)\s*=\s*['\"][^'\"]+['\"][^>]*>\s*</a>", re.IGNORECASE)
+                if not anchor_pat.search(line):
+                    # createTitleAnchorHash should provide a deterministic anchor name for the title
+                    anchor_name = createTitleAnchorHash(title)
+                    anchor_html = f" <a name='{anchor_name}' class='tocLink'></a>"
+                    # replace only the first occurrence of this exact header line in the document
+                    mdData = mdData.replace(line, line + anchor_html, 1)
+                    # reflect the added anchor in the local title variable so downstream transforms see it
+                    title = title + anchor_html
                 title = transform_named_anchor_md(title)
 
                 level = line.count('#')
@@ -415,6 +442,9 @@ def createTableOfContent(mdData):
 
                 tabs = re.sub('#','&nbsp;&nbsp;',line.strip()[:line.strip().index(' ')+1])
                 toc += (tabs+ ' ' + md_toc_entry_with_link + "\n\n")
+                
+
+            
     return mdData.replace("__TOC_PLACEHOLDER__", toc)
 
 def createRFIs(mdData):

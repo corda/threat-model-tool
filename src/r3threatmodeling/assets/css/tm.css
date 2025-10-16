@@ -66,6 +66,7 @@ h1, h2, h3, h4, h5, h6 {
   position: relative;
 }
 
+
 h2:first-child, h1:first-child, h1:first-child + h2, h3:first-child, h4:first-child, h5:first-child, h6:first-child {
   margin-top: 0;
   padding-top: 0;
@@ -101,7 +102,7 @@ h6 tt, h6 code {
 
 h1 {
   font-size: 28px;
-  color: black;
+  color: rgb(188, 44, 48);
 }
 
 h2 {
@@ -438,4 +439,9 @@ div.proposal {
 div.current {
   position: relative;
   z-index: 1;
+}
+
+.tocLink {
+  text-decoration: none;
+  color: darkblue;
 }
