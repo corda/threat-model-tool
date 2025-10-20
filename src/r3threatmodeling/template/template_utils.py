@@ -16,12 +16,9 @@ class HeadingNumberer:
     """
     _instance = None
     _enabled = True
-    # hierarchicalCounterLimit: maximum heading depth to display numbering (default: 4)
     hierarchicalCounterLimit = 4
-
-    # Internal marker to ensure we patch the get_number method only once.
     _number_limit_patched = False
-
+    
     def __init__(self):
         """
         Patch the instance/class get_number method once at runtime so that
@@ -69,21 +66,49 @@ class HeadingNumberer:
     def reset(self):
         """Reset all counters to start fresh."""
         self.counters = [0] * 10  # Support up to 10 levels of nesting
+        self._last_level = 0  # Track the last heading level processed
         
     def get_number(self, level):
         """
         Get the current number for a given level and increment it.
         Also resets all deeper level counters.
         
+        Validates heading hierarchy:
+        - After reset (e.g., placeholder), first heading must be H1
+        - Headings can only increase by 1 level at a time
+        
         Args:
             level: The heading level (1 for h1, 2 for h2, etc.)
             
         Returns:
             str: The formatted number string (e.g., "1.2.3")
+            
+        Raises:
+            ValueError: If heading hierarchy is violated
         """
         if not self._enabled:
             return ""
             
+        # Validate heading hierarchy
+        if not hasattr(self, '_last_level'):
+            self._last_level = 0
+            
+        # After a reset/placeholder, first heading MUST be H1
+        if self._last_level == 0 and level != 1:
+            raise ValueError(
+                f"Invalid heading hierarchy: First heading after __TOC_PLACEHOLDER__ must be H1 (#), "
+                f"but got H{level} ({'#' * level}). "
+                f"Please ensure your markdown starts with a single # heading."
+            )
+        
+        # Headings should not skip levels (e.g., H1 -> H3 is invalid)
+        if level > self._last_level + 1:
+            raise ValueError(
+                f"Invalid heading hierarchy: Cannot skip from H{self._last_level} "
+                f"({'#' * self._last_level}) to H{level} ({'#' * level}). "
+                f"Expected H{self._last_level + 1} ({'#' * (self._last_level + 1)}) or lower."
+            )
+        
         # Adjust for 0-based indexing
         idx = level - 1
         
@@ -96,6 +121,9 @@ class HeadingNumberer:
         # Reset all deeper levels
         for i in range(idx + 1, len(self.counters)):
             self.counters[i] = 0
+        
+        # Update last processed level
+        self._last_level = level
         
         # Build the number string (e.g., "1.2.3")
         number_parts = []
