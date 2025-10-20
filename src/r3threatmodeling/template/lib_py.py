@@ -26,23 +26,10 @@ class Asset: ...
 
 PAGEBREAK = "<div class=\"pagebreak\"></div>"
 
-def wrap_text(input_str: str, columns: int = 80, str_size: int = 77 * 4) -> str:
-    if len(input_str) >= str_size:
-        input_str = input_str[:str_size] + "[...]"
-    return "<br/>".join(textwrap.wrap(unmark(input_str), columns))
+
 
 def true_or_false_mark(value: bool) -> str:
     return "<span style=\"color:green;\">&#10004;</span>" if value else "&#10060;"
-
-# def render_threat_simple_block(threat) -> str:
-#     """Return a simplified textual block (replacing previous diagram)."""
-#     impact = valueOr(threat, "impact_desc", "(impact TBD)")
-#     attack = getattr(threat, "attack", "(attack TBD)")
-#     return (
-#         # f"**Threat:** {threat.threatGeneratedTitle() if hasattr(threat,'threatGeneratedTitle') else threat.title}\n\n"
-#         f"**Attack:** {attack}\n\n"
-#         f"**Impact:** {impact}"
-#     )
 
 def render_text_security_objectives_tree(security_objectives: Iterable[SecurityObjective]) -> str:
     """Render grouped security objectives without spurious heading markers.

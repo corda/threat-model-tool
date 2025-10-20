@@ -1,12 +1,64 @@
 import re
 import html
 from markdown import Markdown
+from bs4 import BeautifulSoup
 from io import StringIO
 from ..threatmodel_data import *
+import textwrap
+
+
 
 #from r3threatmodeling.template_utils import BaseThreatModelObject
 
 # globalMarkDown_attr_list_ext = True ## for MKDOCS metadata headers
+
+# def _wrap_text(input_str: str, columns: int = 80, str_size: int = 77 * 4):
+#     """Replicates the wrapText() macro logic from the legacy Mako template.
+
+#     - Truncates overly long strings adding a trailing '[...]'
+#     - Wraps to given column width and joins lines with <br/>
+#     - Removes any markdown (simple best‑effort) because original used unmark()
+#     """
+
+#     input_str = markdown_to_text(input_str)
+#     if len(input_str) >= str_size:
+#         input_str = input_str[:str_size] + "[...]"
+#     wrapped = textwrap.wrap(input_str, columns)
+#     return "<br/>\n".join(wrapped) if wrapped else ""
+
+def clean_markdown_text(text: str) -> str:
+    """Clean markdown text by removing links and references.
+    
+    - Transforms markdown links to text only [text](link) -> text
+    - Deletes last part from "Refs:" till the end of the text
+    
+    Args:
+        text: Input text with markdown formatting
+        
+    Returns:
+        Cleaned text with markdown links and references removed
+    """
+    if not text:
+        return ""
+    
+    # Transform markdown links to text only [text](link) -> text
+    text = re.sub(r'\[([^\]]+)\]\([^\)]+\)', r'\1', text)
+    
+    # Delete last part from "**Refs:" till the end of the text
+    text = re.sub(r'\*\*Refs?:.*$', '', text)
+
+    return text
+
+
+def markdown_to_text(md_content):
+    """Convert Markdown string to plain text by stripping all formatting."""
+    # Create Markdown instance
+    md = Markdown()
+    # Convert Markdown to HTML
+    html_content = md.convert(md_content)
+    # Parse HTML and extract plain text
+    soup = BeautifulSoup(html_content, "html.parser")
+    return soup.get_text()
 
 
 class HeadingNumberer:

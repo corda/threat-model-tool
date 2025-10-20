@@ -26,6 +26,9 @@ def wrap_text(text, width=80, limit=560):
     Truncates the text if it exceeds the limit and appends '[...]'.
     Also HTML-encodes the text to ensure special characters are properly displayed.
     """
+    # Clean markdown links and references
+    text = clean_markdown_text(text)
+
     if not text:
         return ""
     if len(text) > limit:

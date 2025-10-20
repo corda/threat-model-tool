@@ -104,7 +104,7 @@ def generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, 
 
 
         pre_md_files = sorted(Path(f"{assetDir0}/markdown_sections_1").glob("pre_??_*.md"), reverse=True)
-        post_md_files = sorted(Path(f"{assetDir0}/markdown_sections_1").glob("post_??_*.md"), reverse=True)
+        post_md_files = sorted(Path(f"{assetDir0}/markdown_sections_1").glob("post_??_*.md"), reverse=False)
 
         for md_file in pre_md_files:
             with open(md_file, "r") as f:
