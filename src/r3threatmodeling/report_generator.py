@@ -114,15 +114,12 @@ def generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, 
             with open(md_file, "r") as f:
                 mdReport = mdReport + "\n" + f.read()
         
-    
 
-    # Add numbering to all titles using the HeadingNumberer if enabled
     # Add numbering to all titles using the HeadingNumberer if enabled
     # We'll walk the markdown line-by-line, skip fenced code blocks, and
     # prefix headings with hierarchical numbers when HeadingNumberer is enabled.
     try:
-        # reset counters at start of document
-        reset_heading_numbers()
+
         if is_heading_numbering_enabled():
             new_lines = []
             in_fence = False
@@ -143,7 +140,7 @@ def generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, 
                     if "__TOC_PLACEHOLDER__" in line:
                         # start numbering from here; reset counters so TOC headings start at 1
                         number_started = True
-                        reset_heading_numbers()
+                        # reset_heading_numbers()
                     new_lines.append(line)
                     continue
 
@@ -178,7 +175,7 @@ def generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, 
 
     mdReport = createTableOfContent(mdReport)
 
-    mdReport = createRFIs(mdReport)
+    # mdReport = createRFIs(mdReport)
 
     # No diagram specific post-processing required
 
@@ -404,7 +401,7 @@ def transform_named_anchor_md(text):
     return text
 
 #Credits to https://github.com/exhesham/python-markdown-index-generator/blob/master/markdown_toc.py
-def createTableOfContent(mdData):
+def createTableOfContent(mdData, levelLimit=4):
     toc = ""
     lines = mdData.split('\n')
     for line in lines:
@@ -436,9 +433,11 @@ def createTableOfContent(mdData):
                     md_toc_entry_with_link = '***[%s](#%s)***' % (title, hash)
                     md_toc_entry_with_link = '***%s***' % (title)
 
-                else:
+                elif level <= levelLimit:
                     md_toc_entry_with_link = '[%s](#%s)' % (title, hash)
                     md_toc_entry_with_link = '%s' % (title)
+                else:
+                    continue
 
                 tabs = re.sub('#','&nbsp;&nbsp;',line.strip()[:line.strip().index(' ')+1])
                 toc += (tabs+ ' ' + md_toc_entry_with_link + "\n\n")

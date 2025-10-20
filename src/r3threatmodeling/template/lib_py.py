@@ -376,7 +376,12 @@ def render_tm_report_part(
     if hasattr(tmo, "proposal"):
         lines.append(f"From proposal: {tmo.proposal}\n")
     
-    lines.append(makeMarkdownLinkedHeader(header_level, tmo.title, ctx, skipTOC=tmo.isRoot(), tmObject=tmo))
+    
+    title = tmo.title + " Threat Model"
+    if not tmo.isRoot():
+        title = f"{title} Section"
+
+    lines.append(makeMarkdownLinkedHeader(header_level, title, ctx, skipTOC=tmo.isRoot(), tmObject=tmo))
     
     if hasattr(tmo, "version"):
         lines.append(f"Version: {tmo.version}\n")

@@ -16,7 +16,50 @@ class HeadingNumberer:
     """
     _instance = None
     _enabled = True
-    
+    # hierarchicalCounterLimit: maximum heading depth to display numbering (default: 4)
+    hierarchicalCounterLimit = 4
+
+    # Internal marker to ensure we patch the get_number method only once.
+    _number_limit_patched = False
+
+    def __init__(self):
+        """
+        Patch the instance/class get_number method once at runtime so that
+        numbering is omitted when requested level exceeds hierarchicalCounterLimit.
+        This approach avoids editing the later get_number implementation directly.
+        """
+        cls = type(self)
+        if not getattr(cls, "_number_limit_patched", False):
+            # Keep a reference to the original implementation
+            original_get_number = cls.get_number
+
+            def _limited_get_number(self, level):
+                # Respect global enabled flag first
+                if not cls._enabled:
+                    return ""
+                # If level deeper than allowed limit, omit numbering
+                limit = getattr(cls, "hierarchicalCounterLimit", 4)
+                try:
+                    if int(level) > int(limit):
+                        return ""
+                except Exception:
+                    # On any unexpected input, fallback to original behaviour
+                    pass
+                return original_get_number(self, level)
+
+            # Install the wrapper on the class and mark as patched
+            cls.get_number = _limited_get_number
+            cls._number_limit_patched = True
+
+    @classmethod
+    def set_hierarchicalCounterLimit(cls, limit: int):
+        """Set maximum numbering depth; numbering is omitted for deeper levels."""
+        cls.hierarchicalCounterLimit = int(limit)
+
+    @classmethod
+    def get_hierarchicalCounterLimit(cls) -> int:
+        """Return the current hierarchicalCounterLimit (default 4)."""
+        return int(getattr(cls, "hierarchicalCounterLimit", 4))
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(HeadingNumberer, cls).__new__(cls)
