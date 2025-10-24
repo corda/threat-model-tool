@@ -22,6 +22,8 @@ watchdog
 pyvis
 importlib_resources
 jira
-
+# pypdf 
+# pdfmerger
+pikepdf
 
 # Note: shutils removed as it's not a valid package (shutil is built-in)

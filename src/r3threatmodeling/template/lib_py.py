@@ -26,23 +26,10 @@ class Asset: ...
 
 PAGEBREAK = "<div class=\"pagebreak\"></div>"
 
-def wrap_text(input_str: str, columns: int = 80, str_size: int = 77 * 4) -> str:
-    if len(input_str) >= str_size:
-        input_str = input_str[:str_size] + "[...]"
-    return "<br/>".join(textwrap.wrap(unmark(input_str), columns))
+
 
 def true_or_false_mark(value: bool) -> str:
     return "<span style=\"color:green;\">&#10004;</span>" if value else "&#10060;"
-
-# def render_threat_simple_block(threat) -> str:
-#     """Return a simplified textual block (replacing previous diagram)."""
-#     impact = valueOr(threat, "impact_desc", "(impact TBD)")
-#     attack = getattr(threat, "attack", "(attack TBD)")
-#     return (
-#         # f"**Threat:** {threat.threatGeneratedTitle() if hasattr(threat,'threatGeneratedTitle') else threat.title}\n\n"
-#         f"**Attack:** {attack}\n\n"
-#         f"**Impact:** {impact}"
-#     )
 
 def render_text_security_objectives_tree(security_objectives: Iterable[SecurityObjective]) -> str:
     """Render grouped security objectives without spurious heading markers.
@@ -176,18 +163,18 @@ def render_countermeasure(countermeasure) -> str:
     public = true_or_false_mark(countermeasure.public)
     
     if(countermeasure.parent.fullyMitigated and not countermeasure.inPlace):
-        lines.append(f"<dd markdown=\"block\"><strong>Countermeasure in place?</strong> {ip} (not chosen as threat is mitigated by other countermeasures) ")
+        lines.append(f"<dd markdown=\"block\"><strong>Countermeasure in place?</strong> {ip} (not chosen as threat is mitigated by other countermeasures)</dd>")
     else:
-        lines.append(f"<dd markdown=\"block\"><strong>Countermeasure in place?</strong> {ip} ")
+        lines.append(f"<dd markdown=\"block\"><strong>Countermeasure in place?</strong> {ip}</dd>")
 
-    lines.append(f"<br/><strong>Disclosable?</strong> {public}")
+    # lines.append(f"<dd markdown=\"block\"><br/><strong>Disclosable?</strong> {public}") TODO: re-evluate if needed
 
     op = ""
     if getattr(countermeasure, "operational", False):
         op_mark = "<span style=\"color:green;\">&#10004;</span>"
         operator = f" (operated by {countermeasure.operator})" if hasattr(countermeasure, "operator") else ""
         op = f" <strong>Is operational?</strong>{op_mark}{operator}"
-    lines.append("{op}</dd>")
+    lines.append(f"{op}</dd>")
 
     return "\n".join(lines)
 
@@ -299,7 +286,8 @@ def render_attacker(attacker: Attacker, header_level: int = 1, ctx=None) -> str:
     title = f"{attacker.title} (<code>{attacker._id}</code>)"
     lines = [
         f"<a id=\"{attacker._id}\"></a>",
-        makeMarkdownLinkedHeader(header_level + 4, title, ctx, skipTOC=True, tmObject=attacker),
+        # makeMarkdownLinkedHeader(header_level + 4, title, ctx, skipTOC=True, tmObject=attacker),
+        f"**{title}**\n",
         "<dl markdown=\"block\">",
         "<dt>Description:</dt><dd markdown=\"block\">"
         f"{attacker.description}</dd>",
@@ -321,7 +309,8 @@ def render_asset(asset: Asset, header_level: int = 1, ctx=None, tmo: ThreatModel
     if hasattr(asset, "proposal"):
         lines.append(f"From proposal: {asset.proposal}")
     lines.append(f"<a id=\"{asset.id}\"></a>")
-    lines.append(makeMarkdownLinkedHeader(header_level + 4, title, ctx, skipTOC=True, tmObject=asset))
+    # lines.append(makeMarkdownLinkedHeader(header_level + 4, title, ctx, skipTOC=True, tmObject=asset))
+    lines.append(f"**{title}**\n")
     lines.append("<dl markdown=\"block\">")
     if hasattr(asset, "icon"):
         lines.append(f"<img src=\"{asset.icon}\"/><br/>")
@@ -376,7 +365,12 @@ def render_tm_report_part(
     if hasattr(tmo, "proposal"):
         lines.append(f"From proposal: {tmo.proposal}\n")
     
-    lines.append(makeMarkdownLinkedHeader(header_level, tmo.title, ctx, skipTOC=tmo.isRoot(), tmObject=tmo))
+    
+    title = tmo.title + " Threat Model"
+    if not tmo.isRoot():
+        title = f"{title} Section"
+
+    lines.append(makeMarkdownLinkedHeader(header_level, title, ctx, skipTOC=tmo.isRoot(), tmObject=tmo))
     
     if hasattr(tmo, "version"):
         lines.append(f"Version: {tmo.version}\n")
@@ -403,7 +397,8 @@ def render_tm_report_part(
         lines.append(executive_summary(tmo, header_level, ctx))
         lines.append(PAGEBREAK)
         lines.append(threats_summary(tmo, header_level + 1 , ctx))
-    lines.append(PAGEBREAK)
+    # lines.append(PAGEBREAK)
+    
     lines.append(makeMarkdownLinkedHeader(header_level + 1, tmo.title + " - scope of analysis", ctx))
     if hasattr(tmo.scope, "description") and tmo.scope.description:
         lines.append(makeMarkdownLinkedHeader(header_level + 2, tmo.title + " Overview", ctx))
@@ -458,7 +453,7 @@ def render_tm_report_part(
             lines.append(f"<dl markdown=\"block\"><dt>{a._id}</dt><dd>{a.description} </dd></dl>")
     # Assets
     if len(tmo.assets) > 0:
-        lines.append(PAGEBREAK)
+        # lines.append(PAGEBREAK)
         lines.append(makeMarkdownLinkedHeader(header_level + 2, "Assets", ctx))
         lines.append(makeMarkdownLinkedHeader(header_level + 3, "Summary Table", ctx))
         lines.append(render_asset_table(tmo.assets))
@@ -467,13 +462,13 @@ def render_tm_report_part(
             lines.append(render_asset(asset, header_level, ctx, tmo))
     # Analysis
     if hasattr(tmo, "analysis") and tmo.analysis and len(tmo.analysis.strip()) > 5:
-        lines.append(PAGEBREAK)
+        # lines.append(PAGEBREAK)
         lines.append("<hr/>")
         lines.append(makeMarkdownLinkedHeader(header_level + 1, tmo.title + " Analysis", ctx))
         lines.append(tmo.analysis)
     # Threats
     if len(tmo.threats) > 0:
-        lines.append(PAGEBREAK)
+        # lines.append(PAGEBREAK)
         lines.append("<hr/>")
         lines.append(makeMarkdownLinkedHeader(header_level + 1, tmo.title + " Attack tree", ctx))
         lines.append(f'''<object type="image/svg+xml" style="width:100%; height:auto;" data="img/{tmo._id}_ATTACKTREE.svg">

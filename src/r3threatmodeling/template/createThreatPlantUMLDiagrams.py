@@ -9,6 +9,7 @@ import textwrap
 import html
 
 from ..threatmodel_data import *
+from .template_utils import clean_markdown_text
 
 
 
@@ -19,10 +20,13 @@ def _wrap_text(input_str: str, columns: int = 80, str_size: int = 77 * 4):
     - Wraps to given column width and joins lines with <br/>
     - Removes any markdown (simple best‑effort) because original used unmark()
     """
+
+    # Clean markdown links and references
+    input_str = clean_markdown_text(input_str)
     if input_str is None:
         return ""
     # Basic markdown removal (headers, emphasis) – keep simple to avoid heavy deps
-    md_replacements = [("**", ""), ("__", ""), ("`", ""), ("*", ""), ("#", ""), ("_", "")]
+    md_replacements = [("**", ""), ("__", ""), ("`", ""), ("*", ""), ("#", ""), ("_", ""), ("&", "")]
     for a, b in md_replacements:
         input_str = input_str.replace(a, b)
     if len(input_str) >= str_size:

@@ -7,7 +7,7 @@ import argparse
 import traceback
 
 from ..threatmodel_data import *
-from .template_utils import unmark
+from .template_utils import unmark, clean_markdown_text
 import textwrap
 import html
 
@@ -20,6 +20,10 @@ def _wrap_text(text: str, width: int = 80, limit: int = 77 * 4) -> str:
     - Truncate overly long text adding trailing '[...]'
     - Wrap to a given width and join lines with <br/>
     """
+
+    # Clean markdown links and references
+    text = clean_markdown_text(text)
+
     if not text:
         return ""
     # unmark will also escape HTML entities

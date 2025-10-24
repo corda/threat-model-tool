@@ -11,14 +11,14 @@ import traceback
 ## from mako.exceptions import RichTraceback
 ## from mako.lookup import TemplateLookup
 ## from mako.template import Template
-import markdown
+# import markdown
 import importlib_resources
 
 from . import fullBuildSinglePDF, report_generator
 from .template import TM_AttackTreePlantUMLDiagram, createThreatPlantUMLDiagrams, createSecObjTreePUMLDiagrams, createSecObjectivesPlantUML
 
 from .threatmodel_data import *
-from markdown import Markdown
+# from markdown import Markdown
 from .template.template_utils import *
 
 from pathlib import Path
@@ -217,12 +217,13 @@ def main():
     assetDir = args.assetDir
     rootTMYaml = args.rootTMYaml
     generatePDF = args.generatePDF
+    pdfHeaderNote = args.pdfHeaderNote
     public = True if args.visibility == "public" else False
     versionsFilterStr = args.versionsFilter
 
     if(args.headerNumbering):
         HeadingNumberer.enable()
-    generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData, browserSync, public = public, generatePDF=generatePDF, versionsFilterStr=versionsFilterStr)
+    generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData, browserSync, public = public, generatePDF=generatePDF, pdfHeaderNote=pdfHeaderNote, versionsFilterStr=versionsFilterStr)
 
 if __name__ == "__main__":
     main()

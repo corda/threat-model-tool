@@ -140,6 +140,7 @@ def render_full_report(
     ancestor_data: bool = True,
     header_level: int = 1,
 ) -> str:
+    reset_heading_numbers()
     lines = []
     lines.append(render_tm_report_part(tmo, ancestor_data, toc=True, summary=True, header_level=header_level, ctx=ctx))
     for descendant in tmo.getDescendantsTM():
@@ -163,8 +164,10 @@ def render_mkdocs_report(
     ancestor_data: bool = True,
     header_level: int = 1,
 ) -> str:
-
+    reset_heading_numbers()
     ctx.setdefault('useMarkDown_attr_list_ext', True)
+    ctx['process_toc'] = False  # TOC handled by MkDocs
+    ctx['process_prepost_md'] = False  # pre/post MD disabled
 
     lines = []
     lines.append(render_tm_report_part(tmo, ancestor_data, toc=False, summary=True, header_level=header_level, ctx=ctx))
@@ -191,13 +194,14 @@ def render_compact_report(
     ancestor_data: bool = True,
     header_level: int = 1,
 ) -> str:
+    # reset_heading_numbers()
     lines = []
-    lines.append(render_tm_report_part(tmo, ancestor_data, toc=False, summary=False, header_level=header_level, ctx=ctx))
+    lines.append(render_tm_report_part(tmo, ancestor_data, toc=False, summary=False, header_level=header_level+1, ctx=ctx))
     for descendant in tmo.getDescendantsTM():
         lines.append(render_tm_report_part(descendant, ancestor_data=False, header_level=header_level, ctx=ctx))
-    lines.append(PAGEBREAK)
-    lines.append(makeMarkdownLinkedHeader(header_level + 1, "Annex 1: Keys Summary", ctx))
-    lines.append(render_keys_summary(tmo, ctx, header_level=header_level + 1, print_toc=False))
+    # lines.append(PAGEBREAK)
+    # lines.append(makeMarkdownLinkedHeader(header_level + 1, "Annex 1: Keys Summary", ctx))
+    # lines.append(render_keys_summary(tmo, ctx, header_level=header_level + 1, print_toc=False))
     return "\n".join(lines)
 
 TEMPLATE_MAPPING = {
@@ -211,7 +215,7 @@ TEMPLATE_MAPPING = {
 
 def render_template_by_name(name: str, tmo: ThreatModel, ancestor_data: bool, ctx=None, header_level: int = 1) -> str:
     func = TEMPLATE_MAPPING.get(name)
-    reset_heading_numbers()  # ensure numbering restarts for each new render
+    # reset_heading_numbers()  # ensure numbering restarts for each new render
     if not func:
         raise ValueError(f"Unknown template name (Python renderer): {name}")
     # All mapped functions now share a header_level param for consistent nesting control
@@ -256,11 +260,11 @@ def generate_mkdocs_config(tm_list, output_dir, filename: str = "mkdocs.yml"):
         "theme:",
         "  name: readthedocs",
         "markdown_extensions:",
+        "  - attr_list",
         "  - toc:",
         "      baselevel: 1",
         "      toc_depth: 5",
         "  - md_in_html",
-        "  - attr_list",
         "plugins:",
         "  - search",
         "extra_css:",
