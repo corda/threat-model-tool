@@ -1,12 +1,64 @@
 import re
 import html
 from markdown import Markdown
+from bs4 import BeautifulSoup
 from io import StringIO
 from ..threatmodel_data import *
+import textwrap
+
+
 
 #from r3threatmodeling.template_utils import BaseThreatModelObject
 
 # globalMarkDown_attr_list_ext = True ## for MKDOCS metadata headers
+
+# def _wrap_text(input_str: str, columns: int = 80, str_size: int = 77 * 4):
+#     """Replicates the wrapText() macro logic from the legacy Mako template.
+
+#     - Truncates overly long strings adding a trailing '[...]'
+#     - Wraps to given column width and joins lines with <br/>
+#     - Removes any markdown (simple best‑effort) because original used unmark()
+#     """
+
+#     input_str = markdown_to_text(input_str)
+#     if len(input_str) >= str_size:
+#         input_str = input_str[:str_size] + "[...]"
+#     wrapped = textwrap.wrap(input_str, columns)
+#     return "<br/>\n".join(wrapped) if wrapped else ""
+
+def clean_markdown_text(text: str) -> str:
+    """Clean markdown text by removing links and references.
+    
+    - Transforms markdown links to text only [text](link) -> text
+    - Deletes last part from "Refs:" till the end of the text
+    
+    Args:
+        text: Input text with markdown formatting
+        
+    Returns:
+        Cleaned text with markdown links and references removed
+    """
+    if not text:
+        return ""
+    
+    # Transform markdown links to text only [text](link) -> text
+    text = re.sub(r'\[([^\]]+)\]\([^\)]+\)', r'\1', text)
+    
+    # Delete last part from "**Refs:" till the end of the text
+    text = re.sub(r'\*\*Refs?:.*$', '', text)
+
+    return text
+
+
+def markdown_to_text(md_content):
+    """Convert Markdown string to plain text by stripping all formatting."""
+    # Create Markdown instance
+    md = Markdown()
+    # Convert Markdown to HTML
+    html_content = md.convert(md_content)
+    # Parse HTML and extract plain text
+    soup = BeautifulSoup(html_content, "html.parser")
+    return soup.get_text()
 
 
 class HeadingNumberer:
@@ -16,7 +68,47 @@ class HeadingNumberer:
     """
     _instance = None
     _enabled = True
+    hierarchicalCounterLimit = 4
+    _number_limit_patched = False
     
+    def __init__(self):
+        """
+        Patch the instance/class get_number method once at runtime so that
+        numbering is omitted when requested level exceeds hierarchicalCounterLimit.
+        This approach avoids editing the later get_number implementation directly.
+        """
+        cls = type(self)
+        if not getattr(cls, "_number_limit_patched", False):
+            # Keep a reference to the original implementation
+            original_get_number = cls.get_number
+
+            def _limited_get_number(self, level):
+                # Respect global enabled flag first
+                if not cls._enabled:
+                    return ""
+                # If level deeper than allowed limit, omit numbering
+                limit = getattr(cls, "hierarchicalCounterLimit", 4)
+                try:
+                    if int(level) > int(limit):
+                        return ""
+                except Exception:
+                    # On any unexpected input, fallback to original behaviour
+                    pass
+                return original_get_number(self, level)
+
+            # Install the wrapper on the class and mark as patched
+            cls.get_number = _limited_get_number
+            cls._number_limit_patched = True
+
+    @classmethod
+    def set_hierarchicalCounterLimit(cls, limit: int):
+        """Set maximum numbering depth; numbering is omitted for deeper levels."""
+        cls.hierarchicalCounterLimit = int(limit)
+
+    @classmethod
+    def get_hierarchicalCounterLimit(cls) -> int:
+        """Return the current hierarchicalCounterLimit (default 4)."""
+        return int(getattr(cls, "hierarchicalCounterLimit", 4))
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(HeadingNumberer, cls).__new__(cls)
@@ -26,21 +118,49 @@ class HeadingNumberer:
     def reset(self):
         """Reset all counters to start fresh."""
         self.counters = [0] * 10  # Support up to 10 levels of nesting
+        self._last_level = 0  # Track the last heading level processed
         
     def get_number(self, level):
         """
         Get the current number for a given level and increment it.
         Also resets all deeper level counters.
         
+        Validates heading hierarchy:
+        - After reset (e.g., placeholder), first heading must be H1
+        - Headings can only increase by 1 level at a time
+        
         Args:
             level: The heading level (1 for h1, 2 for h2, etc.)
             
         Returns:
             str: The formatted number string (e.g., "1.2.3")
+            
+        Raises:
+            ValueError: If heading hierarchy is violated
         """
         if not self._enabled:
             return ""
             
+        # Validate heading hierarchy
+        if not hasattr(self, '_last_level'):
+            self._last_level = 0
+            
+        # After a reset/placeholder, first heading MUST be H1
+        if self._last_level == 0 and level != 1:
+            raise ValueError(
+                f"Invalid heading hierarchy: First heading after __TOC_PLACEHOLDER__ must be H1 (#), "
+                f"but got H{level} ({'#' * level}). "
+                f"Please ensure your markdown starts with a single # heading."
+            )
+        
+        # Headings should not skip levels (e.g., H1 -> H3 is invalid)
+        if level > self._last_level + 1:
+            raise ValueError(
+                f"Invalid heading hierarchy: Cannot skip from H{self._last_level} "
+                f"({'#' * self._last_level}) to H{level} ({'#' * level}). "
+                f"Expected H{self._last_level + 1} ({'#' * (self._last_level + 1)}) or lower."
+            )
+        
         # Adjust for 0-based indexing
         idx = level - 1
         
@@ -53,6 +173,9 @@ class HeadingNumberer:
         # Reset all deeper levels
         for i in range(idx + 1, len(self.counters)):
             self.counters[i] = 0
+        
+        # Update last processed level
+        self._last_level = level
         
         # Build the number string (e.g., "1.2.3")
         number_parts = []
@@ -184,9 +307,8 @@ CLEAN_RE = re.compile(r'[\<\>\)\(]+.*$')
 
 def makeMarkdownLinkedHeader(level, title, ctx, skipTOC = False, tmObject = None):
     if ctx:
-        useMarkDown_attr_list_ext=ctx['useMarkDown_attr_list_ext']
-    else:
-        useMarkDown_attr_list_ext = False
+        useMarkDown_attr_list_ext=ctx.get('useMarkDown_attr_list_ext', False)
+
     # useMarkDown_attr_list_ext = globalMarkDown_attr_list_ext
     
     if isinstance(tmObject, BaseThreatModelObject):

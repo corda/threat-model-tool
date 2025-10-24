@@ -13,7 +13,7 @@ import traceback
 from r3threatmodeling import fullBuildSingleTM
 from r3threatmodeling.template.renderers import generate_mkdocs_config, generateFromTMList
 from .threatmodel_data import *
-from markdown import Markdown
+# from markdown import Markdown
 from .template.template_utils import *
 
 from pathlib import Path

@@ -11,14 +11,14 @@ import traceback
 ## from mako.exceptions import RichTraceback
 ## from mako.lookup import TemplateLookup
 ## from mako.template import Template
-import markdown
+# import markdown
 import importlib_resources
 
 from . import fullBuildSinglePDF, report_generator
 from .template import TM_AttackTreePlantUMLDiagram, createThreatPlantUMLDiagrams, createSecObjTreePUMLDiagrams, createSecObjectivesPlantUML
 
 from .threatmodel_data import *
-from markdown import Markdown
+# from markdown import Markdown
 from .template.template_utils import *
 
 from pathlib import Path

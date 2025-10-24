@@ -26,23 +26,10 @@ class Asset: ...
 
 PAGEBREAK = "<div class=\"pagebreak\"></div>"
 
-def wrap_text(input_str: str, columns: int = 80, str_size: int = 77 * 4) -> str:
-    if len(input_str) >= str_size:
-        input_str = input_str[:str_size] + "[...]"
-    return "<br/>".join(textwrap.wrap(unmark(input_str), columns))
+
 
 def true_or_false_mark(value: bool) -> str:
     return "<span style=\"color:green;\">&#10004;</span>" if value else "&#10060;"
-
-# def render_threat_simple_block(threat) -> str:
-#     """Return a simplified textual block (replacing previous diagram)."""
-#     impact = valueOr(threat, "impact_desc", "(impact TBD)")
-#     attack = getattr(threat, "attack", "(attack TBD)")
-#     return (
-#         # f"**Threat:** {threat.threatGeneratedTitle() if hasattr(threat,'threatGeneratedTitle') else threat.title}\n\n"
-#         f"**Attack:** {attack}\n\n"
-#         f"**Impact:** {impact}"
-#     )
 
 def render_text_security_objectives_tree(security_objectives: Iterable[SecurityObjective]) -> str:
     """Render grouped security objectives without spurious heading markers.
@@ -299,7 +286,8 @@ def render_attacker(attacker: Attacker, header_level: int = 1, ctx=None) -> str:
     title = f"{attacker.title} (<code>{attacker._id}</code>)"
     lines = [
         f"<a id=\"{attacker._id}\"></a>",
-        makeMarkdownLinkedHeader(header_level + 4, title, ctx, skipTOC=True, tmObject=attacker),
+        # makeMarkdownLinkedHeader(header_level + 4, title, ctx, skipTOC=True, tmObject=attacker),
+        f"**{title}**\n",
         "<dl markdown=\"block\">",
         "<dt>Description:</dt><dd markdown=\"block\">"
         f"{attacker.description}</dd>",
@@ -321,7 +309,8 @@ def render_asset(asset: Asset, header_level: int = 1, ctx=None, tmo: ThreatModel
     if hasattr(asset, "proposal"):
         lines.append(f"From proposal: {asset.proposal}")
     lines.append(f"<a id=\"{asset.id}\"></a>")
-    lines.append(makeMarkdownLinkedHeader(header_level + 4, title, ctx, skipTOC=True, tmObject=asset))
+    # lines.append(makeMarkdownLinkedHeader(header_level + 4, title, ctx, skipTOC=True, tmObject=asset))
+    lines.append(f"**{title}**\n")
     lines.append("<dl markdown=\"block\">")
     if hasattr(asset, "icon"):
         lines.append(f"<img src=\"{asset.icon}\"/><br/>")
@@ -376,7 +365,12 @@ def render_tm_report_part(
     if hasattr(tmo, "proposal"):
         lines.append(f"From proposal: {tmo.proposal}\n")
     
-    lines.append(makeMarkdownLinkedHeader(header_level, tmo.title, ctx, skipTOC=tmo.isRoot(), tmObject=tmo))
+    
+    title = tmo.title + " Threat Model"
+    if not tmo.isRoot():
+        title = f"{title} Section"
+
+    lines.append(makeMarkdownLinkedHeader(header_level, title, ctx, skipTOC=tmo.isRoot(), tmObject=tmo))
     
     if hasattr(tmo, "version"):
         lines.append(f"Version: {tmo.version}\n")
