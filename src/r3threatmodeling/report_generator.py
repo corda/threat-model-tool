@@ -69,24 +69,36 @@ def generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, 
 
     mdOutFileName = baseFileName + ".md"
     htmlOutFileName = baseFileName + ".html"
+    
+    ## Context default values
+    ctx = {
+        'processToc': True,
+        'process_prepost_md': True,
+        'process_heading_numbering': True
+    }
 
     assetDir0 = os.getcwd() + os.sep + tmo.fileName.replace(tmo.fileName.split('/')[-1],'assets')
 
     try:
         if Path(f"{assetDir0}/markdown_sections_1").exists():
             baseHeaderLevel = baseHeaderLevel + 1
-        ctx = {}
+        
         mdReport = render_template_by_name(template, tmo, ancestorData, ctx=ctx, header_level=baseHeaderLevel)
     except Exception as e:
         print(f"Template rendering error (Python renderer) for template {template}: {e}")
         traceback.print_exc()
         return
+    
+    # if not "__TOC_PLACEHOLDER__" in mdReport:
+    #     processToc = False
+    # else:
+    #     processToc = True
 
     # Post-process the generated markdown report
     # Include md from <main folder>/assets/markdown_sections_1/pre_NN_*.md on top of the document
     # Include md from <main folder>/assets/markdown_sections_1/post_NN_*.md at the end of the document
 
-    if Path(f"{assetDir0}/markdown_sections_1").exists():
+    if Path(f"{assetDir0}/markdown_sections_1").exists() and ctx.get('process_prepost_md', True):
 
         #detele previoud __TOC_PLACEHOLDER__ from template rendering
         mdReport = mdReport.replace("__TOC_PLACEHOLDER__", "")
@@ -166,7 +178,7 @@ def generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, 
                             num = HeadingNumberer().get_number(level)
                         except ValueError:
                             # invalid heading level (e.g., skipping levels)
-                            print(f"after header {previousHeader}: Invalid heading level {level} for line number {lineNum}: {line}")
+                            print(f"ERROR: after header {previousHeader}: Invalid heading level {level} for line number {lineNum}: {line}")
                             exit(-2)
                         if num:
                             numbered_title = f"{num} {title}"
@@ -181,8 +193,8 @@ def generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, 
     except Exception:
         # numbering should not break report generation; log and continue
         traceback.print_exc()
-
-    mdReport = createTableOfContent(mdReport)
+    if ctx.get('process_toc', True):
+        mdReport = createTableOfContent(mdReport)
 
     # mdReport = createRFIs(mdReport)
 
@@ -393,11 +405,6 @@ def postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileNa
     with open(outMDPath, 'w') as outFile:
         outFile.write(mdReport)
 
-# "1 -    Executive Summary  <a name='executive-summary'></a>"
-# "<a href='#executive-summary'>1 -    Executive Summary  </a>"
-def transform_named_anchor_html(text):
-    return re.sub(r"(.*?)<a name='(.*?)' class='tocLink'></a>", r"<a href='#\2'>\1</a>", text)
-
 def transform_named_anchor_md(text):
     m = re.search(
         r"(?s)^(?P<text>.*?)(?:\s*<a\s+(?:name|id)\s*=\s*['\"](?P<name>[^'\"]+)['\"][^>]*>\s*</a>\s*)$",
@@ -428,7 +435,7 @@ def createTableOfContent(mdData, levelLimit=4):
             continue
             
         # if SKIP_TOC not in line or True:  # SKIP_TOC removed to always process all lines
-        if re.match(r'^#+ ', line):
+        if re.match(r'^#+ ', line) and not  SKIP_TOC in line:
             title = re.sub('#', '', line).strip()
             
             # Check if header already has an anchor

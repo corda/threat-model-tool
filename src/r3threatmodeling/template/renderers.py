@@ -166,6 +166,8 @@ def render_mkdocs_report(
 ) -> str:
     reset_heading_numbers()
     ctx.setdefault('useMarkDown_attr_list_ext', True)
+    ctx['process_toc'] = False  # TOC handled by MkDocs
+    ctx['process_prepost_md'] = False  # pre/post MD disabled
 
     lines = []
     lines.append(render_tm_report_part(tmo, ancestor_data, toc=False, summary=True, header_level=header_level, ctx=ctx))
@@ -258,11 +260,11 @@ def generate_mkdocs_config(tm_list, output_dir, filename: str = "mkdocs.yml"):
         "theme:",
         "  name: readthedocs",
         "markdown_extensions:",
+        "  - attr_list",
         "  - toc:",
         "      baselevel: 1",
         "      toc_depth: 5",
         "  - md_in_html",
-        "  - attr_list",
         "plugins:",
         "  - search",
         "extra_css:",

@@ -307,9 +307,8 @@ CLEAN_RE = re.compile(r'[\<\>\)\(]+.*$')
 
 def makeMarkdownLinkedHeader(level, title, ctx, skipTOC = False, tmObject = None):
     if ctx:
-        useMarkDown_attr_list_ext=ctx['useMarkDown_attr_list_ext']
-    else:
-        useMarkDown_attr_list_ext = False
+        useMarkDown_attr_list_ext=ctx.get('useMarkDown_attr_list_ext', False)
+
     # useMarkDown_attr_list_ext = globalMarkDown_attr_list_ext
     
     if isinstance(tmObject, BaseThreatModelObject):

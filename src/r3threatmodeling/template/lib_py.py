@@ -286,7 +286,8 @@ def render_attacker(attacker: Attacker, header_level: int = 1, ctx=None) -> str:
     title = f"{attacker.title} (<code>{attacker._id}</code>)"
     lines = [
         f"<a id=\"{attacker._id}\"></a>",
-        makeMarkdownLinkedHeader(header_level + 4, title, ctx, skipTOC=True, tmObject=attacker),
+        # makeMarkdownLinkedHeader(header_level + 4, title, ctx, skipTOC=True, tmObject=attacker),
+        f"**{title}**\n",
         "<dl markdown=\"block\">",
         "<dt>Description:</dt><dd markdown=\"block\">"
         f"{attacker.description}</dd>",
@@ -308,7 +309,8 @@ def render_asset(asset: Asset, header_level: int = 1, ctx=None, tmo: ThreatModel
     if hasattr(asset, "proposal"):
         lines.append(f"From proposal: {asset.proposal}")
     lines.append(f"<a id=\"{asset.id}\"></a>")
-    lines.append(makeMarkdownLinkedHeader(header_level + 4, title, ctx, skipTOC=True, tmObject=asset))
+    # lines.append(makeMarkdownLinkedHeader(header_level + 4, title, ctx, skipTOC=True, tmObject=asset))
+    lines.append(f"**{title}**\n")
     lines.append("<dl markdown=\"block\">")
     if hasattr(asset, "icon"):
         lines.append(f"<img src=\"{asset.icon}\"/><br/>")
