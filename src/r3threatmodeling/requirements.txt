@@ -27,3 +27,5 @@ jira
 pikepdf
 
 # Note: shutils removed as it's not a valid package (shutil is built-in)
+
+beautifulsoup4
