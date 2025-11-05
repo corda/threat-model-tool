@@ -372,7 +372,7 @@ def postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileNa
     if not assetDir:
         assetDir = 'assets'
 
-    htmlReport = markdown.markdown(mdReport, extensions=['md_in_html', 'attr_list'])
+    htmlReport = markdown.markdown(mdReport, extensions=['md_in_html', 'attr_list', 'fenced_code'])
     baseHTML = """<!DOCTYPE html>
         <html>
         <head>

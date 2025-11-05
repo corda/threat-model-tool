@@ -4943,4 +4943,14 @@ Context: threat modeling and its terminilogy
         The risk level is determined by the combination of impact and likelihood (CVSS)
         The impact is a qualitative description of the risk, the attack is a qualitative description of the likelihood/process of attack.
         The CVSS gives quantitative values for impact and likelihood.
-        
+    Context: markdown sections in yaml attributes
+        In the YAML files ordered and unirdered lists needs a blank line before and after the list.
+        For example:
+        ```yaml
+        impactDesc: |
+          The attacker can perform the following actions:
+
+            - action 1
+            - action 2
+
+         ```
