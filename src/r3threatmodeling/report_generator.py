@@ -372,12 +372,19 @@ def postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileNa
     if not assetDir:
         assetDir = 'assets'
 
-    htmlReport = markdown.markdown(mdReport, extensions=['md_in_html', 'attr_list', 'fenced_code'])
+    htmlReport = markdown.markdown(mdReport, 
+            extensions=['md_in_html', "attr_list",
+            "pymdownx.highlight",
+            "pymdownx.superfences"])
+
     baseHTML = """<!DOCTYPE html>
         <html>
         <head>
         <meta charset=\"utf-8\" />
         <link rel="stylesheet" href="css/tm.css">
+        <link rel="stylesheet" href="css/github.min.css">
+        <script src="js/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script>
         </head>
         <body>%BODY%</body>
         </html>

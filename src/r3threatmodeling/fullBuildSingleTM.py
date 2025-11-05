@@ -47,7 +47,7 @@ def generateSingleTM(rootTMYaml, base_outputDir, assetDir, template, ancestorDat
     module_assets_path = importlib_resources.files('r3threatmodeling').joinpath('assets')
     if module_assets_path.is_dir():
         # Copy specific subdirectories from module assets
-        for subdir in ['css', 'img']:
+        for subdir in ['css', 'img','js']:
             module_subdir_path = module_assets_path.joinpath(subdir)
             if module_subdir_path.is_dir():
                 target_subdir = os.path.join(outputDir, subdir)
