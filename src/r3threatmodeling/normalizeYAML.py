@@ -47,8 +47,9 @@ def getPos(oDict, toFind, byKey=True):
 
 
 def updateThreatModelYaml(self):
-    for childrenTM in self.childrenTM:
-        childrenTM.updateYaml()
+    for child in self.children:
+        if isinstance(child, ThreatModel):
+            child.updateYaml()
 
     for threat in self.threats:
         threat.updateYaml()
