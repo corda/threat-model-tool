@@ -642,7 +642,11 @@ class ThreatModel(BaseThreatModelObject):
         if tmDict["scope"] is None:
             raise BaseException(f"Scope is empty in {self.id}, please check the threat model file")
         self.scope = Scope(tmDict["scope"], self)
-        self.analysis = tmDict["analysis"]
+        if "analysis" not in tmDict:
+            # raise BaseException(f"analysis section missing in {self.id}, please check the threat model file" + self.getFileAndLineErrorMessage())   
+            self.analysis = ""
+        else:
+            self.analysis = tmDict["analysis"]
         self.assets: list[Asset]  = []
         self.securityObjectives: list[SecurityObjective]  = []
         self.attackers: list[Attacker] = []
