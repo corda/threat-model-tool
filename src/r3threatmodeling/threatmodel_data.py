@@ -314,7 +314,8 @@ class Countermeasure(BaseThreatModelObject):
         required_keys = ["inPlace", "public", "description", "title"]
         for key in required_keys:
             if key not in dict_data:
-                raise Exception(f"Countermeasure {self.id} needs a '{key}' attribute" + self.getFileAndLineErrorMessage())
+                if key not in dict_data or dict_data[key] is None:
+                    raise Exception(f"Countermeasure needs a '{key}' attribute{self.getFileAndLineErrorMessage()}")
 
     def printAsText(self):
         return "\nID: " + self.id + " \nDescription: " + self.description 
