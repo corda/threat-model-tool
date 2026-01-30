@@ -70,7 +70,7 @@ def executive_summary(tmo: ThreatModel, header_level: int = 1, ctx=None) -> str:
         lines.append(
             "<table markdown=\"block\" style=\"print-color-adjust: exact; -webkit-print-color-adjust: exact;\">"
         )
-        lines.append("<tr><th>Threat ID</th><th>CVSS</th><th>Always valid?</th></tr>")
+        lines.append("<tr><th>Threat ID</th><th>Severity</th></tr>")
         for threat in unmit_no_op:
             anchor = createObjectAnchorHash(threat)
             cvss_td = (
@@ -91,7 +91,8 @@ def executive_summary(tmo: ThreatModel, header_level: int = 1, ctx=None) -> str:
                     if getattr(threat, "ticketLink", None)
                     else ""
                 )
-                + f"</td>{cvss_td}<td  style=\"text-align: center \">{always}</td></tr>"
+                # + f"</td>{cvss_td}</tr>"
+                + f"{cvss_td}</tr>"
             )
         lines.append("</table>")
         lines.append("</div>")
@@ -117,18 +118,16 @@ def threats_summary(tmo: ThreatModel, header_level: int = 1, ctx=None) -> str:
             "<table markdown=\"block\" style=\"print-color-adjust: exact; -webkit-print-color-adjust: exact;\">"
         )
         lines.append(
-            "<tr><th>Threat ID</th><th>CVSS</th><th>Valid when (condition)</th><th>Fully mitigated</th>"
-            "<th>Has Operational <br/> countermeasures</th></tr>"
+            "<tr><th>Threat ID</th><th>CVSS</th><th>Mitigation Status</th></tr>"
         )
         for threat in unmit + mitigated:
             anchor = createObjectAnchorHash(threat)
-            cond = getattr(threat, "conditional", "Always valid")
+            # cond = getattr(threat, "conditional", "Always valid")
             cvss_td = (
                 f'<td style="background-color: {threat.getSmartScoreColor()}; " >'
                 f'<span markdown="block" style="font-weight:bold; color:white;"><strong>{threat.getSmartScoreDesc()}</strong></span></td>'
             )
-            fully = true_or_false_mark(threat.fullyMitigated)
-            op = "Yes" if threat.hasOperationalCountermeasures() else "No"
+            statusDesc = threat.statusDefaultText()
             proposal = (
                 "<br/><b>FROM PROPOSAL / TBC</b>"
                 if (hasattr(threat, "proposal") or hasattr(threat.threatModel, "proposal"))
@@ -142,8 +141,8 @@ def threats_summary(tmo: ThreatModel, header_level: int = 1, ctx=None) -> str:
             lines.append(
                 "<tr markdown=\"block\"><td>"
                 f'<a href="#{anchor}">{threat.parent._id}.<br/>{threat._id}</a>{proposal}{ticket}'
-                f"</td>{cvss_td}<td>{cond}</td><td style=\"text-align: center \">{fully}</td>"
-                f"<td style=\"text-align: center \">{op}</td></tr>"
+                f"</td>{cvss_td}<td style=\"background-color: {threat.statusColors()['fill']};text-align: center \">{statusDesc}</td>"
+                f"</tr>"
             )
         lines.append("</table></div>")
     return "\n".join(lines)
@@ -215,7 +214,7 @@ def render_threat(threat, header_level: int = 1, ctx=None) -> str:
             lines.append(
                 f"<dd markdown=\"block\"> - <code><a href=\"#{attacker.anchor}\">{attacker._id}</a></code></dd>"
             )
-    status = 'Mitigated' if threat.fullyMitigated else 'Not fully mitigated'
+    status =  threat.statusDefaultText() #'Mitigated' if threat.fullyMitigated else 'Not fully mitigated'
     lines.append(f"<dt>Threat Status:</dt><dd markdown=\"block\">{status}</dd>")
     if hasattr(threat, "conditional"):
         lines.append(f"<dt>Threat condition:</dt><dd markdown=\"block\">{threat.conditional}</dd>")

@@ -356,3 +356,11 @@ It is possible to add a yaml attribute `proposal: PROPOSAL_NAME` to the main yam
 The HTML and MKDOCS version of the report will apply a special css class to the div elements involved tp highlight the proposal nature.
 It also will indicate in the summary the fact that a specific threat/vulnerability is in a proposal state.
 In free text sections like `scope.description` it is possible to add `<div class='proposal'>TEXT</div> as well.`
+
+
+
+## Threat Status
+
+In the `threat:` section
+`fullyMitigated:` should ebe true when there are countermeasures in place enough to fully mitigate the threat. If there are operational mitigations that fully mitigates but are not accesible/implemented (not in place) then this value should be false.
+If there are accessible operational mitigations in plaace this value should be true, will still be '(not secure by default') in the reports, as some operation is needed to make it secure.
