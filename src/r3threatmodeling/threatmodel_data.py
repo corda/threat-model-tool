@@ -566,7 +566,7 @@ class Threat(BaseThreatModelObject):
             if self.secureByDefault():
                 return "Mitigated"
             else:
-                return "Not Secure by Default" 
+                return "Not Secure by Default <br/>(Operational mitigation)" 
         else:
             return "Vulnerable"
 
