@@ -368,6 +368,10 @@ def render_tm_report_part(
     title = tmo.title + " Threat Model"
     if not tmo.isRoot():
         title = f"{title} Section"
+    
+    # Allow override of title from context
+    if ctx and isinstance(ctx, dict) and ctx.get('mainTitle') and tmo.isRoot():
+        title = ctx['mainTitle']
 
     lines.append(makeMarkdownLinkedHeader(header_level, title, ctx, skipTOC=tmo.isRoot(), tmObject=tmo))
     

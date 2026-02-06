@@ -6,140 +6,140 @@
     "configurations": [
     
 
-        {
-            "name": "Python: Module createtickets",
-            "type": "python",
-            "request": "launch",
-            "module": "r3threatmodeling.createtickets",
-            "justMyCode": true,
-            "args": [
-                "--rootTMYaml", "../threat-modeling/threatModels/CBUAE_PHASE2/CBUAE_PHASE2.yaml",
-                "--TMID", "IAM",
-                "--type","Security Story",
-                "--dest", "SEC",
-                "--all"
-
-                // "--YAMLprefix", "devticket_"
-            ]
-        },
-        {
-            "name": "Python: Mermaid Diagrams",
-            "type": "python",
-            "request": "launch",
-            "module": "r3threatmodeling.createThreatMermaidDiagrams",
-            "justMyCode": true,
-            "args": [
-                "--rootTMYaml",
-                "../Corda5ThreatModelsthreatModels/C5/C5.yaml",
-                "--outputDir",
-                "../Corda5ThreatModels/build/generated_reports",
-            ]
-        },
-        {
-            "name": "Python: PlantUML threat Diagrams",
-            "type": "python",
-            "request": "launch",
-            "module": "r3threatmodeling.createThreatPlantUMLDiagrams",
-            "justMyCode": true,
-            "args": [
-                "--rootTMYaml",
-                "../Corda5ThreatModels/threatModels/C5/C5.yaml",
-                "--outputDir",
-                "../Corda5ThreatModels/build/generated_reports/img/threatTree",
-            ]
-        },
-        {
-            "name": "Python: SecObjectives PlantUML Diagrams",
-            "type": "python",
-            "request": "launch",
-            "module": "r3threatmodeling.createSecObjTreePUMLDiagrams",
-            "justMyCode": true,
-            "args": [
-                "--rootTMYaml",
-                "../Corda5ThreatModels/threatModels/C5/C5.yaml",
-                "--outputDir",
-                "../Corda5ThreatModels/build/generated_reports/img/secObjectives",
-            ]
-        },
+        // {
+        //     "name": "Python: Module createtickets",
+        //     "type": "python",
+        //     "request": "launch",
+        //     "module": "r3threatmodeling.createtickets",
+        //     "justMyCode": true,
+        //     "args": [
+        //         "--rootTMYaml", "../threat-modeling/threatModels/CBUAE_PHASE2/CBUAE_PHASE2.yaml",
+        //         "--TMID", "IAM",
+        //         "--type","Security Story",
+        //         "--dest", "SEC",
+        //         "--all"
+        //
+        //         // "--YAMLprefix", "devticket_"
+        //     ]
+        // },
+        // {
+        //     "name": "Python: Mermaid Diagrams",
+        //     "type": "python",
+        //     "request": "launch",
+        //     "module": "r3threatmodeling.createThreatMermaidDiagrams",
+        //     "justMyCode": true,
+        //     "args": [
+        //         "--rootTMYaml",
+        //         "../Corda5ThreatModelsthreatModels/C5/C5.yaml",
+        //         "--outputDir",
+        //         "../Corda5ThreatModels/build/generated_reports",
+        //     ]
+        // },
+        // {
+        //     "name": "Python: PlantUML threat Diagrams",
+        //     "type": "python",
+        //     "request": "launch",
+        //     "module": "r3threatmodeling.createThreatPlantUMLDiagrams",
+        //     "justMyCode": true,
+        //     "args": [
+        //         "--rootTMYaml",
+        //         "../Corda5ThreatModels/threatModels/C5/C5.yaml",
+        //         "--outputDir",
+        //         "../Corda5ThreatModels/build/generated_reports/img/threatTree",
+        //     ]
+        // },
+        // {
+        //     "name": "Python: SecObjectives PlantUML Diagrams",
+        //     "type": "python",
+        //     "request": "launch",
+        //     "module": "r3threatmodeling.createSecObjTreePUMLDiagrams",
+        //     "justMyCode": true,
+        //     "args": [
+        //         "--rootTMYaml",
+        //         "../Corda5ThreatModels/threatModels/C5/C5.yaml",
+        //         "--outputDir",
+        //         "../Corda5ThreatModels/build/generated_reports/img/secObjectives",
+        //     ]
+        // },
         
 
-        {
-            "name": "Python: Module refactorYAML01to02 OVERWRITE",
-            "type": "python",
-            "request": "launch",
-            "module": "r3threatmodeling.normalizeYAML",
-            "justMyCode": true,
-            "args": [
-                "--rootTMYaml",
-                "../Corda5ThreatModelsthreatModels/C5/C5.yaml"
-                // ,
-                // "--YAMLprefix", "refactored_"
-            ]
-        },
-        {
-            "name": "public fullBuild C5 (html and diagrams/images)",
-            "type": "python",
-            "request": "launch",
-            "module": "r3threatmodeling.fullBuildSingleTM",
-            "justMyCode": false,
-            "args": [
-                "--rootTMYaml",
-                "../Corda5ThreatModels/threatModels/C5/C5.yaml",
-                "--browserSync",
-                "--outputDir",
-                "build/C5",
-                "--template",
-                "TM_templateFull",
-                "--formatYAML",
-                "--assetDir",
-                "../Corda5ThreatModels/threatModels/assets",
-                "--visibility", "public"
-            ]
-        },
+        // {
+        //     "name": "Python: Module refactorYAML01to02 OVERWRITE",
+        //     "type": "python",
+        //     "request": "launch",
+        //     "module": "r3threatmodeling.normalizeYAML",
+        //     "justMyCode": true,
+        //     "args": [
+        //         "--rootTMYaml",
+        //         "../Corda5ThreatModelsthreatModels/C5/C5.yaml"
+        //         // ,
+        //         // "--YAMLprefix", "refactored_"
+        //     ]
+        // },
+        // {
+        //     "name": "public fullBuild C5 (html and diagrams/images)",
+        //     "type": "python",
+        //     "request": "launch",
+        //     "module": "r3threatmodeling.fullBuildSingleTM",
+        //     "justMyCode": false,
+        //     "args": [
+        //         "--rootTMYaml",
+        //         "../Corda5ThreatModels/threatModels/C5/C5.yaml",
+        //         "--browserSync",
+        //         "--outputDir",
+        //         "build/C5",
+        //         "--template",
+        //         "TM_templateFull",
+        //         "--formatYAML",
+        //         "--assetDir",
+        //         "../Corda5ThreatModels/threatModels/assets",
+        //         "--visibility", "public"
+        //     ]
+        // },
 
-        {
-            "name": "private C5 fullBuild (html and diagrams/images)",
-            "type": "python",
-            "request": "launch",
-            "module": "r3threatmodeling.fullBuildSingleTM",
-            "justMyCode": false,
-            "args": [
-                "--rootTMYaml",
-                "../Corda5ThreatModels/threatModels/C5/C5.yaml",
-                "--browserSync",
-                "--outputDir",
-                "../Corda5ThreatModels/build/generated_reports/fullC5",
-                "--template",
-                "TM_templateFull",
-                "--formatYAML",
-                "--assetDir",
-                "../Corda5ThreatModels/threatModels/assets",
-                "--generatePDF"
-            ]
-        },
+        // {
+        //     "name": "private C5 fullBuild (html and diagrams/images)",
+        //     "type": "python",
+        //     "request": "launch",
+        //     "module": "r3threatmodeling.fullBuildSingleTM",
+        //     "justMyCode": false,
+        //     "args": [
+        //         "--rootTMYaml",
+        //         "../Corda5ThreatModels/threatModels/C5/C5.yaml",
+        //         "--browserSync",
+        //         "--outputDir",
+        //         "../Corda5ThreatModels/build/generated_reports/fullC5",
+        //         "--template",
+        //         "TM_templateFull",
+        //         "--formatYAML",
+        //         "--assetDir",
+        //         "../Corda5ThreatModels/threatModels/assets",
+        //         "--generatePDF"
+        //     ]
+        // },
 
-        {
-            "name": "VERSIONS FILTER '5.0,5.1' private C5 fullBuild ",
-            "type": "python",
-            "request": "launch",
-            "module": "r3threatmodeling.fullBuildSingleTM",
-            "justMyCode": false,
-            "args": [
-                "--rootTMYaml",
-                "../Corda5ThreatModels/threatModels/C5/C5.yaml",
-                "--browserSync",
-                "--outputDir",
-                "build/C5",
-                "--template",
-                "TM_templateFull",
-                "--formatYAML",
-                "--assetDir",
-                "../Corda5ThreatModels/threatModels/assets",
-                "--generatePDF",
-                "--versionsFilter","5.0,5.1,5.2"
-
-            ]
-        },
+        // {
+        //     "name": "VERSIONS FILTER '5.0,5.1' private C5 fullBuild ",
+        //     "type": "python",
+        //     "request": "launch",
+        //     "module": "r3threatmodeling.fullBuildSingleTM",
+        //     "justMyCode": false,
+        //     "args": [
+        //         "--rootTMYaml",
+        //         "../Corda5ThreatModels/threatModels/C5/C5.yaml",
+        //         "--browserSync",
+        //         "--outputDir",
+        //         "build/C5",
+        //         "--template",
+        //         "TM_templateFull",
+        //         "--formatYAML",
+        //         "--assetDir",
+        //         "../Corda5ThreatModels/threatModels/assets",
+        //         "--generatePDF",
+        //         "--versionsFilter","5.0,5.1,5.2"
+        //
+        //     ]
+        // },
 
         {
             "name": "Python: Directory fullBuild MKDOCS (html and diagrams/images)",
@@ -165,60 +165,60 @@
             ]
         },
 
-        {
-            "name": "public  Module for R3 C5 Full",
-            "type": "python",
-            "request": "launch",
-            "module": "r3threatmodeling.report_generator",
-            "justMyCode": false,
-            "args": [
-                "--rootTMYaml",
-                "../Corda5ThreatModels/threatModels/C5/C5.yaml",
-                "--browserSync",
-                "--public",
-                "--outputDir",
-                "../Corda5ThreatModels/build/generated_reports",
-                "--template",
-                "TM_templateFull",
-                "--formatYAML",
-                "--assetDir",
-                "../Corda5ThreatModels/threatModels/assets"
-            ]
-        },
+        // {
+        //     "name": "public  Module for R3 C5 Full",
+        //     "type": "python",
+        //     "request": "launch",
+        //     "module": "r3threatmodeling.report_generator",
+        //     "justMyCode": false,
+        //     "args": [
+        //         "--rootTMYaml",
+        //         "../Corda5ThreatModels/threatModels/C5/C5.yaml",
+        //         "--browserSync",
+        //         "--public",
+        //         "--outputDir",
+        //         "../Corda5ThreatModels/build/generated_reports",
+        //         "--template",
+        //         "TM_templateFull",
+        //         "--formatYAML",
+        //         "--assetDir",
+        //         "../Corda5ThreatModels/threatModels/assets"
+        //     ]
+        // },
 
-        {
-            "name": "private  Module for R3 C5 Full",
-            "type": "python",
-            "request": "launch",
-            "module": "r3threatmodeling.report_generator",
-            "justMyCode": false,
-            "args": [
-                "--rootTMYaml",
-                "../Corda5ThreatModels/threatModels/C5/C5.yaml",
-                // "--TMID",
-                // "C5",
-                // "C5.CPIPackaging",
-                "--browserSync",
-                // "--watchFiles",
-                // "pyConThreatMod/template/TM_templateFull.mako",
-                // "threatModels/C5/CPIPackaging.yaml",
-                // "threatModels/C5/VNodeOnboarding.yaml",
-                // "pyConThreatMod/template/TM_template.mako",
-                // "pyConThreatMod/template/lib.mako",
-                // "threatModels/C5/C5.yaml",
-                // "threatModels/C5/HTTPGateway.yaml",
-                // "threatModels/C5/ClusterConfiguration.yaml",
-                // "threatModels/C5/ClusterDeployment.yaml",
-                // "threatModels/C5/CPIPackaging.yaml",
-                "--outputDir",
-                "../Corda5ThreatModels/build/generated_reports",
-                "--template",
-                "TM_templateFull",
-                "--formatYAML",
-                "--assetDir",
-                "../Corda5ThreatModels/threatModels/assets"
-            ]
-        },
+        // {
+        //     "name": "private  Module for R3 C5 Full",
+        //     "type": "python",
+        //     "request": "launch",
+        //     "module": "r3threatmodeling.report_generator",
+        //     "justMyCode": false,
+        //     "args": [
+        //         "--rootTMYaml",
+        //         "../Corda5ThreatModels/threatModels/C5/C5.yaml",
+        //         // "--TMID",
+        //         // "C5",
+        //         // "C5.CPIPackaging",
+        //         "--browserSync",
+        //         // "--watchFiles",
+        //         // "pyConThreatMod/template/TM_templateFull.mako",
+        //         // "threatModels/C5/CPIPackaging.yaml",
+        //         // "threatModels/C5/VNodeOnboarding.yaml",
+        //         // "pyConThreatMod/template/TM_template.mako",
+        //         // "pyConThreatMod/template/lib.mako",
+        //         // "threatModels/C5/C5.yaml",
+        //         // "threatModels/C5/HTTPGateway.yaml",
+        //         // "threatModels/C5/ClusterConfiguration.yaml",
+        //         // "threatModels/C5/ClusterDeployment.yaml",
+        //         // "threatModels/C5/CPIPackaging.yaml",
+        //         "--outputDir",
+        //         "../Corda5ThreatModels/build/generated_reports",
+        //         "--template",
+        //         "TM_templateFull",
+        //         "--formatYAML",
+        //         "--assetDir",
+        //         "../Corda5ThreatModels/threatModels/assets"
+        //     ]
+        // },
         {
             "name": "Python: Module for OAuth 2.0 TM",
             "type": "python",
@@ -242,65 +242,65 @@
                 "../personal/threat-models/OAuth 2.0/assets"
             ]
         },
-        {
-            "name": "Corda Sec Hardening Guide ",
-            "type": "python",
-            "request": "launch",
-            "module": "r3threatmodeling.report_generator",
-            "console": "integratedTerminal",
-            "justMyCode": true,
-            "args": [
-                "--rootTMYaml",
-                "../Corda5ThreatModelsthreatModels/C5/C5.yaml",
-                "--TMID",
-                "C5",
-                "--outputDir",
-                "../Corda5ThreatModels/build/generated_reports",
-                "--template",
-                "operationalHardeningGuide",
-                "--baseFileName",
-                "CordaHardeningGuide"
-            ]
-        },
-        {
-            "name": "Corda Testing Guide ",
-            "type": "python",
-            "request": "launch",
-            "module": "r3threatmodeling.report_generator",
-            "console": "integratedTerminal",
-            "justMyCode": true,
-            "args": [
-                "--rootTMYaml",
-                "../Corda5ThreatModels/threatModels/C5/C5.yaml",
-                "--TMID",
-                "C5",
-                "--outputDir",
-                "../Corda5ThreatModels/build/generated_reports/C5",
-                "--template",
-                "testingGuide",
-                "--baseFileName",
-                "TestingGuide"
-            ]
-        },
-        {
-            "name": "Corda Keys summary report ",
-            "type": "python",
-            "request": "launch",
-            "module": "r3threatmodeling.report_generator",
-            "console": "integratedTerminal",
-            "justMyCode": true,
-            "args": [
-                "--rootTMYaml",
-                "../Corda5ThreatModelsthreatModels/C5/C5.yaml",
-                "--TMID",
-                "C5",
-                "--outputDir",
-                "../Corda5ThreatModels/build/generated_reports",
-                "--template",
-                "keysSummary",
-                "--baseFileName",
-                "keysSummary"
-            ]
-        }
+        // {
+        //     "name": "Corda Sec Hardening Guide ",
+        //     "type": "python",
+        //     "request": "launch",
+        //     "module": "r3threatmodeling.report_generator",
+        //     "console": "integratedTerminal",
+        //     "justMyCode": true,
+        //     "args": [
+        //         "--rootTMYaml",
+        //         "../Corda5ThreatModelsthreatModels/C5/C5.yaml",
+        //         "--TMID",
+        //         "C5",
+        //         "--outputDir",
+        //         "../Corda5ThreatModels/build/generated_reports",
+        //         "--template",
+        //         "operationalHardeningGuide",
+        //         "--baseFileName",
+        //         "CordaHardeningGuide"
+        //     ]
+        // },
+        // {
+        //     "name": "Corda Testing Guide ",
+        //     "type": "python",
+        //     "request": "launch",
+        //     "module": "r3threatmodeling.report_generator",
+        //     "console": "integratedTerminal",
+        //     "justMyCode": true,
+        //     "args": [
+        //         "--rootTMYaml",
+        //         "../Corda5ThreatModels/threatModels/C5/C5.yaml",
+        //         "--TMID",
+        //         "C5",
+        //         "--outputDir",
+        //         "../Corda5ThreatModels/build/generated_reports/C5",
+        //         "--template",
+        //         "testingGuide",
+        //         "--baseFileName",
+        //         "TestingGuide"
+        //     ]
+        // },
+        // {
+        //     "name": "Corda Keys summary report ",
+        //     "type": "python",
+        //     "request": "launch",
+        //     "module": "r3threatmodeling.report_generator",
+        //     "console": "integratedTerminal",
+        //     "justMyCode": true,
+        //     "args": [
+        //         "--rootTMYaml",
+        //         "../Corda5ThreatModelsthreatModels/C5/C5.yaml",
+        //         "--TMID",
+        //         "C5",
+        //         "--outputDir",
+        //         "../Corda5ThreatModels/build/generated_reports",
+        //         "--template",
+        //         "keysSummary",
+        //         "--baseFileName",
+        //         "keysSummary"
+        //     ]
+        // }
     ]
 }

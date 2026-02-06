@@ -97,12 +97,47 @@ pip install dist/r3threatmodeling-0.3.3-py3-none-any.whl
 
 ## Report generation command
 
-execute it from console, example:
+### Basic Usage
+
+Execute from console using `fullBuildSingleTM`:
 
 ```bash 
-python -m r3threatmodeling.report_generator --rootTMYaml ../Corda5ThreatModels/threatModels/C5.yaml --TMID C5  --browserSync --outputDir ../Corda5ThreatModels/build/generated_reports --template TM_templateFull
+python -m r3threatmodeling.fullBuildSingleTM \
+  --rootTMYaml threatModels/MySystem/MySystem.yaml \
+  --outputDir build/generated_reports \
+  --generatePDF \
+  --template TM_templateFull
 ```
 
+### Available Parameters for `fullBuildSingleTM`
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `--rootTMYaml` | file | required | Path to the root threat model YAML file |
+| `--outputDir` | path | `build` | Output directory for generated reports |
+| `--template` | string | `TM_template` | Template to use for report generation |
+| `--mainTitle` | string | auto-generated | **Optional.** Custom title for the report. If omitted, defaults to `{ThreatModelTitle} Threat Model` |
+| `--generatePDF` | flag | false | Generate PDF output in addition to HTML/Markdown |
+| `--pdfHeaderNote` | string | `Private and confidential` | Note to include in PDF header |
+| `--versionsFilter` | string | - | Filter threats/assets by version (e.g., `5.0,5.1`) |
+| `--ancestorData` | flag | true | Include security objectives inherited from parent threat models |
+| `--no-ancestorData` | flag | - | Exclude ancestor data from report |
+| `--baseFileName` | string | `{ThreatModelID}` | Custom base filename for output files |
+| `--visibility` | choice | `full` | Report visibility level: `full` or `public` |
+| `--assetDir` | path | - | Directory containing additional assets to include in report |
+| `--browserSync` | flag | false | Enable browser sync for development |
+| `--no-headerNumbering` | flag | - | Disable automatic heading numbering |
+
+### Example with Custom Title
+
+```bash
+python -m r3threatmodeling.fullBuildSingleTM \
+  --rootTMYaml threatModels/MySystem/MySystem.yaml \
+  --outputDir build/generated_reports \
+  --mainTitle "Security Architecture Assessment" \
+  --generatePDF \
+  --template TM_templateFull
+```
 
 ## Refactor yaml schema from version 0.1 to 0,2
 
