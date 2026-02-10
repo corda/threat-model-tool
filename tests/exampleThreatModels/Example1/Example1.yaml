@@ -1,6 +1,8 @@
 ID: Example1
 title: Abstract Example Threat Model
 version: 1.0
+children:
+  - ID: Example1Child
 authors: |
   Example Author
 scope:
