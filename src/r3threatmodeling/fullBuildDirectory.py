@@ -6,6 +6,7 @@ import pathlib
 from tokenize import String
 import argparse
 import time
+import logging
 from watchdog.observers import Observer
 from watchdog.events import LoggingEventHandler, PatternMatchingEventHandler
 import traceback
@@ -27,6 +28,9 @@ def dir_path(path):
 
 
 def main():
+    logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+    logger = logging.getLogger(__name__)
+    
     CLI=argparse.ArgumentParser()
 
     CLI.add_argument(
@@ -178,6 +182,8 @@ def main():
         except Exception as e:
             print(f"ERROR processing TM YAML file {f}: {e}, skipping...")
             traceback.print_exc()
+      else:
+          logger.info(f"Excluding {f}: directory name does not match YAML filename (dir: {pathlib.Path(f).parent.name}, file: {pathlib.Path(f).stem})")
 
     print(tm_list)        
 

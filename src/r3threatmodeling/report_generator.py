@@ -62,7 +62,7 @@ def prepare_output_directory(outputDir, assetDir = None):
                 shutil.copytree(asset_path, outputDir, dirs_exist_ok=True)
 
 
-def generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, assetDir, public=False, baseHeaderLevel: int = 1 ):
+def generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, assetDir, public=False, baseHeaderLevel: int = 1, mainTitle=None):
 
     if baseFileName is None:
         baseFileName = tmo._id
@@ -74,7 +74,8 @@ def generate(tmo, template, ancestorData, outputDir, browserSync, baseFileName, 
     ctx = {
         'processToc': True,
         'process_prepost_md': True,
-        'process_heading_numbering': True
+        'process_heading_numbering': True,
+        'mainTitle': mainTitle
     }
 
     assetDir0 = os.getcwd() + os.sep + tmo.fileName.replace(tmo.fileName.split('/')[-1],'assets')

@@ -314,7 +314,8 @@ class Countermeasure(BaseThreatModelObject):
         required_keys = ["inPlace", "public", "description", "title"]
         for key in required_keys:
             if key not in dict_data:
-                raise Exception(f"Countermeasure {self.id} needs a '{key}' attribute" + self.getFileAndLineErrorMessage())
+                if key not in dict_data or dict_data[key] is None:
+                    raise Exception(f"Countermeasure needs a '{key}' attribute{self.getFileAndLineErrorMessage()}")
 
     def printAsText(self):
         return "\nID: " + self.id + " \nDescription: " + self.description 
@@ -533,6 +534,42 @@ class Threat(BaseThreatModelObject):
             if cm.operational:
                 return True
         return False
+    # by in Place we mean the countermeasure is implementable by operators
+    def hasOperationalCountermeasuresInPlace(self):
+        for cm in self.countermeasures:
+            if cm.operational and cm.inPlace:
+                return True
+        return False
+
+    # Secure by default means fully mitigated without operational countermeasures needed
+    def secureByDefault(self):
+        if self.fullyMitigated and not self.hasOperationalCountermeasures():
+            return True
+        else:
+            return False
+    
+    fullyMitigatedColors = {'border': '#82B366', 'fill': '#D5E8D4'}
+    inSecureBydefaultColors = {'border': '#D6B656', 'fill': '#FFF2CC'}
+    notFullyMitigatedColors = {'border': '#E06666', 'fill': '#F8CECC'}
+
+    def statusColors(self):
+        if self.fullyMitigated:
+            if self.secureByDefault():
+                return self.fullyMitigatedColors
+            else:
+                return self.inSecureBydefaultColors
+        else:
+            return self.notFullyMitigatedColors
+
+    def statusDefaultText(self):
+        if self.fullyMitigated:
+            if self.secureByDefault():
+                return "Mitigated"
+            else:
+                return "Not Secure by Default <br/>(Operational mitigation)" 
+        else:
+            return "Vulnerable"
+
 
     def printAsText(self):
         return "\nID: " + self.id + " \nDescription: " + self.description

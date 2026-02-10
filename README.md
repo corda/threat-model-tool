@@ -33,7 +33,24 @@ If you only need the threat modeling functionality:
 pip install -e .
 ```
 
-### Option 3: Production Installation
+### Option 3: Dev Container (Recommended for Contributors)
+
+The easiest way to get a fully working development environment — works on macOS, Linux, and Windows.
+
+**Prerequisites:** [Docker](https://www.docker.com/) and [VS Code](https://code.visualstudio.com/) with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers).
+
+1. Clone the repo and open it in VS Code
+2. When prompted, click **"Reopen in Container"** (or run `Dev Containers: Reopen in Container` from the Command Palette)
+3. Wait for the build to complete — all dependencies are installed automatically
+
+The dev container includes:
+- Python 3.12 with all project dependencies pre-installed
+- Docker-in-Docker for PlantUML rendering and PDF generation
+- An HTTP server on port 8000 for previewing generated reports (`http://localhost:8000`)
+
+No virtual environment or manual setup needed.
+
+### Option 4: Production Installation
 
 For production use or to install from a different location:
 
@@ -97,12 +114,47 @@ pip install dist/r3threatmodeling-0.3.3-py3-none-any.whl
 
 ## Report generation command
 
-execute it from console, example:
+### Basic Usage
+
+Execute from console using `fullBuildSingleTM`:
 
 ```bash 
-python -m r3threatmodeling.report_generator --rootTMYaml ../Corda5ThreatModels/threatModels/C5.yaml --TMID C5  --browserSync --outputDir ../Corda5ThreatModels/build/generated_reports --template TM_templateFull
+python -m r3threatmodeling.fullBuildSingleTM \
+  --rootTMYaml threatModels/MySystem/MySystem.yaml \
+  --outputDir build/generated_reports \
+  --generatePDF \
+  --template TM_templateFull
 ```
 
+### Available Parameters for `fullBuildSingleTM`
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `--rootTMYaml` | file | required | Path to the root threat model YAML file |
+| `--outputDir` | path | `build` | Output directory for generated reports |
+| `--template` | string | `TM_template` | Template to use for report generation |
+| `--mainTitle` | string | auto-generated | **Optional.** Custom title for the report. If omitted, defaults to `{ThreatModelTitle} Threat Model` |
+| `--generatePDF` | flag | false | Generate PDF output in addition to HTML/Markdown |
+| `--pdfHeaderNote` | string | `Private and confidential` | Note to include in PDF header |
+| `--versionsFilter` | string | - | Filter threats/assets by version (e.g., `5.0,5.1`) |
+| `--ancestorData` | flag | true | Include security objectives inherited from parent threat models |
+| `--no-ancestorData` | flag | - | Exclude ancestor data from report |
+| `--baseFileName` | string | `{ThreatModelID}` | Custom base filename for output files |
+| `--visibility` | choice | `full` | Report visibility level: `full` or `public` |
+| `--assetDir` | path | - | Directory containing additional assets to include in report |
+| `--browserSync` | flag | false | Enable browser sync for development |
+| `--no-headerNumbering` | flag | - | Disable automatic heading numbering |
+
+### Example with Custom Title
+
+```bash
+python -m r3threatmodeling.fullBuildSingleTM \
+  --rootTMYaml threatModels/MySystem/MySystem.yaml \
+  --outputDir build/generated_reports \
+  --mainTitle "Security Architecture Assessment" \
+  --generatePDF \
+  --template TM_templateFull
+```
 
 ## Refactor yaml schema from version 0.1 to 0,2
 
@@ -356,3 +408,11 @@ It is possible to add a yaml attribute `proposal: PROPOSAL_NAME` to the main yam
 The HTML and MKDOCS version of the report will apply a special css class to the div elements involved tp highlight the proposal nature.
 It also will indicate in the summary the fact that a specific threat/vulnerability is in a proposal state.
 In free text sections like `scope.description` it is possible to add `<div class='proposal'>TEXT</div> as well.`
+
+
+
+## Threat Status
+
+In the `threat:` section
+`fullyMitigated:` should ebe true when there are countermeasures in place enough to fully mitigate the threat. If there are operational mitigations that fully mitigates but are not accesible/implemented (not in place) then this value should be false.
+If there are accessible operational mitigations in plaace this value should be true, will still be '(not secure by default') in the reports, as some operation is needed to make it secure.

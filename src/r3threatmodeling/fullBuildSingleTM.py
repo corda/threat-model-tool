@@ -33,7 +33,7 @@ def posixpath_real(path):
   return path
 
 def generateSingleTM(rootTMYaml, base_outputDir, assetDir, template, ancestorData=True,
-                      browserSync=False, public=False, generatePDF=False, pdfHeaderNote=None, versionsFilterStr=None, fileName=None):
+                      browserSync=False, public=False, generatePDF=False, pdfHeaderNote=None, versionsFilterStr=None, fileName=None, mainTitle=None):
     
     tmo = ThreatModel(rootTMYaml, public=public, versionsFilterStr=versionsFilterStr)
 
@@ -48,7 +48,7 @@ def generateSingleTM(rootTMYaml, base_outputDir, assetDir, template, ancestorDat
     # tmID = tmo.id
     # tmTitle = tmo.title
 
-    report_generator.generate(tmo, template, ancestorData, outputDir, browserSync, fileName, assetDir)
+    report_generator.generate(tmo, template, ancestorData, outputDir, browserSync, fileName, assetDir, mainTitle=mainTitle)
 
     # Copy module assets first (will be overridden by TM-specific assets if they exist)
     module_assets_path = importlib_resources.files('r3threatmodeling').joinpath('assets')
@@ -210,6 +210,8 @@ def main():
 
     CLI.add_argument('--baseFileName', default=None, required=False)
 
+    CLI.add_argument('--mainTitle', default=None, required=False)
+
     CLI.add_argument('--no-headerNumbering', dest='headerNumbering', action='store_false')
     CLI.set_defaults(headerNumbering=True)
 
@@ -227,10 +229,11 @@ def main():
     pdfHeaderNote = args.pdfHeaderNote
     public = True if args.visibility == "public" else False
     versionsFilterStr = args.versionsFilter
+    mainTitle = args.mainTitle
 
     if(args.headerNumbering):
         HeadingNumberer.enable()
-    generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData, browserSync, public = public, generatePDF=generatePDF, pdfHeaderNote=pdfHeaderNote, versionsFilterStr=versionsFilterStr)
+    generateSingleTM(rootTMYaml, outputDir, assetDir, template, ancestorData, browserSync, public = public, generatePDF=generatePDF, pdfHeaderNote=pdfHeaderNote, versionsFilterStr=versionsFilterStr, mainTitle=mainTitle)
 
 if __name__ == "__main__":
     main()

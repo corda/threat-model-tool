@@ -1,0 +1,74 @@
+ID: Example1
+title: Abstract Example Threat Model
+version: 1.0
+children:
+  - ID: Example1Child
+authors: |
+  Example Author
+scope:
+  description: |
+    Minimal abstract threat model for testing report generation.
+  securityObjectives:
+    - ID: SYSTEM_CONFIDENTIALITY
+      title: System Confidentiality
+      description: |
+        Prevent unauthorized disclosure of data.
+      group: Data Security
+
+    - ID: SYSTEM_INTEGRITY
+      title: System Integrity
+      description: |
+        Prevent unauthorized modification of data or behavior.
+      group: System Integrity
+
+  attackers:
+    - ID: EXTERNAL_ATTACKER
+      description: |
+        Unauthenticated external user with network access.
+      inScope: true
+analysis: |
+  This abstract model is intended for testing the renderer and report pipeline.
+threats:
+  - ID: DATA_EXPOSURE
+    title: Unauthorized Data Exposure
+    attack: |
+      An attacker accesses sensitive data through a misconfigured access control.
+    threatType: Information Disclosure
+    impactDesc: |
+      Sensitive data is disclosed to unauthorized parties.
+    impactedSecObj:
+      - REFID: SYSTEM_CONFIDENTIALITY
+    attackers:
+      - REFID: EXTERNAL_ATTACKER
+    CVSS:
+      vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+    fullyMitigated: false
+    countermeasures:
+      - ID: ACCESS_CONTROL_ENFORCEMENT
+        title: Enforce Access Control
+        description: |
+          Require authentication and authorization checks on all data access paths.
+        inPlace: false
+        public: true
+
+  - ID: DATA_TAMPERING
+    title: Unauthorized Data Modification
+    attack: |
+      An attacker modifies stored data using an unprotected endpoint.
+    threatType: Tampering
+    impactDesc: |
+      Data integrity is compromised and trusted records are altered.
+    impactedSecObj:
+      - REFID: SYSTEM_INTEGRITY
+    attackers:
+      - REFID: EXTERNAL_ATTACKER
+    CVSS:
+      vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N
+    fullyMitigated: false
+    countermeasures:
+      - ID: INPUT_VALIDATION
+        title: Validate and Authorize Updates
+        description: |
+          Validate inputs and enforce authorization on update operations.
+        inPlace: true
+        public: true

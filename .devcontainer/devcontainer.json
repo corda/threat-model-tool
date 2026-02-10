@@ -1,0 +1,33 @@
+{
+  "name": "threat-model-tool",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "moby": false
+    }
+  },
+  "forwardPorts": [8000],
+  "appPort": [8000],
+
+  // Persist DinD images across rebuilds (plantuml, puppeteer, etc.)
+  "mounts": [
+    "source=threat-model-tool-dind,target=/var/lib/docker,type=volume"
+  ],
+
+  // Once — after container creation: install local packages as editable
+  "postCreateCommand": "pip install -e tree-node && pip install --no-deps -e . && mkdir -p /workspaces/threat-model-tool/build && nohup python -m http.server 8000 --directory /workspaces/threat-model-tool/build > /tmp/http-server.log 2>&1 &",
+
+  // Every start: background HTTP server for report preview (VS Code only)
+  "postStartCommand": "mkdir -p /workspaces/threat-model-tool/build && nohup python -m http.server 8000 --directory /workspaces/threat-model-tool/build > /tmp/http-server.log 2>&1 &",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python"
+      ]
+    }
+  }
+}

@@ -1,0 +1,59 @@
+ID: Example1Child
+title: Database Security (Child of Example 1)
+version: 1.0
+status: Draft
+authors: |
+  Example Author
+parent: Example1
+scope:
+  description: |
+    Detailed threat model for the database component.
+  securityObjectives:
+    - ID: DB_INTEGRITY
+      title: Database Integrity
+      description: |
+        Ensure that the stored data is accurate and consistent.
+      group: Data Security
+      contributesTo:
+        - REFID: SYSTEM_INTEGRITY
+
+  assets:
+    - ID: DB_STORAGE
+      type: data
+      title: Database Storage
+      description: |
+        Underlying data storage files.
+      inScope: true
+
+  attackers:
+    - ID: MALICIOUS_ADMIN
+      title: Malicious Administrator
+      description: |
+        An internal user with administrative access to the database server.
+      inScope: true
+
+analysis: |
+  This model focuses on threats specific to the database layer, inheriting broader context from Example 1.
+
+threats:
+  - ID: DIRECT_DB_ACCESS
+    title: Direct Access to Database Files
+    attack: |
+      An attacker with local system access bypasses the application and accesses database files directly on disk.
+    threatType: Information Disclosure
+    impactDesc: |
+      Confidential data stored in the database is exposed, bypassing all application-level controls.
+    impactedSecObj:
+      - REFID: DB_INTEGRITY
+    attackers:
+      - REFID: MALICIOUS_ADMIN
+    CVSS:
+      vector: 'CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:N'
+    fullyMitigated: false
+    countermeasures:
+      - ID: DISK_ENCRYPTION
+        title: Encrypt Data at Rest
+        description: |
+          Use transparent data encryption (TDE) or full-disk encryption to protect data files.
+        inPlace: false
+        public: true
