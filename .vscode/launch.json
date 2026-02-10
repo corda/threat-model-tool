@@ -16,7 +16,8 @@
                 // "--browserSync",
                 "--outputDir",
                 "build",
-                // "--template",
+                "--generatePDF"
+                // "--tempsoeciallylate",
                 // "TM_templateFull",
                 // "--formatYAML",
                 // "--assetDir",
