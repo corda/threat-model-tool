@@ -1,0 +1,53 @@
+.wy-nav-content {
+    max-width: 100%
+}
+
+
+.wy-table-responsive table td, .wy-table-responsive table th td {
+    white-space: wrap;
+    word-wrap: break-word;
+}
+
+@media print {
+    .pagebreak {
+        clear: both;
+        min-height: 1px;
+        page-break-after: always;
+    }
+    body {
+        margin: 0.1in;  
+      }
+  }
+
+/* override theme header & logo */
+.wy-side-nav-search {
+  background-color: black;
+  text-align: left;
+  border-bottom: 3px solid red;
+  padding-bottom: 2.809em;
+  margin-bottom: 0;
+}
+
+.wy-side-nav-search .icon-home::before {
+  content: '';
+  background-image: url(r3.png);
+  background-size: 40px 40px;
+  width: 40px;
+  height: 40px;
+  display: block;
+}
+
+.wy-nav-top {
+  background-color: black;
+}
+
+.wy-nav-top a::before{
+   content: '';
+  background-image: url(r3.png);
+  background-size: 40px 40px;
+  width: 40px;
+  height: 40px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 10px;
+}

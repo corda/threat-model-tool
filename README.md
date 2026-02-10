@@ -33,7 +33,24 @@ If you only need the threat modeling functionality:
 pip install -e .
 ```
 
-### Option 3: Production Installation
+### Option 3: Dev Container (Recommended for Contributors)
+
+The easiest way to get a fully working development environment — works on macOS, Linux, and Windows.
+
+**Prerequisites:** [Docker](https://www.docker.com/) and [VS Code](https://code.visualstudio.com/) with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers).
+
+1. Clone the repo and open it in VS Code
+2. When prompted, click **"Reopen in Container"** (or run `Dev Containers: Reopen in Container` from the Command Palette)
+3. Wait for the build to complete — all dependencies are installed automatically
+
+The dev container includes:
+- Python 3.12 with all project dependencies pre-installed
+- Docker-in-Docker for PlantUML rendering and PDF generation
+- An HTTP server on port 8000 for previewing generated reports (`http://localhost:8000`)
+
+No virtual environment or manual setup needed.
+
+### Option 4: Production Installation
 
 For production use or to install from a different location:
 
