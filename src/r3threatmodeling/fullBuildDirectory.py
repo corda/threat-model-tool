@@ -167,13 +167,14 @@ def main():
         print(path)
         try:
             import yaml
-            tm = yaml.safe_load(open(f))
-            title = tm['title']
-            version = tm['version']
-            pdfname = f'{title} Threat Model-{version}.pdf'
-            pdfname = re.sub('[^\w_.)(_-]', '_', pdfname)   # replace invalid chars with underscore
+            with open(f, 'r', encoding='utf-8') as open_yml:
+                tm = yaml.safe_load(open_yml)
+                title = tm['title']
+                version = tm['version']
+                pdfname = f'{title} Threat Model-{version}.pdf'
+                pdfname = re.sub(r'[^\w_.()-]', '_', pdfname)   # replace invalid chars with underscore
             
-            tm_list.append({'name': name,'ID': tm['ID'], 'path': path, 'title': title, 'pdf':pdfname})
+                tm_list.append({'name': name,'ID': tm['ID'], 'path': path, 'title': title, 'pdf':pdfname})
         except Exception as e:
             print(f"ERROR processing TM YAML file {f}: {e}, skipping...")
             traceback.print_exc()

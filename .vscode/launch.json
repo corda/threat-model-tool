@@ -13,11 +13,16 @@
             "module": "r3threatmodeling.createtickets",
             "justMyCode": true,
             "args": [
-                "--rootTMYaml", "../threat-modeling/threatModels/CBUAE_PHASE2/CBUAE_PHASE2.yaml",
-                "--TMID", "IAM",
-                "--type","Security Story",
-                "--dest", "SEC",
-                "--all"
+                "--rootTMYaml", "../threat-modeling/threatModels/R3/R3.yaml",
+                //"--rootTMYaml", "../threat-modeling/threatModels/CBUAE_PHASE2/CBUAE_PHASE2.yaml",
+                //"--TMID", "IAM",
+                "--type","New R3 Risk",
+                //"--type","Security Story",
+                //"--dest", "SEC",
+                "--dest", "RR",
+                //"--list",
+                "--field", "Risk Type=Security Risk"
+                //"--all"
 
                 // "--YAMLprefix", "devticket_"
             ]

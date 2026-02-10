@@ -100,7 +100,7 @@ def main():
         name = f.stem
         print(path)
         import yaml
-        tm = yaml.safe_load(open(f))
+        tm = yaml.safe_load(open(f, encoding='utf-8'))
         title = tm['title']
         version = tm['version']
         pdfname = f'{title} Threat Model-{version}.pdf'

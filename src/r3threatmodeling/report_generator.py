@@ -406,10 +406,10 @@ def postProcessTemplateFile(outputDir, browserSync, mdOutFileName, htmlOutFileNa
     outHTMLPath = os.path.join(outputDir, htmlOutFileName)
     print ("output HTML file:" + outHTMLPath)
 
-    with open(outHTMLPath, 'w') as outFile:
+    with open(outHTMLPath, 'w', encoding='utf-8') as outFile:
         outFile.write(htmlReport)
 
-    with open(outMDPath, 'w') as outFile:
+    with open(outMDPath, 'w', encoding='utf-8') as outFile:
         outFile.write(mdReport)
 
 def transform_named_anchor_md(text):

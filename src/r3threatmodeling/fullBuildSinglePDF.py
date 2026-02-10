@@ -15,14 +15,14 @@ def generatePDF(rootTMYaml, outputDir, outputName = None, headerNote=""):
 
     print("Generating PDF from html version")
     rootTMYaml.seek(0)
-    tm = yaml.safe_load(rootTMYaml)
+    tm = yaml.safe_load(rootTMYaml, encoding="utf-8-sig")
     tmID = tm['ID']
 
     if not outputName:
       title = tm['title']
       version = tm['version']
       outputName = f'{title} Threat Model-{version}'
-      outputName = re.sub('[^\w_.)(_-]', '_', outputName)   # replace invalid chars with underscore
+      outputName = re.sub('[^\w_.)(-]', '_', outputName)   # replace invalid chars with underscore
       
     os.makedirs(  "build/scripts", exist_ok=True)
     PDFscript = importlib_resources.files('r3threatmodeling').joinpath('scripts/pdfScript.js')
@@ -73,7 +73,7 @@ def main():
     "--rootTMYaml",
     default = None,
     required=True,
-    type=open
+    type=argparse.FileType('r', encoding='utf-8')
     )
 
     CLI.add_argument(

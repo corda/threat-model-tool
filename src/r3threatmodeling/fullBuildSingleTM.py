@@ -24,6 +24,13 @@ from .template.template_utils import *
 from pathlib import Path
 import shutil
 
+def posixpath_real(path):
+  print(f"Converting path: {path}")
+  #return path.replace('\\', '/')
+  import re
+  path = os.path.realpath(path).replace('\\', '/')
+  path = re.sub(r'^([A-Za-z]):', r'//\1', path.lower())
+  return path
 
 def generateSingleTM(rootTMYaml, base_outputDir, assetDir, template, ancestorData=True,
                       browserSync=False, public=False, generatePDF=False, pdfHeaderNote=None, versionsFilterStr=None, fileName=None):
@@ -63,7 +70,7 @@ def generateSingleTM(rootTMYaml, base_outputDir, assetDir, template, ancestorDat
     # print(f"Generate structurizr diagrams")
     # os.makedirs(img_outputDir, exist_ok=True)
     # createSecObjectivesPlantUML.generate(tmo, img_outputDir)
-    # dockerCommand = f"docker run -it --rm -v {os.path.realpath(img_outputDir)}:/data structurizr/cli export -workspace -format plantuml"
+    # dockerCommand = f"docker run -it --rm -v {posixpath_real(img_outputDir)}:/data structurizr/cli export -workspace -format plantuml"
     # # docker run -it --rm -v $PWD:/usr/local/structurizr structurizr/cli:2024.09.19
     # # latest structurizr/cli version could be: 2024.09.19
 
@@ -75,7 +82,7 @@ def generateSingleTM(rootTMYaml, base_outputDir, assetDir, template, ancestorDat
     threatTree_outputDir = outputDir+'/img/threatTree'
     os.makedirs(threatTree_outputDir, exist_ok=True)
     createThreatPlantUMLDiagrams.generate(tmo, threatTree_outputDir)
-    PUMLCommand = f"docker run --rm -v {os.path.realpath(threatTree_outputDir)}:/data plantuml/plantuml:sha-d2b2bcf \\*.puml -svg -v"
+    PUMLCommand = f"docker run --rm -v {posixpath_real(threatTree_outputDir)}:/data plantuml/plantuml:sha-d2b2bcf *.puml -svg -v"
     print(f" executing: {PUMLCommand}")
     os.system(PUMLCommand)
     
@@ -83,7 +90,7 @@ def generateSingleTM(rootTMYaml, base_outputDir, assetDir, template, ancestorDat
     secObjectives_outputDir = outputDir+'/img/secObjectives'
     os.makedirs(secObjectives_outputDir, exist_ok=True)
     createSecObjTreePUMLDiagrams.generate(tmo, secObjectives_outputDir)
-    PUMLCommand = f"docker run --rm -v {os.path.realpath(secObjectives_outputDir)}:/data plantuml/plantuml:sha-d2b2bcf \\*.puml -svg -v"
+    PUMLCommand = f"docker run --rm -v {posixpath_real(secObjectives_outputDir)}:/data plantuml/plantuml:sha-d2b2bcf *.puml -svg -v"
     print(f" executing: {PUMLCommand}")
     os.system(PUMLCommand)
 
@@ -98,7 +105,7 @@ def generateSingleTM(rootTMYaml, base_outputDir, assetDir, template, ancestorDat
     print(f"Generate Sec Obj hierarchy diagram")
     os.makedirs(img_outputDir, exist_ok=True)
     createSecObjectivesPlantUML.generate(tmo, img_outputDir)
-    PUMLCommand = f"docker run --rm -v {os.path.realpath(img_outputDir)}:/data plantuml/plantuml:sha-d2b2bcf \\*.puml -svg -v"
+    PUMLCommand = f"docker run --rm -v {posixpath_real(img_outputDir)}:/data plantuml/plantuml:sha-d2b2bcf *.puml -svg -v"
     print(f" executing: {PUMLCommand}")
     os.system(PUMLCommand)
 
@@ -111,8 +118,8 @@ def generateSingleTM(rootTMYaml, base_outputDir, assetDir, template, ancestorDat
     PDFscript = importlib_resources.files('r3threatmodeling').joinpath('scripts/pdfScript.js')
     shutil.copy(PDFscript, 'build/scripts/pdfScript.js')
 
-    PDF_command =f"docker run -it --init --cap-add=SYS_ADMIN  -v {os.path.realpath('build/scripts')}:/home/pptruser/scripts -v \
-{os.path.realpath(outputDir)}/:/home/pptruser/{outputDir} --rm ghcr.io/puppeteer/puppeteer:latest node scripts/pdfScript.js \
+    PDF_command =f"docker run -it --init --cap-add=SYS_ADMIN  -v {posixpath_real('build/scripts')}:/home/pptruser/scripts -v \
+{posixpath_real(outputDir)}/:/home/pptruser/{outputDir} --rm ghcr.io/puppeteer/puppeteer:latest node scripts/pdfScript.js \
 file:///home/pptruser/{outputDir}/{tmID}.html {outputDir}/{tmID}.pdf"
     print(f"Executing command: {PDF_command}")
     os.system(PDF_command)
