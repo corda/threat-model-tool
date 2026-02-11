@@ -1,93 +1,57 @@
-# Structured Threat Models *WORK IN PROGRESS*
+# Structured Threat Modeling Tools
+
+These tools enable a structured approach to threat modeling using YAML files, allowing for version control, automated report generation, and consistent security analysis across projects.
 
 ## Development Setup
 
-### Prerequisites
-- Python 3.10 or higher
-- pip
+### Option 1: Dev Container (Recommended)
 
-### Option 1: Full Development Setup (Recommended)
+The easiest way to get started is by using the provided Dev Container. It comes pre-configured with all necessary tools, including **uv**, **make**, and a Python environment.
 
-For development of both the threat modeling tools and the TreeNode library:
+**Prerequisites:** [Docker](https://www.docker.com/) and [VS Code](https://code.visualstudio.com/) with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers).
+
+1. Clone the repo and open it in VS Code.
+2. When prompted, click **"Reopen in Container"** (or use the Command Palette: `Dev Containers: Reopen in Container`).
+3. All tools (`uv`, `make`) and dependencies are pre-installed.
+
+#### Quick Commands (via Makefile)
+- `make init` - Setup editable installation in the current environment.
+- `make test` - Run all tests using `pytest`.
+- `make run-example` - Generate example threat model reports from `tests/exampleThreatModels`.
+- `make build` - Build the project distribution packages.
+- `make check-yaml` - Validate all YAML files in the default directory.
+- `make upgrade-yaml-inplace TM_FILE=<path>` - Perform in-place schema upgrade (recursive).
+- `make clean` - Cleanup generated artifacts (dist, build, public).
+
+#### Debugging
+- Run `make debug` in a terminal.
+- Use the **"Python: Attach to Makefile Debugger"** configuration in VS Code to step through the execution.
+
+The dev container includes:
+- Python 3.12 with `uv` for fast package management.
+- Everything needed for PlantUML rendering and PDF generation.
+- An HTTP server on port 8000 for previewing generated reports (`http://localhost:8000`).
+
+### Option 2: Local Development Setup (Manual)
+
+If you prefer to work outside a container, Python 3.10+ is required. We recommend using `uv` for dependency management.
 
 ```bash
 # Clone the repository
 git clone https://github.com/corda/threat-model-tool.git
 cd threat-model-tool
 
-# Install the extracted TreeNode package in development mode
-cd tree-node
-pip install -e .
-cd ..
-
-# Install the main r3threatmodeling package in development mode
-pip install -e .
+# Install packages in development mode
+uv pip install -e ./tree-node
+uv pip install -e .
 ```
 
-### Option 2: Main Package Only
+### Option 3: Production Installation
 
-If you only need the threat modeling functionality:
-
-```bash
-# From the repository root
-pip install -e .
-```
-
-### Option 3: Dev Container (Recommended for Contributors)
-
-The easiest way to get a fully working development environment using **uv** and **make**.
-
-**Prerequisites:** [Docker](https://www.docker.com/) and [VS Code](https://code.visualstudio.com/) with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers).
-
-1. Clone the repo and open it in VS Code.
-2. When prompted, click **"Reopen in Container"**.
-3. All tools (`uv`, `make`) and dependencies are pre-installed.
-
-#### Quick Commands (via Makefile)
-- `make init` - Setup editable installation.
-- `make test` - Run all tests.
-- `make build` - Build the library distribution packages.
-- `make upgrade-yaml TM_FILE=<path>` - Dry-run schema upgrade for a YAML file (recursive).
-- `make upgrade-yaml-inplace TM_FILE=<path>` - Perform in-place schema upgrade to version 2 (recursive).
-- `make run-example` - Generate example threat model reports.
-- `make clean` - Cleanup generated artifacts.
-
-#### Debugging
-- Run `make debug` in terminal.
-- Use the **"Python: Attach to Makefile Debugger"** configuration in VS Code.
-
-The dev container includes:
-- Python 3.12 with all project dependencies pre-installed
-- Docker-in-Docker for PlantUML rendering and PDF generation
-- An HTTP server on port 8000 for previewing generated reports (`http://localhost:8000`)
-
-No virtual environment or manual setup needed.
-
-### Option 4: Production Installation
-
-For production use or to install from a different location:
+For use in other projects, you can install directly from the repository:
 
 ```bash
-# Install from PyPI (when published)
-pip install r3threatmodeling
-
-# Or install from repository
 pip install git+https://github.com/corda/threat-model-tool.git
-```
-
-### Verification
-
-Test your installation:
-
-```bash
-# Test TreeNode import
-python -c "from tree_node import TreeNode; print('✓ TreeNode OK')"
-
-# Test r3threatmodeling import  
-python -c "from r3threatmodeling import TreeNode; print('✓ r3threatmodeling OK')"
-
-# Run tests
-python -m pytest tests/ -v
 ```
 
 ## Project Structure
@@ -105,96 +69,78 @@ This repository contains two main packages:
 - **Dependencies**: Uses the extracted `tree-node` package
 - **Features**: YAML-based threat models, report generation, analysis tools
 
-## Create a distribution 
+## Building and Distribution
 
-### Build both packages:
+The project uses `uv` for building. You can build both the `tree-node` library and the main `r3threatmodeling` package using:
 
 ```bash
-# Build TreeNode package
-cd tree-node
-python3 -m build
-cd ..
-
-# Build main package
-python3 -m pip install --upgrade build
-python3 -m build
-
-# Install both
-pip install tree-node/dist/tree_node-1.0.0-py3-none-any.whl
-pip install dist/r3threatmodeling-0.3.3-py3-none-any.whl
+make build
 ```
 
+This will generate `.whl` and `.tar.gz` files in the `dist/` directories of both packages.
 
-## Report generation command
+## Report Generation
 
-### Basic Usage
+### Main Tool: `fullBuildSingleTM`
 
-Execute from console using `fullBuildSingleTM`:
+The primary way to generate reports for a single threat model is using `fullBuildSingleTM`.
 
 ```bash 
 python -m r3threatmodeling.fullBuildSingleTM \
-  --rootTMYaml threatModels/MySystem/MySystem.yaml \
+  --rootTMYaml path/to/MySystem.yaml \
   --outputDir build/generated_reports \
   --generatePDF \
   --template TM_templateFull
 ```
 
-### Available Parameters for `fullBuildSingleTM`
+### Available Parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `--rootTMYaml` | file | required | Path to the root threat model YAML file |
 | `--outputDir` | path | `build` | Output directory for generated reports |
 | `--template` | string | `TM_template` | Template to use for report generation |
-| `--mainTitle` | string | auto-generated | **Optional.** Custom title for the report. If omitted, defaults to `{ThreatModelTitle} Threat Model` |
+| `--mainTitle` | string | auto-generated | **Optional.** Custom title for the report. |
 | `--generatePDF` | flag | false | Generate PDF output in addition to HTML/Markdown |
 | `--pdfHeaderNote` | string | `Private and confidential` | Note to include in PDF header |
 | `--versionsFilter` | string | - | Filter threats/assets by version (e.g., `5.0,5.1`) |
 | `--ancestorData` | flag | true | Include security objectives inherited from parent threat models |
-| `--no-ancestorData` | flag | - | Exclude ancestor data from report |
 | `--baseFileName` | string | `{ThreatModelID}` | Custom base filename for output files |
 | `--visibility` | choice | `full` | Report visibility level: `full` or `public` |
-| `--assetDir` | path | - | Directory containing additional assets to include in report |
-| `--browserSync` | flag | false | Enable browser sync for development |
-| `--no-headerNumbering` | flag | - | Disable automatic heading numbering |
 
-### Example with Custom Title
+### Batch Generation
+
+To generate reports for all threat models in a directory (as used in `make run-example`):
 
 ```bash
-python -m r3threatmodeling.fullBuildSingleTM \
-  --rootTMYaml threatModels/MySystem/MySystem.yaml \
-  --outputDir build/generated_reports \
-  --mainTitle "Security Architecture Assessment" \
-  --generatePDF \
-  --template TM_templateFull
+python -m r3threatmodeling.fullBuildDirectory \
+  --TMDirectory threatModels/ \
+  --outputDir build/
 ```
 
-## Refactor yaml schema from version 0.1 to 0,2
+## Schema Upgrades
 
+If you have threat models created with older versions of the schema, you can upgrade them using the normalization tool:
 
-```bash 
-pip install git+https://github.com/corda/threat-model-tool.git@v0.1.4
+```bash
+# Dry run to see changes
+make upgrade-yaml-dryrun TM_FILE=path/to/model.yaml
+
+# Apply changes in-place
+make upgrade-yaml-inplace TM_FILE=path/to/model.yaml
 ```
-```bash python -m r3threatmodeling.report_generator --rootTMYaml ../Corda5ThreatModels/threatModels/
-C5.yaml --TMID C5 C5.CPIPackaging --browserSync --outputDir ../Corda5ThreatModels/build/generated_reports --template TM_tem
-plateFull --formatYAML
-```
-pip install pip install git+https://github.com/corda/threat-model-tool.git
-
-
 
 ## Status
 [GANTT report](threatModels/generated_reports/gantt.md)
 ## Introduction
 
-This repository to hold the structured threat model yaml files and their transformations/reports.
+This repository provides tools to manage structured threat models as YAML files and transform them into human-readable reports (HTML, Markdown, PDF).
 
-Example Threat Model yaml section:
+### Example Threat Model YAML
 
 ```yaml
 threats:
   - ID: VNode1.HoldingID.1
-
     assets:
       - ID: HoldingID
     CVSS:
@@ -204,100 +150,52 @@ threats:
     description: |
       The entropy chosen ...
     public: false
-    fullyMitigated: true (TBC)
+    fullyMitigated: true
     countermeasures:
-      - ID:
+      - ID: Hashing
         description: |
           Use a full SHA-256 hash ...
         inPlace: no
-        vulnManagementLink:
-        public: false
-      - ID:
+      - ID: UniquenessCheck
         description: |
           Check uniqueness when onboarding a virtual Node
         inPlace: true 
         public: true
-
-
 ```
 
-### Generate an human readable report of the threat model yaml files:
+Source YAML files can be found in the [threatModels](threatModels/) folder of your project.
 
-Please refer to .vscode/launch.json to see report generations commands
+## YAML Schema Documentation
 
-```bash
- $ ./TMReportTool.py --yamlFiles threatModels/CPIpackaging.yaml \
-  --browserSync --watchFiles threatModels/CPIpackaging.yaml \
-  pyConThreatMod/template/TM_template.mako  \
-  pyConThreatMod/template/lib.mako threatModels/C5.yaml \
-  --outputDir threatModels/generated_reports
-```
+### Attackers (Roles)
 
-Source yaml files in [threatModels](threatModels/) folder.
-
-
-## YAML schema documentation (work in progress) 
-
-### Attackers
-
-Could have been also called `roles`. Other synonyms could be agents, participants etc... 
-The `attackers` section contains al the roles involved in the system. They may contain trusted and untrusted parties. A trusted party is identified as `inScope: true`, for example in:
+The `attackers` section defines the roles involved in the system. They can be trusted (`inScope: false`) or untrusted (`inScope: true`).
 
 ```yaml
 attackers:
-
-- ID: ANONYMOUS
-
-description: |
-
-Anonymous internet user
-
-inScope: true
+  - ID: ANONYMOUS
+    description: |
+      Anonymous internet user
+    inScope: true
 ```
 
-the anonymous internet used is likely an untrusted party that could attack the system and we want to defend against. `ANONYMOUS` could launch DoS attacks to the system.
-An opposite example:
-```yaml
-- ID: SYS_ADMIN
-- description: |
+### Threats
 
-Installed of the system and maintainer of the infrastructure (network, cloud ...
-inScope: false
-```
+A threat represents something that can go wrong. We separate the **attack** (mechanism) from the **impact** (business consequence).
 
-`SYS_ADMIN` is likely a trusted agent we are not performing threat analysis against during a software product development (may not be the case when threat modeling a specific instance of a running system/installation).
-
-Other software users like `ADMIN` may be trusted (`inScope: false`) or not (`inScope: true`) depending on the criticality of the system and the compliance requirements.  While most software system contain power user (root, admin etc) a critical system may want to be by design resilient to a malicious admin. This should  also be represented explicitly using `SecurityObjective` item.
-
-Attacker (roles) will be associated with threats and countermeasures; with threats when defining who can execute the specific attack; with an 'operational' countermeasure as the `operator` attribute. This last `operator` attribute will allow to extract checklist, and hardening guidelines to specific roles from the countermeasures in our threat model.
-
-
-### Threat
-Is in general something that can go wrong.
-
-`title`
-`attack`
-`impactDescription`
-
-In out yaml definition theres no general `description` for a threat, as we need to separate the `attack` (how to exploit) from the `impact`. The Impact should be described with a language closer to the business and not to the system. For example *"XSS on login page sending this payload ..."*, *"buffer overflow on input data reading on line 45 of  file.c ... "* or *"SQL injection on DAO object with non parametrised query..."* describes an attack on how to exploit the threat, while *"Confidential information disclosure"* is a description of an impact.
-
-TODO
+- `title`: Short name of the threat.
+- `attack`: How the threat can be exploited.
+- `impactDescription`: Business-level impact.
 
 ### Security Objectives
 
-Security objectives (s.o.) represent a high level, generic goal or security requirement. Should be applicable and relate to many threats. They are not mandatory and could be implicit, for example "full Confidentiality, Integrity and availability" is commonly an implicit security objective driving any Threat Modeling exercise.  Structuring a well defined set of `securityObjectives` may allow to strategically manage less obvious security features we want in our system; for example some `compliance` feature, or some advance, defence in depth like generic feature. 
-As security objective relates to a threat impact, as it is a s.o. negation. For example a Denial of Service Threat impacts the Availability s.o. 
-On the other hand is advisable not to go too granular in `securityObjectives` definition as their usefulness is in grouping common 
-
+Security objectives (S.O.) represent high-level security goals (e.g., "Full Confidentiality"). Threats are linked to these objectives to show what is at risk.
 
 ```yaml
-scope:
-
 securityObjectives:
-
-- ID: FULL_CIA
-
-title: Confidentiality Integrity and availability of a Corda Network
+  - ID: FULL_CIA
+    title: Confidentiality, Integrity, and Availability
+```
 
 description: |
 
@@ -322,110 +220,56 @@ In the previous yaml example you can see the `impacts` referencing security obje
 
 ### Assets
 
-An asset can represent any part of the system that is 'in' or 'out' of scope. Explicitly and clearly defining the assets allows to:
- - Avoid ambiguity when referring a part of the system, as any ``asste`` defined has a punctual description 
- - Using a consistent naming, as different teams and individual may call the same part of the system with different names
- - Clearly state what is in scope of analysis or not. As usual, what is not created/coded by the dev team, just used/imported, tends to be out of scope, at least of the specific TM part. Also a dataflow not crossing a ``trust boundary`` tend to be out of scope.
- - Define a generic asset and then one of its specification, at a lower level of abstraction, improving scalability (more below)
- - Group assets by type (credential, DataFlow, private keys, processes)
- - Assist analysis and track it progress and completeness, for example applying a taxonomies of threat to a specific asset (STRIDE to a dataflow crossing a trust boundary)
-
-**YAML example of an asset definition**
+An asset represents any part of the system in or out of scope. Explicitly defining assets helps avoid ambiguity and ensures consistent naming.
 
 ```yaml
     - ID: unique ID of the asset
       specifies: | 
-	      optional, reference to more general Asset ID (e.g. a specific REST endpoint specify general HTTP server)
+        optional reference to a more general Asset ID
       type: process, dataFlow, credential...
-      title: |
-        short title of the asset
-      description: |
-        description fo the asset
+      title: Short title
+      description: Detailed description
       inScope: true/false
 ```
 
-**More on asset hierarchy**
+#### Asset Hierarchy
+Using the `specifies` keyword, an asset can be a specific instance of a more general definition (e.g., a specific API endpoint specifying a general HTTP server). This allows for inheritance of threats and countermeasures.
 
-When Working on different level of abstraction an asset, for example and DataFlow, can be a specification of a more general definition.
-A HTTP server may have several API endpoints, in this case some threat like DoS and mitigation like TLS may apply to the general asset and be inherited by the specification. It is not unusual to identify a general threat/countermeasure during a specific asset analysis. 
-This abstraction of hierarchy and the use if the ``specifies`` keyword of asset would assist and streamline threat analysis.
-``specifies`` creates a linked reference in the report as follow: 
+### Versioning
+You can specify which versions an asset, threat, or countermeasure applies to:
 
-![](docs/img/Pasted%20image%2020230629133136.png)
-
-
-**Example analysis of an specified asset**
-
-![](docs/img/Pasted%20image%2020230629134214.png)
-
-**Versioning feature**
-
-It is possible to tell via YAML to what versions a specific asset, threat or countermeasure belongs, for example:
 ```yaml
     - ID: DF_BOOTSTRAP_TO_DB
       appliesToVersions: ">=5.0"
 ```
-This information will be used in two ways:
 
-1. The ``appliesToVersions`` information will be displayed in the report
-2. By adding the parameters ``"--versionsFilter" "5.0,5.1"`` to the report generator, the report will not show the assets, threat and countermeasures that do not match the list of versions provided as parameter. See [https://pypi.org/project/semantic-version/]() for more info on the versions format
+Use the `--versionsFilter` parameter (e.g., `"--versionsFilter" "5.0,5.1"`) to filter reports by version.
 
-### Operation hardening guide
+### Operational Hardening Guide
 
-The template system also creates a Security Hardening Guideline. It collects all the operational countermeasures `operational: true` grouping it by operator `operator: ADMIN`.
-An operational countermeasure is something an operator (same as threat model defined actors/attackers) needs to do to prevent a threat; it is not a enabled by default/coded feature (`operational: false`).
+The tool can generate a Security Hardening Guideline by collecting all operational countermeasures (`operational: true`) and grouping them by operator (e.g., `operator: ADMIN`).
 
-To make the *Operation hardening guide* readable the title and description of an operational countermeasure should precisely answer to the question "what the operator needs to do (and why, how ...)" instead of a desired state of things or other phrasing.
+To make the guide readable, the title and description of an operational countermeasure should precisely answer "what the operator needs to do".
 
-For example, this phrasing may be not optimal to generate the most useful Hardening guide
 ```yaml
- threats:
-   - ID: ACCIDENTAL_DATA_LOSS
-    title: Data from the main DataBase is lost ...
-    [...]
-    countermeasures:
-      - ID: DATA_BACKUP
-        title: Data backup allows to restore the production system...
-        description: |
-          To restore data after an incident Backups allows...
-        operational: false
-        operator: INFRASTRUCTURE_OPERATOR
-        inPlace: true
-        public: true
-
- ```
-
- We can rephrase it in as way `title:` and `description:` refers to a precise action: 
-
-
- ```yaml
- threats:
-   - ID: ACCIDENTAL_DATA_LOSS
-    title: Data from the main DataBase is lost ...
-    [...]
     countermeasures:
       - ID: DATA_BACKUP
         title: Perform data backup 
         description: |
-          The infrastructure operator performs regular backup in an separate network and those backup are secured with encryption....
-        operational: false
+          The infrastructure operator performs regular backups...
+        operational: true
         operator: INFRASTRUCTURE_OPERATOR
         inPlace: true
-        public: true
+```
 
- ```
+## Proposal Marker
 
- ## Mark threat model parts PROPOSAL
-
-It is possible to add a yaml attribute `proposal: PROPOSAL_NAME` to the main yaml threat model file, to specific `assets` and `threats` sub-elements.
-The HTML and MKDOCS version of the report will apply a special css class to the div elements involved tp highlight the proposal nature.
-It also will indicate in the summary the fact that a specific threat/vulnerability is in a proposal state.
-In free text sections like `scope.description` it is possible to add `<div class='proposal'>TEXT</div> as well.`
+You can mark parts of the threat model as proposals using `proposal: PROPOSAL_NAME`. The reports will highlight these sections with a special CSS class.
 
 
 
-## Threat Status
+## Threat Mitigation Status
 
-In the `threat:` section
+In the `threats:` section, `fullyMitigated: true` indicates that the current countermeasures (both technical and operational) are sufficient to address the threat.
 `fullyMitigated:` should ebe true when there are countermeasures in place enough to fully mitigate the threat. If there are operational mitigations that fully mitigates but are not accesible/implemented (not in place) then this value should be false.
 If there are accessible operational mitigations in plaace this value should be true, will still be '(not secure by default') in the reports, as some operation is needed to make it secure.
