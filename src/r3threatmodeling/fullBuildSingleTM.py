@@ -29,7 +29,8 @@ def posixpath_real(path):
   #return path.replace('\\', '/')
   import re
   path = os.path.realpath(path).replace('\\', '/')
-  path = re.sub(r'^([A-Za-z]):', r'//\1', path.lower())
+  # Only lowercase the drive letter for Windows compatibility in Docker/Git Bash
+  path = re.sub(r'^([A-Za-z]):', lambda m: f"//{m.group(1).lower()}", path)
   return path
 
 def generateSingleTM(rootTMYaml, base_outputDir, assetDir, template, ancestorData=True,
