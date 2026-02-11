@@ -130,8 +130,6 @@ make upgrade-yaml-dryrun TM_FILE=path/to/model.yaml
 make upgrade-yaml-inplace TM_FILE=path/to/model.yaml
 ```
 
-## Status
-[GANTT report](threatModels/generated_reports/gantt.md)
 ## Introduction
 
 This repository provides tools to manage structured threat models as YAML files and transform them into human-readable reports (HTML, Markdown, PDF).
@@ -189,34 +187,17 @@ A threat represents something that can go wrong. We separate the **attack** (mec
 
 ### Security Objectives
 
-Security objectives (S.O.) represent high-level security goals (e.g., "Full Confidentiality"). Threats are linked to these objectives to show what is at risk.
+Security objectives (S.O.) represent high-level security goals (e.g., "Full Confidentiality"). Threats are linked to these objectives via the `impactedSecObj` or `impacts` field.
 
 ```yaml
 securityObjectives:
   - ID: FULL_CIA
     title: Confidentiality, Integrity, and Availability
+    description: |
+      Ability to maintain fundamental confidentiality, integrity and availability.
 ```
 
-description: |
-
-Ability to maintain fundamental confidentiality
-
-integrity and availability of the Corda network or of a specific cluster
-
-group: General security Objectives
-```
-
-By associating the s.o. with the impact of the `threat` we can extract the design and implementation gap from the current design to the one that achieve the specific s.o. in other words we can easily identify the missing countermeasures associated with the general or specific s.o.
-
-```yaml
-threats:
-[...]
-- ID: XXXX
-impactDescription: Creates a potential attack vector for compromising the Cluster
-impacts:
-- REFID: FULL_CIA
-```
-In the previous yaml example you can see the `impacts` referencing security objectives. We can also see the `impact` (without s) that is a text description of the impact.
+By associating a threat with a security objective, the generated reports can highlight the security gaps where objectives are not fully met by countermeasures.
 
 ### Assets
 
@@ -270,6 +251,5 @@ You can mark parts of the threat model as proposals using `proposal: PROPOSAL_NA
 
 ## Threat Mitigation Status
 
-In the `threats:` section, `fullyMitigated: true` indicates that the current countermeasures (both technical and operational) are sufficient to address the threat.
-`fullyMitigated:` should ebe true when there are countermeasures in place enough to fully mitigate the threat. If there are operational mitigations that fully mitigates but are not accesible/implemented (not in place) then this value should be false.
-If there are accessible operational mitigations in plaace this value should be true, will still be '(not secure by default') in the reports, as some operation is needed to make it secure.
+In the `threats:` section, `fullyMitigated: true` indicates that the current countermeasures (both technical and operational) are sufficient to address the threat. If a threat is only mitigated by operational steps that are not yet in place, this should be `false`.
+s needed to make it secure.

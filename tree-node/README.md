@@ -98,6 +98,11 @@ root = node.getRoot()
   - `parent`: Optional parent TreeNode
 
 #### Properties
+- `id`: Full hierarchical ID (e.g., `root.child.leaf`)
+- `anchor`: Local ID of this node (the part after the last dot)
+- `uri`: URI representation of the node
+- `parent`: The parent `TreeNode` or `None`
+- `children`: List of child `TreeNode` objects
 - `id`: Full hierarchical ID of the node
 - `anchor`: The local ID part (excluding parent hierarchy)
 - `uri`: URI representation of the node

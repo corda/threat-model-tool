@@ -7,7 +7,9 @@ We'll do our best to provide any security updates whenever they may be reported 
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 0.1.x   | :white_check_mark: |
+| 0.3.x   | :white_check_mark: |
+| 0.2.x   | :warning:          |
+| 0.1.x   | :x:                |
 
 
 ## Reporting a Vulnerability
