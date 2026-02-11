@@ -47,11 +47,8 @@ class TreeNode:
             return None
         
         if self.parent is not None:
-            try:
-                return self.parent.id + "." + self._id
-            except:
-                # Fallback for cases where parent.id might not be available
-                return getattr(self.parent, '_id', 'unknown') + "." + self._id
+            parent_id = self.parent.id or getattr(self.parent, '_id', 'unknown')
+            return f"{parent_id}.{self._id}"
         else:
             return self._id
     

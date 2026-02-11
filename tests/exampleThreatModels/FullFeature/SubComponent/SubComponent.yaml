@@ -25,13 +25,13 @@ threats:
     impactDesc: Sub component becomes unavailable.
     impactedSecObj:
       - REFID: OBJ_CONFIDENTIALITY  # Referencing parent SecObj
+    CVSS:
+      base: TODO CVSS
+      vector: ''
+    fullyMitigated: false
     countermeasures:
       - title: Rate Limiting
         description: Limit requests to the sub component.
         inPlace: true
         public: true
-        REFID: SUB_CM
-    CVSS:
-      base: TODO CVSS
-      vector: ''
-    fullyMitigated: false
+        ID: SUB_CM

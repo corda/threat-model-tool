@@ -94,7 +94,8 @@ threats:
     fullyMitigated: false
     public: true
     countermeasures:
-      - title: Use Prepared Statements
+      - ID: CM_PREPARED_STATEMENTS
+        title: Use Prepared Statements
         description: Ensure all DB queries use parameterized inputs.
         inPlace: true
         operational: true
@@ -104,19 +105,17 @@ threats:
         ticketLink: https://jira.example.com/browse/DEV-456
         appliesToVersions: '>=5.1'
         public: true
-
-        REFID: CM_PREPARED_STATEMENTS
   - ID: THREAT_DATA_LEAK
     title: Potential Data Leak
     attack: Data might leak through logs.
     threatType: Information Disclosure
-    countermeasures:
-      - title: Log Masking
-        description: Mask PII in logs.
-        inPlace: false
-        public: true
-        REFID: CM_LOG_MASKING
     CVSS:
       base: TODO CVSS
       vector: ''
     fullyMitigated: false
+    countermeasures:
+      - ID: CM_LOG_MASKING
+        title: Log Masking
+        description: Mask PII in logs.
+        inPlace: false
+        public: true

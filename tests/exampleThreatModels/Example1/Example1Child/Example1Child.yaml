@@ -56,4 +56,4 @@ threats:
           Use transparent data encryption (TDE) or full-disk encryption to protect data files.
         inPlace: false
         public: true
-        REFID: DISK_ENCRYPTION
+        ID: DISK_ENCRYPTION

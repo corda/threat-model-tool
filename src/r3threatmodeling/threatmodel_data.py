@@ -607,7 +607,7 @@ class Asset(BaseThreatModelObject):
     @inScope.setter
     def inScope(self, value):
         if not isinstance(value, bool):
-            raise TypeError('Asset.inScope must be an boolean' + ", found value: " + value + " in " + self.id)
+            raise TypeError(f'Asset.inScope must be an boolean, found value: {value} in {self.id}')
         self._inScope = value
     
     def __init__(self, dict_data, parent):
@@ -751,7 +751,7 @@ class ThreatModel(BaseThreatModelObject):
             elif "threats"  == k:
                 if  tmDict["threats"] != None:
                     for threatDict in tmDict["threats"]:
-                        print("Parsing threat: "+ threatDict['ID'])
+                        print(f"Parsing threat: {threatDict.get('ID')}")
                         if self.filterOutForPublicOrVersions(public, threatDict):
                             pass
                         else:
