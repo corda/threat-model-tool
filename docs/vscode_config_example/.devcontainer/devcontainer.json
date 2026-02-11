@@ -1,0 +1,30 @@
+{
+  "name": "Threat Modeling Workspace",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "../.."
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": { "moby": false }
+  },
+  "mounts": [
+    "source=my-models-dind,target=/var/lib/docker,type=volume",
+    //  CRITICAL: Mount the sibling tooling folder into the container
+    "source=${localWorkspaceFolder}/../threat-model-tool,target=/workspaces/threat-model-tool,type=bind,consistency=cached"
+  ],
+
+  "forwardPorts": [8000],
+  "appPort": [8000],
+
+  // Install both the local TreeNode and the Tooling in editable dev mode
+  "postCreateCommand": "pip install -e /workspaces/threat-model-tool/tree-node && pip install --no-deps -e /workspaces/threat-model-tool && mkdir -p /workspaces/threat-modeling/build",
+  
+  // Start HTTP server in background (runs on every container start)
+  // "postStartCommand": "python -m http.server 8000 --directory build > /tmp/http-server.log 2>&1 &",
+
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python"]
+    }
+  }
+}

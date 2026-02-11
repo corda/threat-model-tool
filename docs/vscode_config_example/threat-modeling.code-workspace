@@ -1,0 +1,17 @@
+{
+  "folders": [
+    {
+      "name": "YAML Threat Models",
+      "path": "."
+    },
+    {
+      "name": "Threat Model Tool",
+      "path": "../threat-model-tool"
+    }
+  ],
+  "settings": {
+    "python.analysis.extraPaths": [
+      "/workspaces/threat-model-tool/src"
+    ]
+  }
+}
