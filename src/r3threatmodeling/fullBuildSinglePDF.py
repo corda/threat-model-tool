@@ -15,7 +15,11 @@ def generatePDF(rootTMYaml, outputDir, outputName = None, headerNote=""):
 
     print("Generating PDF from html version")
     rootTMYaml.seek(0)
-    tm = yaml.safe_load(rootTMYaml, encoding="utf-8-sig")
+    # Note: encoding parameter not supported in PyYAML >= 5.1; file object already handles encoding
+    # If encofing is needed, it should be handled when opening the file, not in yaml.safe_load
+    #  e.g. if parsing argument: type=argparse.FileType('r', encoding='utf-8-sig')
+
+    tm = yaml.safe_load(rootTMYaml)
     tmID = tm['ID']
 
     if not outputName:
@@ -33,7 +37,7 @@ def generatePDF(rootTMYaml, outputDir, outputName = None, headerNote=""):
 
     userDir ="/home/pptruser"
 
-    PDF_command =f"docker run --init -v {os.path.realpath('build/scripts')}:{userDir}/scripts -v \
+    PDF_command =f"docker run --init --platform linux/amd64 -v {os.path.realpath('build/scripts')}:{userDir}/scripts -v \
 {os.path.realpath(outputDir)}/:{userDir}/{outputDir} --rm ghcr.io/puppeteer/puppeteer:latest node scripts/pdfScript.js \
 file://{userDir}/{outputDir}/{tmID}.html {outputDir}/{outputName}.pdf '{headerNote}'"
     print(f"Executing command: {PDF_command}")
