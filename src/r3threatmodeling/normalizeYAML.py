@@ -47,6 +47,41 @@ def getPos(oDict, toFind, byKey=True):
 
 
 def updateThreatModelYaml(self):
+    if 'schemaVersion' not in self.originDict:
+        # insert after ID
+        try:
+            order = getPos(self.originDict, 'ID') + 1
+            self.originDict.insert(order, 'schemaVersion', 2)
+        except ValueError:
+            # ID not found? shouldn't happen for a TM, but just in case
+            self.originDict['schemaVersion'] = 2
+    elif self.originDict['schemaVersion'] < 2:
+        self.originDict['schemaVersion'] = 2
+
+    # Remove unused root attributes
+    unused_root = ['executiveSummaryText', 'jiraLink', 'status', 'diagram', 'references', 'lastReview']
+    for attr in unused_root:
+        if attr in self.originDict:
+            self.originDict.pop(attr)
+
+    if 'scope' in self.originDict and self.originDict['scope'] is not None:
+        if 'diagram' in self.originDict['scope']:
+            self.originDict['scope'].pop('diagram')
+        if 'references' in self.originDict['scope']:
+            self.originDict['scope'].pop('references')
+        
+        if 'securityObjectives' in self.originDict['scope'] and self.originDict['scope']['securityObjectives'] is not None:
+             for obj in self.originDict['scope']['securityObjectives']:
+                 if 'lowPriority' in obj:
+                     obj.pop('lowPriority')
+
+    # Rename ID to REFID in children
+    if 'children' in self.originDict and self.originDict['children'] is not None:
+        for i in range(len(self.originDict['children'])):
+            if isinstance(self.originDict['children'][i], dict) and 'ID' in self.originDict['children'][i] and 'REFID' not in self.originDict['children'][i]:
+                val = self.originDict['children'][i].pop('ID')
+                self.originDict['children'][i]['REFID'] = val
+
     for child in self.children:
         if isinstance(child, ThreatModel):
             child.updateYaml()
@@ -59,8 +94,20 @@ def updateThreatModelYaml(self):
 def updateThreatYaml(self):
     ##refactor YAML
 
-    # rename a yaml field
-    # WARNING: as this is a commented map we may loss the comments 
+    if 'description' in self.originDict:
+        # Move description to attack if attack is missing, otherwise just pop it
+        if 'attack' not in self.originDict or not self.originDict['attack']:
+             self.originDict['attack'] = self.originDict.pop('description')
+        else:
+             self.originDict.pop('description')
+
+    unused_threat = [
+        'WIP', 'toReview', 'Taxonomy group', 'generic', 'sensitivity',
+        'lowPriority', 'guide', 'required', 'createTicket', 'pentestTestable'
+    ]
+    for attr in unused_threat:
+        if attr in self.originDict:
+            self.originDict.pop(attr)
 
     if 'impacts' in self.originDict:
         order = getPos(self.originDict, 'impacts')
@@ -68,24 +115,17 @@ def updateThreatYaml(self):
         self.originDict.pop('impacts')
         self.originDict.insert(order, 'impactedSecObj', impactedSecObj)
 
-
-    if 'impact' in self.originDict:
-        impact = self.originDict['impact']
-        self.originDict.pop('impact')
-        order = 2
-        if 'impactedSecObj' in self.originDict:
-            order = getPos(self.originDict, 'impactedSecObj')
-        self.originDict.insert(order, 'impactDesc', impact)
-
-    if 'assets' in self.originDict:
-        # self.originDict['assets'].append({'REFID': 't4st'})
-        if self.originDict['assets'] != None:
-            for i in range(len(self.originDict['assets'])):
-            # for asset in self.originDict['assets']:
-                if not "REFID" in self.originDict['assets'][i]:
-                    self.originDict['assets'][i] = {'REFID':  self.originDict['assets'][i]['ID']}
-                # self.originDict['assets'].insert(1, 'REFID', asset['ID'])
-                # self.originDict['assets'].pop(asset['ID'])
+    # Migrate IDs to REFIDs in lists of references
+    for list_field in ['impactedSecObj', 'threatActors', 'countermeasures', 'assets']:
+        if list_field in self.originDict and self.originDict[list_field] is not None:
+            for i in range(len(self.originDict[list_field])):
+                item = self.originDict[list_field][i]
+                if isinstance(item, dict) and 'ID' in item and 'REFID' not in item:
+                    # If it has more than just ID, it might be a definition (like in countermeasures)
+                    # For now, let's only rename if it's clearly intended as a reference
+                    # Actually the parser handles REFID in definitions too now
+                    val = item.pop('ID')
+                    item['REFID'] = val
 
 
 
@@ -102,6 +142,11 @@ def updateCountermeasureYaml(self):
             if 'operator' not in self.originDict:
                 order = getPos(self.originDict, 'operational') + 1
                 self.originDict.insert(order, 'operator', self.operator)
+
+    unused_cm = ['guide', 'required', 'createTicket', 'sensitivity']
+    for attr in unused_cm:
+        if attr in self.originDict:
+            self.originDict.pop(attr)
 
 
 CommentedMap.insert = com_insert

@@ -1,0 +1,37 @@
+ID: SubComponent
+schemaVersion: 2
+title: Sub-Component Feature Test
+version: 1.0
+parent: FullFeature
+
+scope:
+  description: |
+    Scope for the sub-component.
+  assets:
+    - ID: SUB_ASSET
+      title: Sub Asset
+      type: service
+      inScope: true
+
+threats:
+  - ID: SUB_THREAT
+    title: Threat to Sub Component
+    attack: ''
+    threatType: DoS
+    attackers:
+      - REFID: ATT_EXTERNAL
+    assets:
+      - REFID: SUB_ASSET
+    impactDesc: Sub component becomes unavailable.
+    impactedSecObj:
+      - REFID: OBJ_CONFIDENTIALITY  # Referencing parent SecObj
+    countermeasures:
+      - title: Rate Limiting
+        description: Limit requests to the sub component.
+        inPlace: true
+        public: true
+        REFID: SUB_CM
+    CVSS:
+      base: TODO CVSS
+      vector: ''
+    fullyMitigated: false

@@ -47,6 +47,8 @@ The easiest way to get a fully working development environment using **uv** and 
 - `make init` - Setup editable installation.
 - `make test` - Run all tests.
 - `make build` - Build the library distribution packages.
+- `make upgrade-yaml TM_FILE=<path>` - Dry-run schema upgrade for a YAML file (recursive).
+- `make upgrade-yaml-inplace TM_FILE=<path>` - Perform in-place schema upgrade to version 2 (recursive).
 - `make run-example` - Generate example threat model reports.
 - `make clean` - Cleanup generated artifacts.
 

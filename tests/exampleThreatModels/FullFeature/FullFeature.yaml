@@ -1,0 +1,122 @@
+ID: FullFeature
+schemaVersion: 2
+title: Comprehensive Reference Threat Model
+version: '1.0'
+appliesToVersions: '>=5.1'
+children:
+  - REFID: SubComponent
+authors: |
+  Jane Doe
+  John Smith
+
+history: |
+  - 1.0  2024-01-01: Initial version
+  - 1.1  2024-02-11: Added compliance and versioning features
+
+ISO27001Ref:
+  ID: A.12.1.1
+  description: Documented operating procedures
+  group: Operations Security
+
+gantt:
+  startDate: '2024-01-01'
+  endDate: '2024-03-01'
+  status: In Progress
+
+scope:
+  description: |
+    Full scope description for the comprehensive model.
+  securityObjectives:
+    - ID: OBJ_CONFIDENTIALITY
+      title: Data Confidentiality
+      description: Protect data from unauthorized access.
+      group: General
+      treeImage: true
+      inScope: true
+    - ID: OBJ_INTEGRITY
+      title: Data Integrity
+      description: Protect data from unauthorized modification.
+      group: General
+      contributesTo:
+        - REFID: OBJ_CONFIDENTIALITY
+
+  assets:
+    - ID: ASSET_USER_DATA
+      title: User Data
+      description: Personal data stored in the database.
+      type: data
+      inScope: true
+      appliesToVersions: '>=5.0'
+      properties:
+        type: PII
+        storage: Encrypted DB
+        authentication: OAuth2
+        authorization: RBAC
+        TLS: '1.3'
+
+  attackers:
+    - ID: ATT_EXTERNAL
+      title: External Attacker
+      description: An attacker from the public internet.
+      inScope: true
+
+  assumptions:
+    - ID: ASSUMPTION_NETWORK
+      description: Cloud network provides basic isolation.
+
+threat analysis: |
+  ### Analysis Methodology
+  Standard STRIDE analysis was performed.
+
+threats:
+  - ID: THREAT_SQL_INJECTION
+    title: SQL Injection
+    attack: |
+      1. Find vulnerable input field.
+      2. Inject SQL payload.
+    threatType: Tampering
+    impactDesc: High
+    impactedSecObj:
+      - REFID: OBJ_INTEGRITY
+    attackers:
+      - REFID: ATT_EXTERNAL
+    assets:
+      - REFID: ASSET_USER_DATA
+    CVSS:
+      vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+      base: 9.8
+    appliesToVersions: '>=5.1'
+    compliance:
+      GDPR:
+        ref: Article 32
+      ISO27001:
+        ref: A.12.6.1
+    fullyMitigated: false
+    public: true
+    countermeasures:
+      - title: Use Prepared Statements
+        description: Ensure all DB queries use parameterized inputs.
+        inPlace: true
+        operational: true
+        operator: UNDEFINED
+        tested: true
+        testRef: test-001
+        ticketLink: https://jira.example.com/browse/DEV-456
+        appliesToVersions: '>=5.1'
+        public: true
+
+        REFID: CM_PREPARED_STATEMENTS
+  - ID: THREAT_DATA_LEAK
+    title: Potential Data Leak
+    attack: Data might leak through logs.
+    threatType: Information Disclosure
+    countermeasures:
+      - title: Log Masking
+        description: Mask PII in logs.
+        inPlace: false
+        public: true
+        REFID: CM_LOG_MASKING
+    CVSS:
+      base: TODO CVSS
+      vector: ''
+    fullyMitigated: false

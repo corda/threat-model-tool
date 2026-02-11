@@ -1,4 +1,5 @@
 ID: Example2
+schemaVersion: 2
 title: Abstract Example Threat Model 2
 version: 1.0
 authors: |
@@ -42,13 +43,13 @@ threats:
       vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
     fullyMitigated: false
     countermeasures:
-      - ID: ACCESS_CONTROL_ENFORCEMENT
-        title: Enforce Access Control
+      - title: Enforce Access Control
         description: |
           Require authentication and authorization checks on all data access paths.
         inPlace: false
         public: true
 
+        REFID: ACCESS_CONTROL_ENFORCEMENT
   - ID: DATA_TAMPERING
     title: Unauthorized Data Modification
     attack: |
@@ -64,9 +65,9 @@ threats:
       vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N
     fullyMitigated: false
     countermeasures:
-      - ID: INPUT_VALIDATION
-        title: Validate and Authorize Updates
+      - title: Validate and Authorize Updates
         description: |
           Validate inputs and enforce authorization on update operations.
         inPlace: true
         public: true
+        REFID: INPUT_VALIDATION

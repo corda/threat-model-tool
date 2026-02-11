@@ -1,7 +1,7 @@
 ID: Example1Child
+schemaVersion: 2
 title: Database Security (Child of Example 1)
 version: 1.0
-status: Draft
 authors: |
   Example Author
 parent: Example1
@@ -48,12 +48,12 @@ threats:
     attackers:
       - REFID: MALICIOUS_ADMIN
     CVSS:
-      vector: 'CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:N'
+      vector: CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:N
     fullyMitigated: false
     countermeasures:
-      - ID: DISK_ENCRYPTION
-        title: Encrypt Data at Rest
+      - title: Encrypt Data at Rest
         description: |
           Use transparent data encryption (TDE) or full-disk encryption to protect data files.
         inPlace: false
         public: true
+        REFID: DISK_ENCRYPTION

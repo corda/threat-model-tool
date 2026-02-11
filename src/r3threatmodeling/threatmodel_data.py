@@ -457,6 +457,9 @@ class Threat(BaseThreatModelObject):
         self.attackers = []
         self.threatModel = tm
 
+        if 'description' in dict_data:
+            raise BaseException(f"description is not allowed in Threat {self.id}, please use 'attack' instead (file: \"{tm.fileName}\")")
+
         dict_data.setdefault('CVSS', {'base':'TODO CVSS', 'vector':''})
         dict_data.setdefault('fullyMitigated', False)
 
@@ -519,6 +522,12 @@ class Threat(BaseThreatModelObject):
             
         if not hasattr(self, "threatType"):
             raise BaseException(f"threatType required for {self.id}")
+        
+        if not hasattr(self, "attack"):
+            raise BaseException(f"attack instructions required for {self.id} (even if empty use: 'attack: \"\"')")
+        
+        if not hasattr(self, "title"):
+            raise BaseException(f"title required for {self.id}")
 
         #set defaults for CVSS
         if self.CVSS['vector']:
@@ -676,6 +685,7 @@ class ThreatModel(BaseThreatModelObject):
 
         self.threats: list[Threat] = []
         self._id = tmDict["ID"]
+        self.schemaVersion = tmDict.get("schemaVersion", 1)
         if tmDict["scope"] is None:
             raise BaseException(f"Scope is empty in {self.id}, please check the threat model file")
         self.scope = Scope(tmDict["scope"], self)
@@ -751,7 +761,9 @@ class ThreatModel(BaseThreatModelObject):
             elif "children"  == k:
                 for childrenDict in tmDict['children']:
                     try:
-                        child_id = childrenDict['ID']
+                        child_id = childrenDict.get('REFID') or childrenDict.get('ID')
+                        if child_id is None:
+                             raise BaseException(f"REFID or ID required in children list in {self.id}")
                         # Handle both file objects and string paths
                         if isinstance(fileIn, str):
                             base_path = os.path.dirname(fileIn)

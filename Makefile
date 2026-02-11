@@ -24,6 +24,23 @@ run-example:
 		--MKDocsSiteDir public \
 		--MKDocsDir build/mkdocs
 
+check-yaml:
+	uv run python -m r3threatmodeling.checkYAMLFullDirectory \
+		--TMDirectory $(TM_DIR)
+
+check-single-yaml:
+	uv run python -m r3threatmodeling.checkSingleYAMLfile \
+		--tmYAMLfile $(TM_FILE)
+
+upgrade-yaml-dryrun:
+	uv run python -m r3threatmodeling.normalizeYAML \
+		--rootTMYaml $(TM_FILE) \
+		--dryRun
+
+upgrade-yaml-inplace:
+	uv run python -m r3threatmodeling.normalizeYAML \
+		--rootTMYaml $(TM_FILE)
+
 debug:
 	uv run python -m debugpy --listen 5678 --wait-for-client -m r3threatmodeling.fullBuildDirectory \
 		--TMDirectory $(TM_DIR) \
