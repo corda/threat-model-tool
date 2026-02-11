@@ -35,13 +35,24 @@ pip install -e .
 
 ### Option 3: Dev Container (Recommended for Contributors)
 
-The easiest way to get a fully working development environment — works on macOS, Linux, and Windows.
+The easiest way to get a fully working development environment using **uv** and **make**.
 
 **Prerequisites:** [Docker](https://www.docker.com/) and [VS Code](https://code.visualstudio.com/) with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers).
 
-1. Clone the repo and open it in VS Code
-2. When prompted, click **"Reopen in Container"** (or run `Dev Containers: Reopen in Container` from the Command Palette)
-3. Wait for the build to complete — all dependencies are installed automatically
+1. Clone the repo and open it in VS Code.
+2. When prompted, click **"Reopen in Container"**.
+3. All tools (`uv`, `make`) and dependencies are pre-installed.
+
+#### Quick Commands (via Makefile)
+- `make init` - Setup editable installation.
+- `make test` - Run all tests.
+- `make build` - Build the library distribution packages.
+- `make run-example` - Generate example threat model reports.
+- `make clean` - Cleanup generated artifacts.
+
+#### Debugging
+- Run `make debug` in terminal.
+- Use the **"Python: Attach to Makefile Debugger"** configuration in VS Code.
 
 The dev container includes:
 - Python 3.12 with all project dependencies pre-installed

@@ -4,7 +4,16 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-    
+        {
+            "name": "Python: Attach to Makefile Debugger",
+            "type": "python",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5678
+            },
+            "justMyCode": false
+        },
         {
             "name": "Python: Directory fullBuild MKDOCS (html and diagrams/images)",
             "type": "python",
@@ -16,16 +25,16 @@
                 // "--browserSync",
                 "--outputDir",
                 "build",
-                "--generatePDF"
+                "--generatePDF",
                 // "--tempsoeciallylate",
                 // "TM_templateFull",
-                // "--formatYAML",
+                "--formatYAML",
                 // "--assetDir",
-                // "../Corda5ThreatModels/threatModels/assets",
-                // "--templateSiteFolderSRC", "tests/siteTemplate/mkdocs",
-                // "--templateSiteFolderDST", "build/mkdocs/",
-                // "--MKDocsSiteDir", "public",
-                // "--MKDocsDir", "build/mkdocs"
+                // "../xxx/threatModels/assets",
+                "--templateSiteFolderSRC", "tests/siteTemplate/mkdocs",
+                "--templateSiteFolderDST", "build/mkdocs/",
+                "--MKDocsSiteDir", "public",
+                "--MKDocsDir", "build/mkdocs"
             ]
         },
 
