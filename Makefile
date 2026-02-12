@@ -5,8 +5,8 @@ OUTPUT_DIR ?= build
 .PHONY: init test build run-example debug clean
 
 init:
-	uv pip install -e ./tree-node
-	uv pip install -e .
+	sudo uv pip install --system -e ./tree-node
+	sudo uv pip install --system -e .
 
 test:
 	uv run pytest

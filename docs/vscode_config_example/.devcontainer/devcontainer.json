@@ -13,14 +13,8 @@
     "source=${localWorkspaceFolder}/../threat-model-tool,target=/workspaces/threat-model-tool,type=bind,consistency=cached"
   ],
 
-  "forwardPorts": [8000],
-  "appPort": [8000],
-
   // Install both the local TreeNode and the Tooling in editable dev mode
-  "postCreateCommand": "pip install -e /workspaces/threat-model-tool/tree-node && pip install --no-deps -e /workspaces/threat-model-tool && mkdir -p /workspaces/threat-modeling/build",
-  
-  // Start HTTP server in background (runs on every container start)
-  // "postStartCommand": "python -m http.server 8000 --directory build > /tmp/http-server.log 2>&1 &",
+  "postCreateCommand": "make init",
 
   "customizations": {
     "vscode": {

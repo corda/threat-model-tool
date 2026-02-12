@@ -31,11 +31,7 @@ cp ../threat-model-tool/docs/vscode_config_example/threat-modeling.code-workspac
 ## 4. Basic Usage
 
 ### View Reports
-Start the local server:
-```bash
-python -m http.server 8000 --directory build
-```
-Access via [http://localhost:8000](http://localhost:8000).
+Generated reports are located in the `build/` directory.
 
 ## Note on Tool Changes
 The tool is installed via `pip install -e`. Any changes you make in `threat-model-tool/src/` are applied immediately without needing a reinstall or container rebuild.

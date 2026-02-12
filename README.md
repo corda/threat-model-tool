@@ -30,7 +30,6 @@ The easiest way to get started is by using the provided Dev Container. It comes 
 The dev container includes:
 - Python 3.12 with `uv` for fast package management.
 - Everything needed for PlantUML rendering and PDF generation.
-- An HTTP server on port 8000 for previewing generated reports (`http://localhost:8000`).
 
 ### Option 2: Local Development Setup (Manual)
 

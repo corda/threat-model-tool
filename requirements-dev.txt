@@ -20,3 +20,6 @@ sphinx-rtd-theme
 build
 twine
 wheel
+debugpy
+twine
+wheel
