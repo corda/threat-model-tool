@@ -31,9 +31,40 @@ This Threat Model Tool is designed to:
 -   Assist in RFI (Request For Information) process to engineering teams.
 -   Export ticket lists for tracking tools (e.g., Jira).
 
-## 2. Detailed Knowledge & Context
+## 3. Validation Rules and Data Quality
 
-### Core Philosophy: "Are We Building It?"
+The tool parser enforces strict validation rules to ensure data consistency and report quality. As an AI agent, you must ensure generated YAML complies with these rules.
+
+### Metadata & Structure
+- **ID and Filename Consistency**: The root `ID` of the threat model MUST exactly match the YAML filename (excluding the `.yaml` extension).
+- **Mandatory Scope**: Every threat model requires a non-empty `scope` section.
+- **Security Objective Groups**: Each `securityObjective` must have a defined `group` attribute for categorization in reports.
+
+### Threat Definitions
+- **No generic `description`**: Threats must NOT use the `description` field. Use `attack` (mechanism) and `impactDesc` (consequence) instead.
+- **Mandatory Fields**: Every threat must define `threatType`, `attack`, and `title`.
+- **CVSS Scores**: If a `CVSS` vector is provided, it must be a valid CVSS3 string.
+
+### Countermeasures
+- **Mandatory Attributes**: Every countermeasure (unless it is a `REFID`) must include:
+    - `inPlace`: Boolean (true if implemented/verified).
+    - `public`: Boolean (true if shareable externally).
+    - `title`: Short descriptive name.
+    - `description`: Detailed explanation of the control.
+
+### Asset Requirements
+- **Asset Type**: Every asset must define a `type` (e.g., `system`, `data`, `dataflow`, `credential`, `endpoint`).
+- **In-Scope boolean**: Every asset must have an explicit boolean `inScope` property.
+
+### Consistency Logic (Warnings)
+While not always triggering hard errors, the following patterns are flagged as warnings:
+1. **Mitigation verification**: If a threat is `fullyMitigated: true`, it must have at least one countermeasure where `inPlace: true`.
+2. **Public Disclosure**: Risks marked as `public: true` should generally be `fullyMitigated`.
+3. **External Trust**: A public, fully mitigated threat must have at least one mitigation that is both `inPlace: true` and `public: true`.
+
+---
+
+## 4. Practical Instructions for AI Agents
 **CRITICAL:** Threat modeling scope must focus on **what the team is building**, not what they are using. This rigorous approach prevents scope explosion and makes the analysis actionable.
 
 **Scope Decision Framework:**

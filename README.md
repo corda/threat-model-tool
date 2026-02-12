@@ -167,9 +167,27 @@ Source YAML files can be found in the [threatModels](threatModels/) folder of yo
 
 The tool enforces several validation rules to ensure consistency across threat models:
 
-### ID and Filename Consistency
-The `ID` field in the root of the threat model YAML file must match the filename (excluding the `.yaml` extension). If they do not match, the tool will raise an exception.
+### Mandatory Rules
+- **ID and Filename Consistency**: The root `ID` field must match the filename (excluding the `.yaml` extension).
+- **Mandatory Scope**: Every threat model requires a non-empty `scope` section.
+- **Security Objective Groups**: Each `securityObjective` must have a defined `group` attribute.
+- **Threat Fields**: Threats must use `attack` and `impactDesc` instead of a generic `description`. They must also define `threatType` and `title`.
+- **Countermeasure Attributes**: Non-reference countermeasures require `inPlace` (bool), `public` (bool), `title`, and `description`.
+- **Asset Constraints**: Assets require a `type` and an explicit boolean `inScope` status.
 
+### Consistency Checks (Warnings)
+- **Mitigation Check**: `fullyMitigated` threats should have at least one `inPlace` countermeasure.
+- **Public Safety**: `public` threats should be `fullyMitigated`.
+- **Public Mitigation**: Public mitigated threats require at least one mitigation that is both `inPlace` and `public`.
+
+## AI Assistance for Threat Modeling
+
+This repository includes a specialized guide for LLM agents (like GitHub Copilot or ChatGPT) to help them understand the methodology and schema requirements of this project.
+
+The [AI Threat Modeling Guide](docs/ai/threat-modeling-guide.md) can be provided to an AI agent to:
+- Instruct it on the "Are we building it?" scope philosophy.
+- Define the strict validation rules for YAML generation.
+- Ensure consistent terminology and semantics across the threat model.
 
 ## YAML Schema Documentation
 
