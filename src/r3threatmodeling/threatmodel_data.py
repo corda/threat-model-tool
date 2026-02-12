@@ -680,6 +680,11 @@ class ThreatModel(BaseThreatModelObject):
         
         self.originDict = tmDict
 
+        # Validate that the ID matches the filename
+        expected_id = os.path.splitext(os.path.basename(self.fileName))[0]
+        if tmDict.get("ID") != expected_id:
+            raise BaseException(f"Threat model ID '{tmDict.get('ID')}' does not match filename '{expected_id}' in {self.fileName}")
+
         # Initialize TreeNode with parent-child relationship
         super().__init__(tmDict, parent)
 

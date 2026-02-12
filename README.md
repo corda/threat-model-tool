@@ -163,6 +163,14 @@ threats:
 
 Source YAML files can be found in the [threatModels](threatModels/) folder of your project.
 
+## Validation Rules
+
+The tool enforces several validation rules to ensure consistency across threat models:
+
+### ID and Filename Consistency
+The `ID` field in the root of the threat model YAML file must match the filename (excluding the `.yaml` extension). If they do not match, the tool will raise an exception.
+
+
 ## YAML Schema Documentation
 
 ### Attackers (Roles)
@@ -252,4 +260,4 @@ You can mark parts of the threat model as proposals using `proposal: PROPOSAL_NA
 ## Threat Mitigation Status
 
 In the `threats:` section, `fullyMitigated: true` indicates that the current countermeasures (both technical and operational) are sufficient to address the threat. If a threat is only mitigated by operational steps that are not yet in place, this should be `false`.
-s needed to make it secure.
+ 

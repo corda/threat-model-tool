@@ -1741,7 +1741,7 @@ Context: threat modeling and its terminilogy
         ```
         File: /Users/auser/workspace/personal/threat-models/threatModels/LLM_adoption/LLM_adoption.yaml
         ```yaml
-        ID: LLM_ADOPTION_THREAT_MODEL
+        ID: LLM_adoption
         title: LLM Adoption
         version: "1.0"
         authors: |
