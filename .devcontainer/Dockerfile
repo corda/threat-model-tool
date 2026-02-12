@@ -10,15 +10,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install uv
 RUN pip install uv
 
-# Layer 2: Python dependencies (changes when requirements.txt changes)
-# Copy only requirement files first for better layer caching
+# Layer 2: Python dependencies
 COPY requirements-dev.txt /tmp/
 COPY src/r3threatmodeling/requirements.txt /tmp/app-requirements.txt
 
-# Install deps WITHOUT the git-based tree-node (it's installed as editable from workspace)
+# Install dependencies using uv for speed
+# We filter out the local git dependency tree-node because it will be installed as editable in postCreateCommand
 RUN sed '/^tree-node @/d' /tmp/app-requirements.txt > /tmp/app-requirements-filtered.txt \
-    && pip install --no-cache-dir -r /tmp/app-requirements-filtered.txt \
-    && pip install --no-cache-dir \
+    && uv pip install --system --no-cache -r /tmp/app-requirements-filtered.txt \
+    && uv pip install --system --no-cache \
         pytest>=7.0.0 pytest-cov black flake8 mypy pre-commit \
         sphinx sphinx-rtd-theme \
         build twine wheel debugpy \
