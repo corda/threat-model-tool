@@ -20,6 +20,7 @@ From your local terminal, copy the template files into the modeling folder:
 cd threat-modeling
 cp -r ../threat-model-tool/docs/vscode_config_example/.devcontainer .
 cp ../threat-model-tool/docs/vscode_config_example/threat-modeling.code-workspace .
+cp ../threat-model-tool/docs/vscode_config_example/Makefile .
 ```
 
 ## 3. Open Workspace
