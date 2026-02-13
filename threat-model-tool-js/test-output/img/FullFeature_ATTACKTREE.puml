@@ -17,7 +17,7 @@ digraph G {
     label=
     <<table border="0" cellborder="0" cellspacing="0" width="530">
      <tr><td align="left"><b>SQL Injection <i>-Vulnerable</i></b>
-     </td>  <td BGCOLOR="#df3d03">High</td></tr>
+     </td>  <td BGCOLOR="#cc0500">9.8 (Critical)</td></tr>
      <tr><td align="center" COLSPAN="2">1. Find vulnerable input field. 2. Inject SQL payload. </td></tr>
    </table>>
 ];
@@ -41,7 +41,7 @@ digraph G {
     label=
     <<table border="0" cellborder="0" cellspacing="0" width="530">
      <tr><td align="left"><b>Potential Data Leak <i>-Vulnerable</i></b>
-     </td>  <td BGCOLOR="#f9a009">Medium</td></tr>
+     </td>  <td BGCOLOR="gray">TODO CVSS</td></tr>
      <tr><td align="center" COLSPAN="2">Data might leak through logs.</td></tr>
    </table>>
 ];
@@ -72,7 +72,7 @@ digraph G {
     label=
     <<table border="0" cellborder="0" cellspacing="0" width="530">
      <tr><td align="left"><b>Threat to Sub Component <i>-Vulnerable</i></b>
-     </td>  <td BGCOLOR="#f9a009">Medium</td></tr>
+     </td>  <td BGCOLOR="gray">TODO CVSS</td></tr>
      <tr><td align="center" COLSPAN="2"></td></tr>
    </table>>
 ];

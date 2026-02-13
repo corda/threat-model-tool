@@ -32,11 +32,34 @@ export default class BaseThreatModelObject extends TreeNode {
         return this._id;
     }
 
-    get anchor(): string {
-        if (this.parent && (this.parent as any)._id && this.parent.constructor.name === 'ThreatModel') {
-            return `${(this.parent as any)._id}.${this._id}`;
+    /**
+     * Get the full hierarchical ID: parent.id + "." + self._id
+     * Matches Python tree_node's id property.
+     */
+    getHierarchicalId(): string {
+        if (this.parent && (this.parent as any).getHierarchicalId) {
+            return `${(this.parent as any).getHierarchicalId()}.${this._id}`;
         }
         return this._id;
+    }
+
+    /**
+     * Get the anchor part of the ID (excluding root hierarchy).
+     * Matches Python tree_node: strips everything up to and including the first dot
+     * from the hierarchical ID.
+     * 
+     * Examples:
+     *   FullFeature.THREAT_SQL_INJECTION → THREAT_SQL_INJECTION
+     *   FullFeature.SubComponent.SUB_THREAT → SubComponent.SUB_THREAT
+     *   FullFeature (root, no dot) → FullFeature
+     */
+    get anchor(): string {
+        const fullId = this.getHierarchicalId();
+        const dotIndex = fullId.indexOf('.');
+        if (dotIndex >= 0) {
+            return fullId.substring(dotIndex + 1);
+        }
+        return fullId;
     }
 
     get description(): string {

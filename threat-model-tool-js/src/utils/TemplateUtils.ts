@@ -1,5 +1,8 @@
 import { HeadingNumberer } from './HeadingNumberer.js';
 
+/** Page break div matching Python's PAGEBREAK constant (no surrounding newlines) */
+export const PAGEBREAK = '<div class="pagebreak"></div>';
+
 /**
  * Safe property access with default value
  */
@@ -13,21 +16,28 @@ export function valueOr(obj: any, attr: string, alt: any): any {
 }
 
 /**
- * Create object anchor hash for HTML links
- * Format: parent._id.object._id or just object._id
+ * Create object anchor hash for HTML links.
+ * Matches Python: return tmObject.anchor
  */
 export function createObjectAnchorHash(tmObject: any): string {
-    if (tmObject.parent && tmObject.parent._id && tmObject.parent.constructor.name === 'ThreatModel') {
-        return `${tmObject.parent._id}.${tmObject._id}`;
-    }
-    return tmObject._id;
+    return tmObject.anchor;
 }
 
 /**
- * Create title anchor hash (just lowercase and replace spaces)
+ * Create title anchor hash.
+ * Matches Python: title.lower().rstrip().replace(' ','-').replace(':','')
+ *                 .replace(',','').replace('`','').replace("'","")
+ *                 then TAG_RE.sub('', hash)
  */
 export function createTitleAnchorHash(title: string): string {
-    return title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+    let hash = title.toLowerCase().trimEnd()
+        .replace(/ /g, '-')
+        .replace(/:/g, '')
+        .replace(/,/g, '')
+        .replace(/`/g, '')
+        .replace(/'/g, '');
+    hash = hash.replace(/<[^>]+>/g, '');
+    return hash;
 }
 
 /**
@@ -59,42 +69,67 @@ export function makeMarkdownLinkedHeader(
         anchor = createTitleAnchorHash(title);
     }
 
-    // Build header
+    // Build header — matches Python format exactly:
+    //   code = "\n\n" + header + (" " + skip_html if skip_html else "") + " <a id='...'></a>\n"
+    //   return "\n" + code + "\n"
     const hashes = '#'.repeat(level);
-    const skipTOCDiv = skipTOC ? "  <div class='skipTOC'></div>" : "";
-    
-    return `${hashes} ${number}${title}${skipTOCDiv} <a id='${anchor}'></a>\n`;
+    const skipTOCHtml = skipTOC ? "  <div class='skipTOC'></div>" : "";
+    const header = `${hashes} ${number}${title.trimEnd()}`;
+    const code = `\n\n${header}${skipTOCHtml ? ' ' + skipTOCHtml : ''} <a id='${anchor}'></a>\n`;
+    return `\n${code}\n`;
 }
 
 /**
- * Render nested markdown list from data structure
+ * Render nested markdown list from data structure.
+ * Matches Python's renderNestedMarkdownList() which uses a stream-based approach
+ * and handles both dicts (objects) and lists (arrays).
  */
 export function renderNestedMarkdownList(
-    data: any[],
+    data: any,
     level: number = 0,
     firstIndent: string | null = null
 ): string {
-    const lines: string[] = [];
-    const indent = firstIndent !== null ? firstIndent : "  ".repeat(level);
+    const parts: string[] = [];
+    _renderNested(data, level, parts, firstIndent);
+    return parts.join('');
+}
 
-    for (const item of data) {
-        if (typeof item === 'string') {
-            lines.push(`${indent}- ${item}`);
-        } else if (Array.isArray(item)) {
-            lines.push(renderNestedMarkdownList(item, level + 1, indent + "  "));
-        } else if (typeof item === 'object') {
-            for (const [key, value] of Object.entries(item)) {
-                lines.push(`${indent}- **${key}:**`);
-                if (Array.isArray(value)) {
-                    lines.push(renderNestedMarkdownList(value, level + 1, indent + "  "));
-                } else {
-                    lines.push(`${indent}  ${value}`);
-                }
+function _renderNested(
+    data: any,
+    level: number,
+    parts: string[],
+    firstIndent: string | null,
+): void {
+    const indent = "  ".repeat(Math.max(0, level));
+
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+        // Dict/object handler
+        for (const [key, value] of Object.entries(data)) {
+            if (parts.length === 0 && firstIndent !== null) {
+                parts.push(`${firstIndent}${key}: `);
+            } else {
+                parts.push(`${indent}- **${key}**: `);
+            }
+            if (typeof value === 'object' && value !== null) {
+                parts.push('\n');
+                _renderNested(value, level + 1, parts, firstIndent);
+            } else {
+                parts.push(`${value}\n`);
+            }
+        }
+    } else if (Array.isArray(data)) {
+        // List/array handler
+        for (const item of data) {
+            if (typeof item === 'object' && !Array.isArray(item)) {
+                _renderNested(item, level + 1, parts, firstIndent);
+            } else if (Array.isArray(item)) {
+                parts.push(`${indent}- \n`);
+                _renderNested(item, level + 1, parts, firstIndent);
+            } else {
+                parts.push(`${indent}- ${item}\n`);
             }
         }
     }
-
-    return lines.join('\n');
 }
 
 /**
@@ -133,7 +168,3 @@ export function cleanMarkdownText(text: string): string {
     return text;
 }
 
-/**
- * Page break marker
- */
-export const PAGEBREAK = '<div class="pagebreak"></div>';

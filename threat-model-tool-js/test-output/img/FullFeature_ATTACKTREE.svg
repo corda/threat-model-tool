@@ -27,8 +27,8 @@
 <text text-anchor="start" x="483.18" y="-93.4" font-family="Arial" font-weight="bold" font-size="12.00">SQL Injection </text>
 <text text-anchor="start" x="577.18" y="-93.4" font-family="Arial" font-weight="bold" font-style="italic" font-size="12.00">&#45;Vulnerable</text>
 <text text-anchor="start" x="653.18" y="-93.4" font-family="Arial" font-size="12.00"> &#160;&#160;&#160;&#160;</text>
-<polygon fill="#df3d03" stroke="transparent" points="719.18,-87 719.18,-104 796.18,-104 796.18,-87 719.18,-87"/>
-<text text-anchor="start" x="743.68" y="-92.4" font-family="Arial" font-size="12.00">High</text>
+<polygon fill="#cc0500" stroke="transparent" points="696.18,-87 696.18,-104 796.18,-104 796.18,-87 696.18,-87"/>
+<text text-anchor="start" x="709.68" y="-92.4" font-family="Arial" font-size="12.00">9.8 (Critical)</text>
 <text text-anchor="start" x="483.18" y="-75.4" font-family="Arial" font-size="12.00">1. Find vulnerable input field. 2. Inject SQL payload. </text>
 </a>
 </g>
@@ -63,9 +63,9 @@
 <text text-anchor="start" x="483.18" y="-32.4" font-family="Arial" font-weight="bold" font-size="12.00">Potential Data Leak </text>
 <text text-anchor="start" x="623.18" y="-32.4" font-family="Arial" font-weight="bold" font-style="italic" font-size="12.00">&#45;Vulnerable</text>
 <text text-anchor="start" x="699.18" y="-32.4" font-family="Arial" font-size="12.00"> &#160;&#160;&#160;&#160;</text>
-<polygon fill="#f9a009" stroke="transparent" points="720.18,-26 720.18,-43 773.18,-43 773.18,-26 720.18,-26"/>
-<text text-anchor="start" x="722.18" y="-31.4" font-family="Arial" font-size="12.00">Medium</text>
-<text text-anchor="start" x="538.18" y="-14.4" font-family="Arial" font-size="12.00">Data might leak through logs.</text>
+<polygon fill="gray" stroke="transparent" points="720.18,-26 720.18,-43 796.18,-43 796.18,-26 720.18,-26"/>
+<text text-anchor="start" x="722.18" y="-31.4" font-family="Arial" font-size="12.00">TODO CVSS</text>
+<text text-anchor="start" x="549.68" y="-14.4" font-family="Arial" font-size="12.00">Data might leak through logs.</text>
 </a>
 </g>
 </g>
@@ -107,8 +107,8 @@
 <text text-anchor="start" x="483.18" y="-155.4" font-family="Arial" font-weight="bold" font-size="12.00">Threat to Sub Component </text>
 <text text-anchor="start" x="664.18" y="-155.4" font-family="Arial" font-weight="bold" font-style="italic" font-size="12.00">&#45;Vulnerable</text>
 <text text-anchor="start" x="740.18" y="-155.4" font-family="Arial" font-size="12.00"> &#160;&#160;&#160;&#160;</text>
-<polygon fill="#f9a009" stroke="transparent" points="761.18,-149 761.18,-166 814.18,-166 814.18,-149 761.18,-149"/>
-<text text-anchor="start" x="763.18" y="-154.4" font-family="Arial" font-size="12.00">Medium</text>
+<polygon fill="gray" stroke="transparent" points="761.18,-149 761.18,-166 837.18,-166 837.18,-149 761.18,-149"/>
+<text text-anchor="start" x="763.18" y="-154.4" font-family="Arial" font-size="12.00">TODO CVSS</text>
 </a>
 </g>
 </g>

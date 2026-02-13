@@ -32,6 +32,7 @@ export default class Threat extends BaseThreatModelObject {
         dictData.CVSS = dictData.CVSS || dictData.cvss || { base: 'TODO CVSS', vector: '' };
         this.cvssObject = new TMCVSS(dictData.CVSS);
         dictData.fullyMitigated = dictData.fullyMitigated !== undefined ? dictData.fullyMitigated : false;
+        this.fullyMitigated = dictData.fullyMitigated;
 
         for (const [key, value] of Object.entries(dictData)) {
             if (key === 'ticketLink') {
@@ -91,9 +92,7 @@ export default class Threat extends BaseThreatModelObject {
             throw new Error(`title required for ${this.id}`);
         }
 
-        if (dictData.CVSS && dictData.CVSS.vector) {
-            this.cvssObject = new TMCVSS(dictData.CVSS.vector);
-        }
+        // CVSS already constructed above from the full dict
     }
 
     get description(): string {
@@ -133,6 +132,31 @@ export default class Threat extends BaseThreatModelObject {
 
     getSmartScoreColor(): string {
         return this.cvssObject ? this.cvssObject.getSmartScoreColor() : 'gray';
+    }
+
+    /** Mitigation status text matching Python output */
+    statusDefaultText(): string {
+        if (this.fullyMitigated) {
+            return this.secureByDefault() ? 'Mitigated' : 'Not Secure by Default <br/>(Operational mitigation)';
+        }
+        return 'Vulnerable';
+    }
+
+    /** Check if all in-place countermeasures make this secure by default */
+    secureByDefault(): boolean {
+        if (!this.fullyMitigated) return false;
+        for (const cm of this.countermeasures) {
+            const resolved = (cm as any).resolve ? (cm as any).resolve() : cm;
+            if (resolved && !resolved.inPlace) return false;
+        }
+        return true;
+    }
+
+    private static readonly mitigatedColors = { border: '#82B366', fill: '#D5E8D4' };
+    private static readonly notFullyMitigatedColors = { border: '#B85450', fill: '#F8CECC' };
+
+    statusColors(): { border: string; fill: string } {
+        return this.fullyMitigated ? Threat.mitigatedColors : Threat.notFullyMitigatedColors;
     }
 
     threatGeneratedTitle(): string {

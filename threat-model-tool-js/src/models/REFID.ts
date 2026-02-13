@@ -13,8 +13,9 @@ export default class REFID extends BaseThreatModelObject {
     }
 
     resolve(): BaseThreatModelObject | null {
-        const root = this.getThreatModel();
-        if (!root) return null;
+        // Resolve from the root ThreatModel (not nearest TM) so cross-TM references work
+        const root = this.getRoot() as any;
+        if (!root || !root.getDescendantById) return null;
         return root.getDescendantById(this.REFIDValue);
     }
 }

@@ -56,7 +56,10 @@ export default class ThreatModel extends BaseThreatModelObject {
         this.scope = new Scope(tmDict.scope, this);
 
         // Parse analysis
-        this.analysis = tmDict.analysis || tmDict['threat analysis'] || "";
+        // Note: Python uses setattr with YAML keys as-is, so 'threat analysis' (with space)
+        // becomes a different attribute than 'analysis'. hasattr(tmo, "analysis") is False
+        // for YAML key "threat analysis". We match that behavior here.
+        this.analysis = tmDict.analysis || "";
 
         // Parse scope contents
         this.parseScope(tmDict.scope, publicFlag);
@@ -134,6 +137,13 @@ export default class ThreatModel extends BaseThreatModelObject {
 
     assetDir(): string {
         return path.join(path.dirname(this.fileName), 'assets');
+    }
+
+    /**
+     * Check if this is the root threat model (no parent)
+     */
+    isRoot(): boolean {
+        return this.parent === null;
     }
 
     /**

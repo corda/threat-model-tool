@@ -1639,6 +1639,163 @@ console.log('Done!');
 
 ---
 
+## Part 7: Output Alignment Gap Analysis (Feb 2026)
+
+### Comparison Method
+
+Generated markdown output from Python (`make run-example`) and JS (`npx tsx src/scripts/build-threat-model.ts`) for `FullFeature.yaml` (519 vs 272 lines). The following differences were identified.
+
+### 7.1 Heading Numbering & Hierarchy
+
+| Aspect | Python | JS (current) | Action |
+|--------|--------|---------------|--------|
+| Title heading | No number, `<a id='FullFeature'>` | Numbered `# 1`, anchor from slug | Fix: title should skip numbering, anchor = `_id` |
+| TOC numbering | Starts at 1 (title excluded via `skipTOC`) | Starts at 2 (title counted) | Fix: match Python numbering start |
+| Numbering disabled initially | `disable_heading_numbering()` while root title emitted, re-enable after | Always enabled | Fix: port the disable/enable pattern from Python `render_tm_report_part` |
+| Child TM hierarchy | Child wraps under parent heading (e.g. `# 5 ... Threat Model Section > ## 5.1 scope`) | Child sections flattened to top-level `#` headings | Fix: in `render_full_report`, call descendants with `header_level` offset |
+| `header_level` offset for summaries | Python: `header_level = header_level - 1` when `toc=True` so TOC numbering starts at 1 | JS: No adjustment | Fix: port the offset logic |
+
+**Python reference**: `render_tm_report_part()` in `lib_py.py` lines 361-380
+
+### 7.2 CVSS Score Display
+
+| Aspect | Python | JS (current) | Action |
+|--------|--------|---------------|--------|
+| Score format | `"9.8 (Critical)"` — includes numeric score + severity | `"High"` — severity word only | Fix `TMCVSS.getSmartScoreDesc()` |
+| Score type label | `"Base score:"` / `"Temporal score:"` via `getSmartScoreType()` | Not implemented | Add `getSmartScoreType()` |
+| `TODO CVSS` | When no vector, shows gray `"TODO CVSS"` | Computes `Medium` from placeholder logic | Fix: detect empty/TODO vector |
+| `clean_vector()` | Strips prefix from CVSS vector for display | Not implemented | Add `clean_vector()` |
+| Actual CVSS calculation | Uses `cvss` npm package for real scoring | Placeholder heuristic in `calculateScore()` | Fix: use `cvss` package (already in dependencies) |
+
+**Python reference**: `threatmodel_data.py` lines 192-252 (`TMCVSS` class)
+
+### 7.3 Anchor IDs
+
+| Aspect | Python | JS (current) | Action |
+|--------|--------|---------------|--------|
+| Threat anchors | Bare `_id`: `#THREAT_SQL_INJECTION` | Prefixed: `#FullFeature.THREAT_SQL_INJECTION` | Depends on Python `createObjectAnchorHash` using `tmObject.anchor` |
+| SecObj anchors | Bare `_id`: `#OBJ_CONFIDENTIALITY` | Prefixed: `#FullFeature.OBJ_CONFIDENTIALITY` | Same fix — check Python `anchor` property |
+| Legacy `<a id="">` | Python emits `<a id="{threat._id}">` before the heading | JS does not emit these | Add legacy anchor tags |
+
+**Python reference**: `render_threat()` in `lib_py.py` line 186: `<a id=\"{threat._id}\"></a>`; `template_utils.py` `createObjectAnchorHash()`
+
+### 7.4 Threat Detail Metadata (render_threat)
+
+These fields are present in the Python `render_threat()` but missing from JS `renderThreats()`:
+
+- **Per-threat PlantUML diagram**: `<img src="img/threatTree/{threat._id}.svg"/>` (centered)
+- **`<dl>` definition list format**: Python wraps threat details in `<dl markdown="block">`, JS uses flat paragraphs
+- **Applies To Versions**: `<dt>Applies To Versions</dt><dd>{threat.appliesToVersions}</dd>`
+- **Assets involved**: `<dt>Assets (IDs) involved</dt>` with `<code><a href>` links
+- **Threat actors**: `<dt>Threat actors:</dt>` with links
+- **Threat Status**: `<dt>Threat Status:</dt><dd>Vulnerable|Mitigated</dd>`
+- **Threat condition**: `<dt>Threat condition:</dt><dd>...</dd>` (conditional threats)
+- **Impact with SecObj links**: Uses `threat.impact_desc` which includes linked security objectives
+- **Attack type**: `<dt>Attack type</dt><dd>...</dd>`
+- **CVSS block**: Full `<dt>CVSS</dt><dd>` with score type, score desc, and vector string
+- **Compliance**: `renderNestedMarkdownList(threat.compliance)`
+- **Ticket link**: `<a href="...">` link
+
+**Python reference**: `render_threat()` in `lib_py.py` lines 178-260
+
+### 7.5 Countermeasure Subsections
+
+| Aspect | Python | JS (current) | Action |
+|--------|--------|---------------|--------|
+| Structure | Separate `### Counter-measures for X` subsection with `<dl>` blocks | Inline bullet list under threat | Rewrite to match Python |
+| Countermeasure detail | `<code>CM_ID</code> Title`, description, inPlace mark, operational mark, operator | Just title + status + description | Add all fields |
+| Applies To Versions | Shown per countermeasure | Not shown | Add |
+| Mitigation type | Shown if present | Not shown | Add |
+| Fully mitigated note | "not chosen as threat is mitigated by other countermeasures" | Not shown | Add |
+
+**Python reference**: `render_countermeasure()` in `lib_py.py` lines 155-177
+
+### 7.6 Attacker Rendering
+
+| Aspect | Python | JS (current) | Action |
+|--------|--------|---------------|--------|
+| Format | `<dl>` with Description, Reference, In Scope fields, `<hr/>` | Simple paragraph | Rewrite to `<dl>` format |
+| Icon | `<img src="{attacker.icon}"/>` if present | Not shown | Add |
+
+**Python reference**: `render_attacker()` in `lib_py.py` lines 268-283
+
+### 7.7 Asset Rendering
+
+| Aspect | Python | JS (current) | Action |
+|--------|--------|---------------|--------|
+| Summary table columns | `Title(ID)`, `Type`, `In Scope` (with checkmarks) | `Asset`, `Type`, `Description` | Fix columns |
+| Detail format | `<dl>` with css class, anchor, proposal, icon, versions, properties, auth | Simple paragraph | Rewrite |
+| `specifies` | Shows inherited asset link | Not implemented | Add |
+
+**Python reference**: `render_asset()` / `render_asset_table()` in `lib_py.py` lines 285-325
+
+### 7.8 Assumptions Rendering
+
+| Aspect | Python | JS (current) | Action |
+|--------|--------|---------------|--------|
+| Format | `<dl><dt>ID</dt><dd>description</dd></dl>` | `- **title**: description` bullet list | Rewrite to `<dl>` |
+
+### 7.9 Attack Tree Image
+
+| Aspect | Python | JS (current) | Action |
+|--------|--------|---------------|--------|
+| Format | `<object>` with `<img>` fallback + legend SVG | Simple `<img>` | Add `<object>` wrapper + legend |
+
+### 7.10 Missing Sections
+
+| Section | Python | JS (current) | Action |
+|---------|--------|---------------|--------|
+| Release history | Shown after threats if `tmo.history` exists | Not rendered | Add |
+| Linked TM ID format | `FullFeature.SubComponent` (prefixed with parent) | `SubComponent` (bare) | Fix to use `child.id` which includes parent prefix |
+| ISO27001 Summary | Rendered as annex if `tmo.ISO27001Ref` exists | Not implemented | Add (low priority) |
+| Analysis section | Rendered if `tmo.analysis` has content > 5 chars | Not rendered in full report pipeline | Add |
+| `<div class='current'>` / `<div class='proposal'>` wrappers | Around threats, assets | Not present | Add |
+| `> **Note** This section contains...` | Before threats list | Not present | Add |
+| `<hr/>` separators | Between sections and threats | Partially present | Align |
+
+### 7.11 Executive Summary Differences
+
+| Aspect | Python | JS (current) | Action |
+|--------|--------|---------------|--------|
+| `<td>` closing | Python sometimes omits `</td>` (quirk) | JS properly closes | Keep JS behavior (valid HTML) |
+| Proposal/TBC labels | Shows if `threat.proposal` exists | Not shown | Add (low priority) |
+
+### 7.12 TOC Generation
+
+| Aspect | Python | JS (current) | Action |
+|--------|--------|---------------|--------|
+| Blank lines between entries | Each entry has blank line between | No blank lines | Add blank lines |
+| `<code>` in titles | Preserved in TOC links | Stripped by regex | Keep `<code>` tags |
+| Child TM section header | `5 Sub-Component Feature Test Threat Model Section` | No section wrapper | Add section wrapper heading |
+| Indentation depth | More granular (6 levels of `&nbsp;&nbsp;`) | Flatter | Match Python indent levels |
+
+---
+
+## Implementation Priority
+
+### Phase 1: Critical Output Alignment (do first)
+1. **Fix CVSS**: Use `cvss` package, implement `getSmartScoreDesc()` as `"9.8 (Critical)"`, handle `TODO CVSS`
+2. **Fix heading hierarchy**: Port `disable_heading_numbering()` pattern, child TM offset
+3. **Fix `render_threat()`**: Add `<dl>` format, all metadata fields, per-threat diagram reference
+4. **Fix `render_countermeasure()`**: Separate subsection with `<dl>` blocks
+5. **Fix anchor IDs**: Match Python's `anchor` property behavior
+
+### Phase 2: Detail Alignment
+6. Fix attacker rendering (`<dl>` format)
+7. Fix asset table columns and detail format
+8. Fix assumptions format (`<dl>`)
+9. Add attack tree `<object>` wrapper + legend
+10. Add release history section
+11. Add `> **Note**` before threats
+
+### Phase 3: Polish
+12. Add `<div class='current'>/<div class='proposal'>` wrappers
+13. Add compliance rendering
+14. Align TOC blank lines and indentation
+15. Add ISO27001 summary (if needed)
+
+---
+
 ## Final Notes
 
 The vast majority of this is **string manipulation and templating**. The Python code is clean and well-organized. Follow the patterns, replicate the string formatting exactly, and test frequently.

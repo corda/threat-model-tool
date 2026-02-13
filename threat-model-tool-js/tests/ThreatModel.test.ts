@@ -133,8 +133,11 @@ test('TypeScript Models', async (t) => {
             assert.ok(threat.cvssObject, 'Threat should have CVSS object');
             
             const scoreDesc = threat.getSmartScoreDesc();
-            assert.ok(['None', 'Low', 'Medium', 'High', 'Critical'].includes(scoreDesc), 
-                     'CVSS score description should be valid');
+            // Format is now "9.8 (Critical)" matching Python output
+            const validDescPattern = /^\d+\.?\d*\s*\(\w+\)$|^TODO$|^None$/;
+            assert.ok(validDescPattern.test(scoreDesc) || 
+                      ['None', 'Low', 'Medium', 'High', 'Critical'].some(s => scoreDesc.includes(s)), 
+                     `CVSS score description should be valid, got: ${scoreDesc}`);
             
             const scoreVal = threat.getSmartScoreVal();
             assert.ok(scoreVal >= 0 && scoreVal <= 10, 'CVSS score should be between 0 and 10');
