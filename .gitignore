@@ -93,3 +93,4 @@ ENV/
 .ropeproject
 
 .obsidian
+**/node_modules/*

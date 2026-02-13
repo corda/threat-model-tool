@@ -1,0 +1,95 @@
+@startuml
+digraph G {
+  rankdir="RL";
+  node [shape=plaintext, fontname="Arial" fontsize="12", align="left"];
+
+"FullFeature" [fillcolor="#bae9ff", style=filled, shape=ellipse, color="#B85450",
+ label=
+ <<table border="0" cellborder="0" cellspacing="0">
+   <tr><td align="left">
+     <b>Comprehensive Reference Threat</b>
+<br/>
+     <b>Model</b>
+   </td></tr>
+ </table>>]
+"THREAT_SQL_INJECTION" [ fillcolor="#F8CECC", style=filled, shape=polygon, color="#E06666", penwidth=2,
+    URL="../index.html#THREAT_SQL_INJECTION",  target="_top",
+    label=
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
+     <tr><td align="left"><b>SQL Injection <i>-Vulnerable</i></b>
+     </td>  <td BGCOLOR="#df3d03">High</td></tr>
+     <tr><td align="center" COLSPAN="2">1. Find vulnerable input field. 2. Inject SQL payload. </td></tr>
+   </table>>
+];
+
+"THREAT_SQL_INJECTION_countermeasure0" [
+    fillcolor="#D5E8D4", style=filled, shape=polygon, penwidth=2,
+    color="#82B366",
+    label=
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
+      <tr><td align="left">
+        <b>Use Prepared Statements</b><br/><br/>
+        Ensure all DB queries use parameterized inputs.
+      </td></tr>
+    </table>>
+]
+
+"THREAT_SQL_INJECTION_countermeasure0" -> "THREAT_SQL_INJECTION" [label = " mitigates", style="solid", color="green", penwidth=2]
+"THREAT_SQL_INJECTION" -> "FullFeature" [label="impacts ", color="#B85450", style="solid", penwidth=2]
+"THREAT_DATA_LEAK" [ fillcolor="#F8CECC", style=filled, shape=polygon, color="#E06666", penwidth=2,
+    URL="../index.html#THREAT_DATA_LEAK",  target="_top",
+    label=
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
+     <tr><td align="left"><b>Potential Data Leak <i>-Vulnerable</i></b>
+     </td>  <td BGCOLOR="#f9a009">Medium</td></tr>
+     <tr><td align="center" COLSPAN="2">Data might leak through logs.</td></tr>
+   </table>>
+];
+
+"THREAT_DATA_LEAK_countermeasure0" [
+    fillcolor="#FFF2CC", style=filled, shape=polygon, penwidth=2,
+    color="#D6B656",
+    label=
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
+      <tr><td align="left">
+        <b>Log Masking</b><br/><br/>
+        Mask PII in logs.
+      </td></tr>
+    </table>>
+]
+
+"THREAT_DATA_LEAK_countermeasure0" -> "THREAT_DATA_LEAK" [label = " mitigates", style="solid", color="green", penwidth=2]
+"THREAT_DATA_LEAK" -> "FullFeature" [label="impacts ", color="#B85450", style="solid", penwidth=2]
+"SubComponent" [fillcolor="#bae9ff", style=filled, shape=ellipse, color="#B85450",
+ label=
+ <<table border="0" cellborder="0" cellspacing="0">
+   <tr><td align="left">
+     <b>Sub-Component Feature Test</b>
+   </td></tr>
+ </table>>]
+"SUB_THREAT" [ fillcolor="#F8CECC", style=filled, shape=polygon, color="#E06666", penwidth=2,
+    URL="../index.html#SUB_THREAT",  target="_top",
+    label=
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
+     <tr><td align="left"><b>Threat to Sub Component <i>-Vulnerable</i></b>
+     </td>  <td BGCOLOR="#f9a009">Medium</td></tr>
+     <tr><td align="center" COLSPAN="2"></td></tr>
+   </table>>
+];
+
+"SUB_THREAT_countermeasure0" [
+    fillcolor="#D5E8D4", style=filled, shape=polygon, penwidth=2,
+    color="#82B366",
+    label=
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
+      <tr><td align="left">
+        <b>Rate Limiting</b><br/><br/>
+        Limit requests to the sub component.
+      </td></tr>
+    </table>>
+]
+
+"SUB_THREAT_countermeasure0" -> "SUB_THREAT" [label = " mitigates", style="solid", color="green", penwidth=2]
+"SUB_THREAT" -> "SubComponent" [label="impacts ", color="#B85450", style="solid", penwidth=2]
+}
+@enduml

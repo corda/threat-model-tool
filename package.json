@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "html-escaper": "^3.0.3"
+  },
+  "devDependencies": {
+    "@types/html-escaper": "^3.0.4"
+  }
+}

@@ -1,0 +1,251 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/r3/threat-model-tool/schema/v2",
+  "title": "Threat Model Schema",
+  "description": "JSON Schema for validating threat model YAML files",
+  "type": "object",
+  "required": ["ID", "schemaVersion", "title", "version"],
+  "properties": {
+    "ID": {
+      "type": "string",
+      "description": "Unique identifier for the threat model",
+      "pattern": "^[A-Za-z0-9_-]+$"
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "description": "Version of the threat model schema",
+      "minimum": 1
+    },
+    "title": {
+      "type": "string",
+      "description": "Title of the threat model",
+      "minLength": 1
+    },
+    "version": {
+      "type": ["string", "number"],
+      "description": "Version of the threat model document"
+    },
+    "authors": {
+      "type": "string",
+      "description": "Authors of the threat model"
+    },
+    "scope": {
+      "type": "object",
+      "description": "Scope of the threat model",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description of the scope"
+        },
+        "securityObjectives": {
+          "type": "array",
+          "description": "Security objectives for the system",
+          "items": {
+            "$ref": "#/definitions/SecurityObjective"
+          }
+        },
+        "attackers": {
+          "type": "array",
+          "description": "Potential attackers",
+          "items": {
+            "$ref": "#/definitions/Attacker"
+          }
+        },
+        "assets": {
+          "type": "array",
+          "description": "Assets to protect",
+          "items": {
+            "$ref": "#/definitions/Asset"
+          }
+        },
+        "assumptions": {
+          "type": "array",
+          "description": "Assumptions made in the threat model",
+          "items": {
+            "$ref": "#/definitions/Assumption"
+          }
+        }
+      }
+    },
+    "analysis": {
+      "type": "string",
+      "description": "Analysis and findings"
+    },
+    "threats": {
+      "type": "array",
+      "description": "Identified threats",
+      "items": {
+        "$ref": "#/definitions/Threat"
+      }
+    }
+  },
+  "definitions": {
+    "SecurityObjective": {
+      "type": "object",
+      "required": ["ID", "title"],
+      "properties": {
+        "ID": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "group": {
+          "type": "string"
+        }
+      }
+    },
+    "Attacker": {
+      "type": "object",
+      "required": ["ID"],
+      "properties": {
+        "ID": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "description": {
+          "type": "string"
+        },
+        "inScope": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Asset": {
+      "type": "object",
+      "required": ["ID", "title"],
+      "properties": {
+        "ID": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["Data", "Service", "Hardware", "Software", "Network", "Physical"]
+        }
+      }
+    },
+    "Assumption": {
+      "type": "object",
+      "required": ["ID", "description"],
+      "properties": {
+        "ID": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Threat": {
+      "type": "object",
+      "required": ["ID", "title", "attack", "threatType"],
+      "properties": {
+        "ID": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "attack": {
+          "type": "string",
+          "description": "Description of the attack"
+        },
+        "threatType": {
+          "type": "string",
+          "description": "Type of threat (e.g., Information Disclosure, Denial of Service)"
+        },
+        "impactDesc": {
+          "type": "string",
+          "description": "Description of the impact"
+        },
+        "impactedSecObj": {
+          "type": "array",
+          "description": "References to impacted security objectives",
+          "items": {
+            "$ref": "#/definitions/REFID"
+          }
+        },
+        "attackers": {
+          "type": "array",
+          "description": "References to attackers",
+          "items": {
+            "$ref": "#/definitions/REFID"
+          }
+        },
+        "CVSS": {
+          "type": "object",
+          "properties": {
+            "vector": {
+              "type": "string",
+              "description": "CVSS vector string",
+              "pattern": "^CVSS:3\\.[01]/.*"
+            }
+          }
+        },
+        "fullyMitigated": {
+          "type": "boolean",
+          "description": "Whether the threat is fully mitigated"
+        },
+        "countermeasures": {
+          "type": "array",
+          "description": "Countermeasures for the threat",
+          "items": {
+            "$ref": "#/definitions/Countermeasure"
+          }
+        }
+      }
+    },
+    "Countermeasure": {
+      "type": "object",
+      "required": ["ID", "title"],
+      "properties": {
+        "ID": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "inPlace": {
+          "type": "boolean",
+          "description": "Whether the countermeasure is already in place"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Planned", "InProgress", "Implemented", "NotApplicable"]
+        }
+      }
+    },
+    "REFID": {
+      "type": "object",
+      "required": ["REFID"],
+      "properties": {
+        "REFID": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        }
+      }
+    }
+  }
+}

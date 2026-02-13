@@ -1,0 +1,26 @@
+@startuml
+title Threat Model Diagram\nAbstract Example Threat Model 2
+
+skinparam rectangle {
+  BackgroundColor<<Critical>> #cc0500
+  BackgroundColor<<High>> #df3d03
+  BackgroundColor<<Medium>> #f9a009
+  BackgroundColor<<Low>> #ffcb0d
+  BackgroundColor<<None>> #53aa33
+  BorderColor Black
+}
+
+rectangle "Unauthorized Data Exposure" as DATA_EXPOSURE <<High>> {
+  **Type:** Information Disclosure
+  **CVSS:** 7.5 (High)
+}
+
+rectangle "Unauthorized Data Modification" as DATA_TAMPERING <<High>> {
+  **Type:** Tampering
+  **CVSS:** 7.5 (High)
+}
+
+DATA_EXPOSURE --> SYSTEM_CONFIDENTIALITY : impacts
+DATA_TAMPERING --> SYSTEM_INTEGRITY : impacts
+
+@enduml
