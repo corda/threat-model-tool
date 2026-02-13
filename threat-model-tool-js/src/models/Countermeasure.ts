@@ -11,7 +11,8 @@ export default class Countermeasure extends BaseThreatModelObject {
         super(dictData, threat);
         this.threat = threat;
         this.operational = dictData.operational || false;
-        this._operator = "UNDEFINED";
+        // Use operator from dictData if present, otherwise default to "UNDEFINED"
+        this._operator = dictData.operator || "UNDEFINED";
 
         const requiredKeys = ["inPlace", "public", "description", "title"];
         for (const key of requiredKeys) {

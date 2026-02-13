@@ -139,7 +139,9 @@ function renderCountermeasure(cm: Countermeasure): string {
     const lines: string[] = [];
     
     if (cm.isReference) {
-        lines.push(`<strong>Reference to <code>${cm.id}</code> ${cm.title}</strong><br/>`);
+        // Python uses countermeasure.id for references (full hierarchical ID)
+        const fullId = cm.getHierarchicalId ? cm.getHierarchicalId() : cm.id;
+        lines.push(`<strong>Reference to <code>${fullId}</code> ${cm.title}</strong><br/>`);
     } else {
         lines.push(`<strong> <code>${(cm as any)._id || cm.id}</code> ${cm.title}</strong><br/>`);
     }
@@ -281,13 +283,24 @@ function renderThreat(threat: Threat, headerLevel: number = 1, ctx: any = {}): s
         lines.push(`<dt><strong>Ticket link:</strong><a href="${safe}"> ${safe}  </a> </dt><dd markdown="block"></dd>`);
     }
     
-    // Countermeasures
-    const cms = threat.countermeasures || [];
-    if (cms.length > 0) {
+    // Countermeasures — resolve REFIDs to actual countermeasure objects
+    const cmsRaw = threat.countermeasures || [];
+    if (cmsRaw.length > 0) {
         lines.push(makeMarkdownLinkedHeader(headerLevel + 3, `Counter-measures for ${(threat as any)._id || threat.id} `, ctx, true));
         lines.push('<dl markdown="block">');
-        for (const cm of cms) {
-            lines.push(renderCountermeasure(cm));
+        for (const cmOrRef of cmsRaw) {
+            // Resolve REFID references to actual countermeasure objects
+            const cm = (cmOrRef as any).resolve ? (cmOrRef as any).resolve() : cmOrRef;
+            if (cm) {
+                // Mark as reference if it was resolved from a REFID
+                if ((cmOrRef as any).resolve) {
+                    cm.isReference = true;
+                }
+                lines.push(renderCountermeasure(cm));
+            } else {
+                // REFID couldn't be resolved - show error
+                lines.push(`<strong>Reference to <code>${(cmOrRef as any).REFIDValue || 'unknown'}</code> (unresolved)</strong><br/>`);
+            }
         }
         lines.push('</dl>');
     } else {
@@ -573,10 +586,12 @@ export function renderThreats(tmo: ThreatModel, headerLevel: number = 1, ctx: an
  */
 export function renderOperationalHardening(tmo: ThreatModel, headerLevel: number = 1, ctx: any = {}): string {
     const guideData = tmo.getOperationalGuideData();
-    const cms: Countermeasure[] = [];
+    let cms: Countermeasure[] = [];
     Object.keys(guideData).sort().forEach(op => {
-        cms.push(...guideData[op].sort((a: any, b: any) => a.id.localeCompare(b.id)));
+        cms.push(...guideData[op]);
     });
+    // Python sorts the final combined list by ID
+    cms = cms.sort((a: any, b: any) => (a._id || a.id || '').localeCompare(b._id || b.id || ''));
 
     const lines: string[] = [];
     const title = 'Operational Security Hardening Guide';
@@ -654,8 +669,10 @@ function renderKeyTable(assets: any[]): string {
     
     for (const a of assets) {
         const typeVal = a.properties?.type || a.type || '';
+        // Python uses a.id which is the full hierarchical ID
+        const fullId = a.getHierarchicalId ? a.getHierarchicalId() : a.id;
         lines.push(
-            `  <tr><td><strong><a href="#${a.id}">${a.title}</a></strong></td>` +
+            `  <tr><td><strong><a href="#${fullId}">${a.title}</a></strong></td>` +
             `<td><b>${typeVal}</b><br/>${a.description}</td><td>${a.propertiesHTML()}</td></tr>`
         );
     }

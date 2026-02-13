@@ -142,21 +142,33 @@ export default class Threat extends BaseThreatModelObject {
         return 'Vulnerable';
     }
 
-    /** Check if all in-place countermeasures make this secure by default */
+    /** 
+     * Secure by default means fully mitigated without operational countermeasures needed.
+     * Matches Python: fullyMitigated and not hasOperationalCountermeasures()
+     */
     secureByDefault(): boolean {
         if (!this.fullyMitigated) return false;
+        return !this.hasOperationalCountermeasures();
+    }
+
+    /** Check if any countermeasure is marked as operational */
+    hasOperationalCountermeasures(): boolean {
         for (const cm of this.countermeasures) {
             const resolved = (cm as any).resolve ? (cm as any).resolve() : cm;
-            if (resolved && !resolved.inPlace) return false;
+            if (resolved && resolved.operational) return true;
         }
-        return true;
+        return false;
     }
 
     private static readonly mitigatedColors = { border: '#82B366', fill: '#D5E8D4' };
-    private static readonly notFullyMitigatedColors = { border: '#B85450', fill: '#F8CECC' };
+    private static readonly inSecureByDefaultColors = { border: '#D6B656', fill: '#FFF2CC' };
+    private static readonly notFullyMitigatedColors = { border: '#E06666', fill: '#F8CECC' };
 
     statusColors(): { border: string; fill: string } {
-        return this.fullyMitigated ? Threat.mitigatedColors : Threat.notFullyMitigatedColors;
+        if (this.fullyMitigated) {
+            return this.secureByDefault() ? Threat.mitigatedColors : Threat.inSecureByDefaultColors;
+        }
+        return Threat.notFullyMitigatedColors;
     }
 
     threatGeneratedTitle(): string {

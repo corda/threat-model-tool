@@ -97,13 +97,16 @@ export class TMCVSS {
     /**
      * Return score description matching Python: "9.8 (Critical)"
      * If TODO, returns "TODO CVSS"
+     * Note: Python floats format with decimal (10.0), so we match that
      */
     getSmartScoreDesc(): string {
         if (this.isTodo()) return 'TODO CVSS';
         const idx = this.getSmartScoreIndex();
         const score = this.scores()[idx];
         const severity = this.severities()[idx];
-        return `${score} (${severity})`;
+        // Format score to always show decimal like Python (10.0 not 10)
+        const scoreStr = Number.isInteger(score) ? score.toFixed(1) : String(score);
+        return `${scoreStr} (${severity})`;
     }
 
     getSmartScoreVal(): number {

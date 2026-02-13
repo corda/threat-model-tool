@@ -147,7 +147,7 @@ export default class ThreatModel extends BaseThreatModelObject {
     }
 
     /**
-     * Get threats filtered by fullyMitigated status
+     * Get threats filtered by fullyMitigated status, sorted by CVSS score descending
      */
     getThreatsByFullyMitigated(fullyMitigated: boolean): Threat[] {
         const result: Threat[] = [];
@@ -166,11 +166,12 @@ export default class ThreatModel extends BaseThreatModelObject {
             }
         }
 
-        return result;
+        // Sort by CVSS score descending (matching Python behavior)
+        return result.sort((a, b) => b.getSmartScoreVal() - a.getSmartScoreVal());
     }
 
     /**
-     * Get threats filtered by fullyMitigated AND operational status
+     * Get threats filtered by fullyMitigated AND operational status, sorted by CVSS score descending
      */
     getThreatsByFullyMitigatedAndOperational(fullyMitigated: boolean, operational: boolean): Threat[] {
         const result: Threat[] = [];
@@ -188,7 +189,8 @@ export default class ThreatModel extends BaseThreatModelObject {
             }
         }
 
-        return result;
+        // Sort by CVSS score descending (matching Python behavior)
+        return result.sort((a, b) => b.getSmartScoreVal() - a.getSmartScoreVal());
     }
 
     /**

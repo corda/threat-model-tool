@@ -54,7 +54,7 @@ export class ReportGenerator {
             mdReport = mdReport.replace('__TOC_PLACEHOLDER__', toc);
         }
 
-        // Write markdown file (ensure trailing newline)
+        // Write markdown file (ensure trailing newline to match Python)
         if (!mdReport.endsWith('\n')) {
             mdReport += '\n';
         }
