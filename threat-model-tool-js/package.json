@@ -1,0 +1,24 @@
+{
+  "name": "threat-model-tool-js",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A JavaScript implementation of a threat modeling tool, inspired by a Python version.",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.32.0"
+  },
+  "keywords": [
+    "threat-modeling",
+    "security",
+    "javascript"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
