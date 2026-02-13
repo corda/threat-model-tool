@@ -63,10 +63,10 @@ This repository contains two main packages:
 - **Features**: Parent-child relationships, tree traversal, ID validation
 - **Documentation**: See [tree-node/README.md](tree-node/README.md)
 
-### 2. `src/r3threatmodeling/` - Threat Modeling Tools
-- **Purpose**: Structured threat modeling and report generation
-- **Dependencies**: Uses the extracted `tree-node` package
-- **Features**: YAML-based threat models, report generation, analysis tools
+### 3. `threat-model-tool-js/` - TypeScript/Node.js Implementation
+- **Purpose**: A modern port of the threat modeling library to TypeScript.
+- **Features**: Type-safe parsing, fast rendering, and shared logic with the Python version.
+- **Documentation**: See [threat-model-tool-js/README.md](threat-model-tool-js/README.md).
 
 ## Building and Distribution
 

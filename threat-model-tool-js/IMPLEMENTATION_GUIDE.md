@@ -1,5 +1,7 @@
 # Complete Implementation Guide: Python to TypeScript Port
 
+> **UPDATE (Feb 2026):** The core classes described here have been implemented. This guide remains as a reference for completing the remaining output formats and integration tests.
+
 ## Goal: 99% Output Similarity with Python Implementation
 
 This guide provides step-by-step instructions to complete the TypeScript port of the threat model tool, matching the Python output format.

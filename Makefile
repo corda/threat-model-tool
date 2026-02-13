@@ -7,6 +7,8 @@ OUTPUT_DIR ?= build
 init:
 	sudo uv pip install --system -e ./tree-node
 	sudo uv pip install --system -e .
+	npm install
+	cd threat-model-tool-js && npm install
 
 test:
 	uv run pytest

@@ -1,37 +1,43 @@
-# Implementation Summary
+# Implementation Summary: TypeScript Migration Status
 
-## ✅ Project Complete: Threat Model Tool TypeScript Migration
+## 🚧 Status: Porting in Progress (Functional Milestone Reached)
+
+The core engine has been successfully ported from Python to TypeScript. While many features are complete, some specialized functionalities (like ISO27001 mapping) and advanced HTML generation are still undergoing verification for full parity.
 
 ### Objectives Achieved
 
-1. **✅ TypeScript Migration**
-   - Fully migrated from JavaScript to TypeScript
-   - Complete type safety with interfaces and type definitions
-   - All models, parsers, and utilities ported
-   - Successfully compiles with no errors
+1. **✅ TypeScript Migration (Core)**
+   - Ported core model hierarchy: `ThreatModel`, `Threat`, `Asset`, `Countermeasure`, etc.
+   - Implemented `TreeNode` logic to match Python's hierarchical ID management.
+   - Resolved critical module resolution issues (ESM/NodeNext).
 
-2. **✅ JSON Schema Creation**
-   - Comprehensive `threat-model-schema.json` created
-   - Defines all threat model structures
-   - Validates YAML/JSON threat model files
-   - Documents required fields and data types
+2. **✅ Template Renderers (Python → TypeScript)**
+   - **Markdown Renderer**: Matches Python's output for Executive Summary, Threats, Assets, and Annexes (Operational Hardening, Keys Classification).
+   - **PlantUML Renderer**: Generates diagrams for Threats and Security Objectives.
+   - **TOC Generator**: Implements hierarchical numbering and internal linking.
 
-3. **✅ Template Renderers (Python → TypeScript)**
-   - **Markdown Renderer**: Full reports, summaries, compact views
-   - **PlantUML Renderer**: Threat diagrams, security objectives, attack trees
-   - **PDF Renderer**: Integration with pandoc for PDF generation
-   
-4. **✅ Testing & Validation**
-   - Demo script successfully generates all outputs
-   - Markdown reports verified
-   - PlantUML diagrams verified
-   - All functionality working end-to-end
+3. **✅ Progress on Porting (lib_py.ts)**
+   - Successfully ported complex rendering logic for `FullFeature.yaml` samples.
+   - Handled recursive child model loading and data aggregation.
 
-5. **✅ Comprehensive Documentation**
-   - Complete README with usage examples
-   - Quick start guide
-   - API usage documentation
-   - JSON Schema documentation
+### 📊 Deliverables (Current State)
+
+| Component | Status | Notes |
+| :--- | :--- | :--- |
+| **Data Models** | ✅ Complete | Full parity with Python class hierarchy. |
+| **Markdown Reports** | ✅ Balanced parity | Matches main sections and Annexes 1-2. |
+| **PlantUML** | ✅ Functional | Generates diagrams; binaries now in Docker. |
+| **ISO27001 Mapping** | 🚧 Pending | Logic is yet to be ported from Python. |
+| **VitePress Site** | 🚧 Planned | Native TS site generation to replace MkDocs. |
+| **Testing** | ✅ Infrastructure Ready | Node.js native testing configured. |
+
+### 🎯 Key Features
+
+### Feature Parity Logic (`lib_py.ts`)
+We have implemented a `lib_py.ts` renderer that directly replicates the string-building behavior of the original Python tool, ensuring that the generated Markdown is essentially identical to the legacy output.
+
+### Hierarchical Numbering
+The tool now supports `1.1`, `1.1.1` style numbering across the entire report, matching the Python `HeadingNumberer` singleton behavior.
 
 ## 📊 Deliverables
 
