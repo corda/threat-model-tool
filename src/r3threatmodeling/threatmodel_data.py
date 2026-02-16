@@ -599,15 +599,43 @@ class Asset(BaseThreatModelObject):
         return ret + "</ul>"
 
     @property
-    def inScope(self):
+    def inScope(self) -> str:
+        """Return human-readable inScope status as 'Yes' or 'No'.
+        
+        Note: This property returns a STRING for display purposes.
+        For boolean logic, use the private `_inScope` attribute directly.
+        
+        Example:
+            # For display: use .inScope (returns 'Yes'/'No')
+            print(f"In scope: {asset.inScope}")
+            
+            # For boolean logic: use ._inScope (returns True/False)
+            if asset._inScope:
+                process_in_scope_asset(asset)
+        
+        Returns:
+            str: 'Yes' if asset is in scope, 'No' otherwise.
+        
+        Raises:
+            BaseException: If _inScope attribute is not set.
+        """
         try:
             return 'Yes' if self._inScope else 'No'
-        except:
-            raise BaseException("asset "+ self.id +" missing valid boolean inScope attribute " )
+        except AttributeError:
+            raise BaseException(f"Asset {self.id} missing valid boolean inScope attribute")
+
     @inScope.setter
-    def inScope(self, value):
+    def inScope(self, value: bool) -> None:
+        """Set the inScope status.
+        
+        Args:
+            value: Boolean indicating whether asset is in scope.
+        
+        Raises:
+            TypeError: If value is not a boolean.
+        """
         if not isinstance(value, bool):
-            raise TypeError(f'Asset.inScope must be an boolean, found value: {value} in {self.id}')
+            raise TypeError(f'Asset.inScope must be a boolean, found value: {value} in {self.id}')
         self._inScope = value
     
     def __init__(self, dict_data, parent):
@@ -880,8 +908,18 @@ class ThreatModel(BaseThreatModelObject):
         ret =  sorted(ts, key=lambda x: x.getSmartScoreVal(), reverse=True )
         return ret
 
-    def getAssetsByProps(self, **kwargs ):
-        res = [asset for asset in self.getAllDown('assets') if matchesAllPros(asset , **kwargs)]
+    def getAssetsByProps(self, **kwargs):
+        all_items = self.getAllDown('assets')
+        seen_ids = set()
+        res = []
+        for asset in all_items:
+            if not isinstance(asset, Asset):
+                continue
+            if asset.id in seen_ids:
+                continue
+            seen_ids.add(asset.id)
+            if matchesAllPros(asset, **kwargs):
+                res.append(asset)
         return res
         
     def getOperationalGuideData(self):

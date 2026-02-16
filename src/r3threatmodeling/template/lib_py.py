@@ -302,7 +302,7 @@ def render_attacker(attacker: Attacker, header_level: int = 1, ctx=None) -> str:
 
 def render_asset(asset: Asset, header_level: int = 1, ctx=None, tmo: ThreatModel | None = None) -> str:
     css = "proposal" if hasattr(asset, "proposal") else "current"
-    in_scope_str = "in scope" if asset.inScope else "not in scope"
+    in_scope_str = "in scope" if asset._inScope else "not in scope"
     title = f"{asset.title} ({asset.type} {in_scope_str} - ID: <code>{asset._id}</code>)"
     lines = [f"<hr/>\n<div markdown=\"1\" class='{css}'>"]
     if hasattr(asset, "proposal"):

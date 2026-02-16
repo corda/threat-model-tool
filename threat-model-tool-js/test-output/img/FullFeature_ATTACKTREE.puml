@@ -12,11 +12,11 @@ digraph G {
      <b>Model</b>
    </td></tr>
  </table>>]
-"THREAT_SQL_INJECTION" [ fillcolor="#F8CECC", style=filled, shape=polygon, color="#E06666", penwidth=2,
+"THREAT_SQL_INJECTION" [ fillcolor="#D5E8D4", style=filled, shape=polygon, color="#82B366", penwidth=2,
     URL="../index.html#THREAT_SQL_INJECTION",  target="_top",
     label=
     <<table border="0" cellborder="0" cellspacing="0" width="530">
-     <tr><td align="left"><b>SQL Injection <i>-Vulnerable</i></b>
+     <tr><td align="left"><b>SQL Injection <i>-Mitigated</i></b>
      </td>  <td BGCOLOR="#cc0500">9.8 (Critical)</td></tr>
      <tr><td align="center" COLSPAN="2">1. Find vulnerable input field. 2. Inject SQL payload. </td></tr>
    </table>>
@@ -41,8 +41,8 @@ digraph G {
     label=
     <<table border="0" cellborder="0" cellspacing="0" width="530">
      <tr><td align="left"><b>Potential Data Leak <i>-Vulnerable</i></b>
-     </td>  <td BGCOLOR="gray">TODO CVSS</td></tr>
-     <tr><td align="center" COLSPAN="2">Data might leak through logs.</td></tr>
+     </td>  <td BGCOLOR="#f9a009">6.5 (Medium)</td></tr>
+     <tr><td align="center" COLSPAN="2">Data might leak through logs or error messages.</td></tr>
    </table>>
 ];
 
@@ -60,6 +60,91 @@ digraph G {
 
 "THREAT_DATA_LEAK_countermeasure0" -> "THREAT_DATA_LEAK" [label = " mitigates", style="solid", color="green", penwidth=2]
 "THREAT_DATA_LEAK" -> "FullFeature" [label="impacts ", color="#B85450", style="solid", penwidth=2]
+"THREAT_KEY_COMPROMISE" [ fillcolor="#D5E8D4", style=filled, shape=polygon, color="#82B366", penwidth=2,
+    URL="../index.html#THREAT_KEY_COMPROMISE",  target="_top",
+    label=
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
+     <tr><td align="left"><b>API Key Compromise <i>-Mitigated</i></b>
+     </td>  <td BGCOLOR="#cc0500">10.0 (Critical)</td></tr>
+     <tr><td align="center" COLSPAN="2">Attacker obtains API key through: 1. Source code repository exposure 2. Man-in-the-middle attack 3. Social engineering </td></tr>
+   </table>>
+];
+
+"THREAT_KEY_COMPROMISE_countermeasure0" [
+    fillcolor="#D5E8D4", style=filled, shape=polygon, penwidth=2,
+    color="#82B366",
+    label=
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
+      <tr><td align="left">
+        <b>Regular Key Rotation</b><br/><br/>
+        Rotate API keys every 30 days or immediately upon suspected compromise. Keys should be stored in a secure vault with audit logging. 
+      </td></tr>
+    </table>>
+]
+
+"THREAT_KEY_COMPROMISE_countermeasure0" -> "THREAT_KEY_COMPROMISE" [label = " mitigates", style="solid", color="green", penwidth=2]
+"THREAT_KEY_COMPROMISE_countermeasure1" [
+    fillcolor="#D5E8D4", style=filled, shape=polygon, penwidth=2,
+    color="#82B366",
+    label=
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
+      <tr><td align="left">
+        <b>Secure Key Storage</b><br/><br/>
+        Store keys in HashiCorp Vault with audit logging.
+      </td></tr>
+    </table>>
+]
+
+"THREAT_KEY_COMPROMISE_countermeasure1" -> "THREAT_KEY_COMPROMISE" [label = " mitigates", style="solid", color="green", penwidth=2]
+"THREAT_KEY_COMPROMISE" -> "FullFeature" [label="impacts ", color="#B85450", style="solid", penwidth=2]
+"THREAT_RCE" [ fillcolor="#F8CECC", style=filled, shape=polygon, color="#E06666", penwidth=2,
+    URL="../index.html#THREAT_RCE",  target="_top",
+    label=
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
+     <tr><td align="left"><b>Remote Code Execution <i>-Vulnerable</i></b>
+     </td>  <td BGCOLOR="#cc0500">10.0 (Critical)</td></tr>
+     <tr><td align="center" COLSPAN="2">Exploiting deserialization vulnerability to execute arbitrary code. </td></tr>
+   </table>>
+];
+
+"THREAT_RCE_countermeasure0" [
+    fillcolor="#FFF2CC", style=filled, shape=polygon, penwidth=2,
+    color="#D6B656",
+    label=
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
+      <tr><td align="left">
+        <b>Strict Input Validation</b><br/><br/>
+        Validate and sanitize all deserialized input.
+      </td></tr>
+    </table>>
+]
+
+"THREAT_RCE_countermeasure0" -> "THREAT_RCE" [label = " mitigates", style="solid", color="green", penwidth=2]
+"THREAT_RCE" -> "FullFeature" [label="impacts ", color="#B85450", style="solid", penwidth=2]
+"THREAT_INFO_DISCLOSURE" [ fillcolor="#D5E8D4", style=filled, shape=polygon, color="#82B366", penwidth=2,
+    URL="../index.html#THREAT_INFO_DISCLOSURE",  target="_top",
+    label=
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
+     <tr><td align="left"><b>Minor Information Disclosure <i>-Mitigated</i></b>
+     </td>  <td BGCOLOR="#f9a009">5.3 (Medium)</td></tr>
+     <tr><td align="center" COLSPAN="2">Version information exposed in HTTP headers.</td></tr>
+   </table>>
+];
+
+"THREAT_INFO_DISCLOSURE_countermeasure0" [
+    fillcolor="#D5E8D4", style=filled, shape=polygon, penwidth=2,
+    color="#82B366",
+    label=
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
+      <tr><td align="left">
+        <b>Remove Version Headers</b><br/><br/>
+        Configure server to not expose version information.
+      </td></tr>
+    </table>>
+]
+
+"THREAT_INFO_DISCLOSURE_countermeasure0" -> "THREAT_INFO_DISCLOSURE" [label = " mitigates", style="solid", color="green", penwidth=2]
+"THREAT_INFO_DISCLOSURE" -> "FullFeature" [label="impacts ", color="#B85450", style="solid", penwidth=2]
 "SubComponent" [fillcolor="#bae9ff", style=filled, shape=ellipse, color="#B85450",
  label=
  <<table border="0" cellborder="0" cellspacing="0">
@@ -67,29 +152,147 @@ digraph G {
      <b>Sub-Component Feature Test</b>
    </td></tr>
  </table>>]
-"SUB_THREAT" [ fillcolor="#F8CECC", style=filled, shape=polygon, color="#E06666", penwidth=2,
-    URL="../index.html#SUB_THREAT",  target="_top",
+"SUB_THREAT_DOS" [ fillcolor="#D5E8D4", style=filled, shape=polygon, color="#82B366", penwidth=2,
+    URL="../index.html#SUB_THREAT_DOS",  target="_top",
     label=
     <<table border="0" cellborder="0" cellspacing="0" width="530">
-     <tr><td align="left"><b>Threat to Sub Component <i>-Vulnerable</i></b>
-     </td>  <td BGCOLOR="gray">TODO CVSS</td></tr>
-     <tr><td align="center" COLSPAN="2"></td></tr>
+     <tr><td align="left"><b>Denial of Service on Sub Component <i>-Mitigated</i></b>
+     </td>  <td BGCOLOR="#df3d03">7.5 (High)</td></tr>
+     <tr><td align="center" COLSPAN="2">Overwhelming the sub-component with excessive requests, causing service degradation or unavailability. </td></tr>
    </table>>
 ];
 
-"SUB_THREAT_countermeasure0" [
+"SUB_THREAT_DOS_countermeasure0" [
     fillcolor="#D5E8D4", style=filled, shape=polygon, penwidth=2,
     color="#82B366",
     label=
     <<table border="0" cellborder="0" cellspacing="0" width="530">
       <tr><td align="left">
         <b>Rate Limiting</b><br/><br/>
-        Limit requests to the sub component.
+        Limit requests to the sub component to 1000 req/sec.
       </td></tr>
     </table>>
 ]
 
-"SUB_THREAT_countermeasure0" -> "SUB_THREAT" [label = " mitigates", style="solid", color="green", penwidth=2]
-"SUB_THREAT" -> "SubComponent" [label="impacts ", color="#B85450", style="solid", penwidth=2]
+"SUB_THREAT_DOS_countermeasure0" -> "SUB_THREAT_DOS" [label = " mitigates", style="solid", color="green", penwidth=2]
+"SUB_THREAT_DOS" -> "SubComponent" [label="impacts ", color="#B85450", style="solid", penwidth=2]
+"SUB_THREAT_KEY_LEAK" [ fillcolor="#D5E8D4", style=filled, shape=polygon, color="#82B366", penwidth=2,
+    URL="../index.html#SUB_THREAT_KEY_LEAK",  target="_top",
+    label=
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
+     <tr><td align="left"><b>Sub-Component Key Exposure <i>-Mitigated</i></b>
+     </td>  <td BGCOLOR="#df3d03">8.1 (High)</td></tr>
+     <tr><td align="center" COLSPAN="2">API key for sub-component exposed through misconfiguration.</td></tr>
+   </table>>
+];
+
+"SUB_THREAT_KEY_LEAK_countermeasure0" [
+    fillcolor="#D5E8D4", style=filled, shape=polygon, penwidth=2,
+    color="#82B366",
+    label=
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
+      <tr><td align="left">
+        <b>Rate Limiting</b><br/><br/>
+        Limit requests to the sub component to 1000 req/sec.
+      </td></tr>
+    </table>>
+]
+
+"SUB_THREAT_KEY_LEAK_countermeasure0" -> "SUB_THREAT_KEY_LEAK" [label = " mitigates", style="solid", color="green", penwidth=2]
+"SUB_THREAT_KEY_LEAK_countermeasure1" [
+    fillcolor="#D5E8D4", style=filled, shape=polygon, penwidth=2,
+    color="#82B366",
+    label=
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
+      <tr><td align="left">
+        <b>Key Access Auditing</b><br/><br/>
+        Log and monitor all key access attempts.
+      </td></tr>
+    </table>>
+]
+
+"SUB_THREAT_KEY_LEAK_countermeasure1" -> "SUB_THREAT_KEY_LEAK" [label = " mitigates", style="solid", color="green", penwidth=2]
+"SUB_THREAT_KEY_LEAK" -> "SubComponent" [label="impacts ", color="#B85450", style="solid", penwidth=2]
+"ApiGateway" [fillcolor="#bae9ff", style=filled, shape=ellipse, color="#B85450",
+ label=
+ <<table border="0" cellborder="0" cellspacing="0">
+   <tr><td align="left">
+     <b>API Gateway Security Model</b>
+   </td></tr>
+ </table>>]
+"GW_JWT_FORGERY" [ fillcolor="#D5E8D4", style=filled, shape=polygon, color="#82B366", penwidth=2,
+    URL="../index.html#GW_JWT_FORGERY",  target="_top",
+    label=
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
+     <tr><td align="left"><b>JWT Token Forgery <i>-Mitigated</i></b>
+     </td>  <td BGCOLOR="#cc0500">9.1 (Critical)</td></tr>
+     <tr><td align="center" COLSPAN="2">Attacker forges JWT token by: 1. Exploiting weak algorithm (alg:none) 2. Brute-forcing weak secret 3. Key confusion attack (RS/HS) </td></tr>
+   </table>>
+];
+
+"GW_JWT_FORGERY_countermeasure0" [
+    fillcolor="#D5E8D4", style=filled, shape=polygon, penwidth=2,
+    color="#82B366",
+    label=
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
+      <tr><td align="left">
+        <b>Algorithm Whitelist</b><br/><br/>
+        Only allow RS256 algorithm, reject 'none' and HS.
+      </td></tr>
+    </table>>
+]
+
+"GW_JWT_FORGERY_countermeasure0" -> "GW_JWT_FORGERY" [label = " mitigates", style="solid", color="green", penwidth=2]
+"GW_JWT_FORGERY_countermeasure1" [
+    fillcolor="#D5E8D4", style=filled, shape=polygon, penwidth=2,
+    color="#82B366",
+    label=
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
+      <tr><td align="left">
+        <b>Strong JWT Secret</b><br/><br/>
+        Use cryptographically strong random secret (256+ bits).
+      </td></tr>
+    </table>>
+]
+
+"GW_JWT_FORGERY_countermeasure1" -> "GW_JWT_FORGERY" [label = " mitigates", style="solid", color="green", penwidth=2]
+"GW_JWT_FORGERY" -> "ApiGateway" [label="impacts ", color="#B85450", style="solid", penwidth=2]
+"GW_RATE_LIMIT_BYPASS" [ fillcolor="#D5E8D4", style=filled, shape=polygon, color="#82B366", penwidth=2,
+    URL="../index.html#GW_RATE_LIMIT_BYPASS",  target="_top",
+    label=
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
+     <tr><td align="left"><b>Rate Limit Bypass <i>-Mitigated</i></b>
+     </td>  <td BGCOLOR="#f9a009">5.9 (Medium)</td></tr>
+     <tr><td align="center" COLSPAN="2">Bypassing rate limits through distributed requests or header manipulation.</td></tr>
+   </table>>
+];
+
+"GW_RATE_LIMIT_BYPASS_countermeasure0" [
+    fillcolor="#D5E8D4", style=filled, shape=polygon, penwidth=2,
+    color="#82B366",
+    label=
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
+      <tr><td align="left">
+        <b>Algorithm Whitelist</b><br/><br/>
+        Only allow RS256 algorithm, reject 'none' and HS.
+      </td></tr>
+    </table>>
+]
+
+"GW_RATE_LIMIT_BYPASS_countermeasure0" -> "GW_RATE_LIMIT_BYPASS" [label = " mitigates", style="solid", color="green", penwidth=2]
+"GW_RATE_LIMIT_BYPASS_countermeasure1" [
+    fillcolor="#D5E8D4", style=filled, shape=polygon, penwidth=2,
+    color="#82B366",
+    label=
+    <<table border="0" cellborder="0" cellspacing="0" width="530">
+      <tr><td align="left">
+        <b>Client IP Fingerprinting</b><br/><br/>
+        Use multiple headers and techniques to identify true client IP.
+      </td></tr>
+    </table>>
+]
+
+"GW_RATE_LIMIT_BYPASS_countermeasure1" -> "GW_RATE_LIMIT_BYPASS" [label = " mitigates", style="solid", color="green", penwidth=2]
+"GW_RATE_LIMIT_BYPASS" -> "ApiGateway" [label="impacts ", color="#B85450", style="solid", penwidth=2]
 }
 @enduml

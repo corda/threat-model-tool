@@ -97,21 +97,20 @@ def render_keys_summary(tmo: ThreatModel, ctx=None, header_level: int = 1, print
     lines = [makeMarkdownLinkedHeader(header_level, "Keys classification ", ctx, skipTOC=False)]
     if print_toc:
         lines.append("__TOC_PLACEHOLDER__")
-    get_assets = getattr(tmo, "getAssetsByProps", None)
-    if not get_assets:
-        return "\n".join(lines)
-    app_keys = get_assets(applicationRelated=True, type="key")
+    app_keys = tmo.getAssetsByProps(applicationRelated=True, type="key")
     if app_keys:
         lines.append(makeMarkdownLinkedHeader(header_level + 1, "Application-specific keys", ctx, skipTOC=False))
         lines.append("Keys issued to processes to communicate in a secure manner, not linked to a specific business logic")
         lines.append(_render_key_table(app_keys))
-    infra_keys = get_assets(infrastructureRelated=True, type="key")
-    certs = get_assets(type="certificate")
+    infra_keys = tmo.getAssetsByProps(infrastructureRelated=True, type="key")
+    certs = tmo.getAssetsByProps(type="certificate")
     if infra_keys or certs:
         lines.append(makeMarkdownLinkedHeader(header_level + 1, "Infrastructure Keys and PKI assets", ctx, skipTOC=False))
-        lines.append(_render_key_table(infra_keys))
-        lines.append(_render_key_table(certs))
-    creds = get_assets(type="credential") + get_assets(type="credentials") + get_assets(type="secret")
+        if infra_keys:
+            lines.append(_render_key_table(infra_keys))
+        if certs:
+            lines.append(_render_key_table(certs))
+    creds = tmo.getAssetsByProps(type="credential") + tmo.getAssetsByProps(type="credentials") + tmo.getAssetsByProps(type="secret")
     if creds:
         lines.append(makeMarkdownLinkedHeader(header_level + 1, "Credentials", ctx, skipTOC=False))
         lines.append(_render_key_table(creds))
