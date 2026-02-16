@@ -412,7 +412,7 @@ function renderAttacker(attacker: any, headerLevel: number = 1, ctx: any = {}): 
     const lines: string[] = [];
     
     lines.push(`<a id="${attacker._id || attacker.id}"></a>`);
-    lines.push(`**${title}**\n`);
+    lines.push(`<p><strong>${title}</strong></p>`);
     lines.push('<dl markdown="block">');
     lines.push(`<dt>Description:</dt><dd markdown="block">${attacker.description}</dd>`);
     
@@ -474,13 +474,13 @@ function renderAssetTable(assets: any[]): string {
     });
     
     const lines: string[] = [];
-    lines.push('<table markdown="block">');
+    lines.push('<table>');
     lines.push('<tr><th>Title(ID)</th><th>Type</th><th>In Scope</th></tr>');
     
     for (const a of sorted) {
         const check = a.inScope ? '&#x2714;&#xFE0F;' : '&#x274C;';
         lines.push(
-            `<tr markdown="block"><td markdown="block">${a.title}<br/><code><strong markdown="block">${a._id || a.id}</strong></code>` +
+            `<tr><td>${a.title}<br/><code><strong>${a._id || a.id}</strong></code>` +
             `</td><td>${a.type}</td><td>${check}</td></tr>`
         );
     }

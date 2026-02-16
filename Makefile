@@ -6,7 +6,7 @@ TOTEST_DIR ?= $(ROOT_DIR)/build/totest
 TOTEST_OUTPUT_PY ?= $(TOTEST_DIR)/output_python
 TOTEST_OUTPUT_TS ?= $(TOTEST_DIR)/output_ts
 
-.PHONY: init test build run-example debug clean build-totest-python build-totest-ts compare-totest-md compare-totest-puml compare-totest-current compare-totest
+.PHONY: init test build run-example debug clean build-totest-python build-totest-ts compare-totest-md compare-totest-html compare-totest-puml compare-totest-current compare-totest render-totest-puml-tsvg
 
 init:
 	sudo uv pip install --system -e ./tree-node
@@ -81,9 +81,19 @@ build-totest-ts:
 compare-totest-md:
 	python3 $(ROOT_DIR)/scripts/compare_totest.py --mode md --base $(TOTEST_DIR)
 
+compare-totest-html:
+	python3 $(ROOT_DIR)/scripts/compare_totest.py --mode html --base $(TOTEST_DIR)
+
 compare-totest-puml:
 	python3 $(ROOT_DIR)/scripts/compare_totest.py --mode puml --base $(TOTEST_DIR)
 
-compare-totest-current: compare-totest-md compare-totest-puml
+render-totest-puml-tsvg:
+	@if command -v plantuml >/dev/null 2>&1; then \
+		find "$(TOTEST_OUTPUT_PY)" "$(TOTEST_OUTPUT_TS)" -type f -name '*.puml' -exec plantuml -tsvg {} +; \
+	else \
+		echo "plantuml command not found on PATH. Skipping explicit -tsvg rendering target."; \
+	fi
 
-compare-totest: build-totest-python build-totest-ts compare-totest-md compare-totest-puml
+compare-totest-current: compare-totest-md compare-totest-html compare-totest-puml
+
+compare-totest: build-totest-python build-totest-ts render-totest-puml-tsvg compare-totest-md compare-totest-html compare-totest-puml

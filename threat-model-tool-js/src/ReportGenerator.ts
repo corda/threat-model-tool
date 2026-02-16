@@ -402,7 +402,7 @@ export class ReportGenerator {
         }
         const titleText = match[1].trimEnd();
         const anchor = match[2];
-        return `[${titleText}](#${anchor}){.tocLink}`;
+        return `<a href="#${anchor}" class="tocLink">${titleText}</a>`;
     }
 
     private static createTableOfContent(mdData: string, levelLimit: number = 4): string {
@@ -519,6 +519,16 @@ export class ReportGenerator {
         }
 
         const repoRoot = path.resolve(process.cwd(), '..');
+        const pythonAssetRootDir = path.join(repoRoot, 'src', 'r3threatmodeling', 'assets');
+        for (const subdir of ['css', 'img', 'js']) {
+            const srcDir = path.join(pythonAssetRootDir, subdir);
+            const dstDir = path.join(outputDir, subdir);
+            if (fs.existsSync(srcDir) && fs.statSync(srcDir).isDirectory()) {
+                fs.mkdirSync(dstDir, { recursive: true });
+                fs.cpSync(srcDir, dstDir, { recursive: true, force: true });
+            }
+        }
+
         const pythonAssetImgDir = path.join(repoRoot, 'src', 'r3threatmodeling', 'assets', 'img');
         const outImgDir = path.join(outputDir, 'img');
         if (fs.existsSync(pythonAssetImgDir) && fs.statSync(pythonAssetImgDir).isDirectory()) {

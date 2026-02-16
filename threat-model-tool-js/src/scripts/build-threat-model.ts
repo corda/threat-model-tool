@@ -4,6 +4,41 @@ import { ReportGenerator } from '../ReportGenerator.js';
 import { execSync } from 'child_process';
 import path from 'path';
 import fs from 'fs';
+import { marked } from 'marked';
+import { load } from 'cheerio';
+
+function renderMarkdownWithMdInHtml(mdSource: string): string {
+    const render = (src: string): string => marked.parse(src, { gfm: true, breaks: false, async: false }) as string;
+
+    let html = render(mdSource);
+
+    for (let pass = 0; pass < 8; pass++) {
+        const $ = load(`<root>${html}</root>`, { decodeEntities: false });
+        const nodes = $('*[markdown="1"], *[markdown="block"]');
+        if (nodes.length === 0) {
+            return $('root').html() || html;
+        }
+
+        nodes.each((_, element) => {
+            const inner = $(element).html() || '';
+            const renderedInner = render(inner).trim();
+            $(element).removeAttr('markdown');
+            $(element).html(renderedInner);
+        });
+
+        const next = $('root').html() || html;
+        if (next === html) {
+            break;
+        }
+        html = next;
+    }
+
+    return html;
+}
+
+function stripMarkdownAttributes(html: string): string {
+    return html.replace(/\s+markdown=("|')(?:1|block)\1/g, '');
+}
 
 function collectPumlFiles(dir: string): string[] {
     if (!fs.existsSync(dir)) {
@@ -51,6 +86,38 @@ function sanitizePumlFilesForLegacyPlantUml(imgDir: string): void {
     }
 }
 
+function toShellSingleQuoted(value: string): string {
+    return `'${value.replace(/'/g, `'"'"'`)}'`;
+}
+
+function generateHtmlFromMarkdown(outputDir: string, modelId: string): void {
+    const mdPath = path.join(outputDir, `${modelId}.md`);
+    const htmlPath = path.join(outputDir, `${modelId}.html`);
+
+    if (!fs.existsSync(mdPath)) {
+        console.warn(`Markdown file missing, HTML not generated: ${mdPath}`);
+        return;
+    }
+
+    const mdReport = fs.readFileSync(mdPath, 'utf-8');
+    const htmlBody = stripMarkdownAttributes(renderMarkdownWithMdInHtml(mdReport));
+    const baseHtml = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="css/tm.css">
+<link rel="stylesheet" href="css/github.min.css">
+<script src="js/highlight.min.js"></script>
+<script>hljs.highlightAll();</script>
+</head>
+<body>%BODY%</body>
+</html>
+`;
+
+    fs.writeFileSync(htmlPath, baseHtml.replace('%BODY%', htmlBody), 'utf8');
+    console.log(`Generated: ${htmlPath}`);
+}
+
 const args = process.argv.slice(2);
 const yamlFile = args[0];
 const outputDir = args[1] || './output';
@@ -70,6 +137,9 @@ if (!fs.existsSync(fullPath)) {
 const tmo = new ThreatModel(fullPath);
 ReportGenerator.generate(tmo, 'full', path.resolve(outputDir));
 
+const modelId = (tmo as any)._id || (tmo as any).id;
+generateHtmlFromMarkdown(path.resolve(outputDir), modelId);
+
 // Run PlantUML via Docker
 const imgDir = path.join(path.resolve(outputDir), 'img');
 console.log('Generating PlantUML diagrams...');
@@ -77,15 +147,14 @@ console.log('Generating PlantUML diagrams...');
 try {
     sanitizePumlFilesForLegacyPlantUml(imgDir);
 
-    // Check if there are any .puml files
-    const pumlFiles = fs.readdirSync(imgDir).filter(f => f.endsWith('.puml'));
+    const pumlFiles = collectPumlFiles(imgDir);
     if (pumlFiles.length > 0) {
-        // Try local plantuml if available, otherwise suggest docker
+        const quoted = pumlFiles.map(toShellSingleQuoted).join(' ');
         try {
-            execSync(`plantuml -svg "${imgDir}/*.puml"`, { stdio: 'inherit' });
+            execSync(`plantuml -tsvg ${quoted}`, { stdio: 'inherit' });
         } catch (e) {
             console.log('Local plantuml failed, trying docker...');
-            execSync(`docker run --rm -v "${imgDir}:/data" plantuml/plantuml:sha-d2b2bcf *.puml -svg`, {
+            execSync(`docker run --rm -v "${imgDir}:/data" plantuml/plantuml:sha-d2b2bcf *.puml -tsvg`, {
                 stdio: 'inherit'
             });
         }

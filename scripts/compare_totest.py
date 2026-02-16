@@ -50,15 +50,38 @@ def compare_puml(base: Path) -> int:
     return 0
 
 
+def compare_html(base: Path) -> int:
+    print("MODEL,html_diff_lines_excl_last_update")
+    for model in MODELS:
+        py = base / "output_python" / model / f"{model}.html"
+        ts = base / "output_ts" / model / f"{model}.html"
+        if not py.exists() or not ts.exists():
+            print(f"{model},MISSING")
+            continue
+
+        result = subprocess.run(["diff", "-u", str(py), str(ts)], capture_output=True, text=True)
+        diff_lines = 0
+        for line in result.stdout.splitlines():
+            if line.startswith(("---", "+++", "@@")):
+                continue
+            if line.startswith(("+", "-")) and "Last update:" not in line:
+                diff_lines += 1
+
+        print(f"{model},{diff_lines}")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", choices=["md", "puml"], required=True)
+    parser.add_argument("--mode", choices=["md", "puml", "html"], required=True)
     parser.add_argument("--base", default="build/totest")
     args = parser.parse_args()
 
     base = Path(args.base).resolve()
     if args.mode == "md":
         return compare_md(base)
+    if args.mode == "html":
+        return compare_html(base)
     return compare_puml(base)
 
 
