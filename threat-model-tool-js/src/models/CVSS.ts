@@ -19,10 +19,17 @@ export class TMCVSS {
             try {
                 const normalizedVector = this.normalizeVector(this.vector);
                 const all = CVSS.getAll(normalizedVector);
+                const readScore = (value: any): number => {
+                    if (typeof value === 'number') return value;
+                    return Number(value?.score ?? 0);
+                };
+                const base = readScore((all as any).base);
+                const temporal = readScore((all as any).temporal);
+                const environmental = readScore((all as any).environmental);
                 this._scores = {
-                    base: all.base?.score ?? 0,
-                    temporal: all.temporal?.score ?? 0,
-                    environmental: all.environmental?.score ?? 0,
+                    base: Number.isFinite(base) ? base : 0,
+                    temporal: Number.isFinite(temporal) ? temporal : 0,
+                    environmental: Number.isFinite(environmental) ? environmental : 0,
                 };
             } catch {
                 this._scores = null;
@@ -50,7 +57,10 @@ export class TMCVSS {
 
     scores(): [number, number, number] {
         if (this._scores) {
-            return [this._scores.base, this._scores.temporal, this._scores.environmental];
+            const base = Number.isFinite(this._scores.base) ? this._scores.base : 0;
+            const temporal = Number.isFinite(this._scores.temporal) ? this._scores.temporal : 0;
+            const environmental = Number.isFinite(this._scores.environmental) ? this._scores.environmental : 0;
+            return [base, temporal, environmental];
         }
         return [0, 0, 0];
     }
@@ -102,7 +112,8 @@ export class TMCVSS {
     getSmartScoreDesc(): string {
         if (this.isTodo()) return 'TODO CVSS';
         const idx = this.getSmartScoreIndex();
-        const score = this.scores()[idx];
+        const rawScore = this.scores()[idx];
+        const score = Number.isFinite(rawScore) ? rawScore : 0;
         const severity = this.severities()[idx];
         // Format score to always show decimal like Python (10.0 not 10)
         const scoreStr = Number.isInteger(score) ? score.toFixed(1) : String(score);
@@ -111,7 +122,8 @@ export class TMCVSS {
 
     getSmartScoreVal(): number {
         if (this.isTodo()) return 0;
-        return this.scores()[this.getSmartScoreIndex()];
+        const value = this.scores()[this.getSmartScoreIndex()];
+        return Number.isFinite(value) ? value : 0;
     }
 
     getSmartScoreColor(): string {

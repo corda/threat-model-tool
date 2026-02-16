@@ -167,7 +167,11 @@ export default class ThreatModel extends BaseThreatModelObject {
         }
 
         // Sort by CVSS score descending (matching Python behavior)
-        return result.sort((a, b) => b.getSmartScoreVal() - a.getSmartScoreVal());
+        return result.sort((a, b) => {
+            const aScore = Number.isFinite(a.getSmartScoreVal()) ? a.getSmartScoreVal() : 0;
+            const bScore = Number.isFinite(b.getSmartScoreVal()) ? b.getSmartScoreVal() : 0;
+            return bScore - aScore;
+        });
     }
 
     /**
@@ -190,7 +194,11 @@ export default class ThreatModel extends BaseThreatModelObject {
         }
 
         // Sort by CVSS score descending (matching Python behavior)
-        return result.sort((a, b) => b.getSmartScoreVal() - a.getSmartScoreVal());
+        return result.sort((a, b) => {
+            const aScore = Number.isFinite(a.getSmartScoreVal()) ? a.getSmartScoreVal() : 0;
+            const bScore = Number.isFinite(b.getSmartScoreVal()) ? b.getSmartScoreVal() : 0;
+            return bScore - aScore;
+        });
     }
 
     /**

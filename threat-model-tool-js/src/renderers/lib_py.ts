@@ -372,7 +372,11 @@ export function renderSecurityObjectives(tmo: ThreatModel, headerLevel: number =
     lines.push('**Details:**');
     
     // Sort by title like Python does
-    const sorted = [...tmo.securityObjectives].sort((a, b) => a.title.localeCompare(b.title));
+    const sorted = [...tmo.securityObjectives].sort((a, b) => {
+        if (a.title < b.title) return -1;
+        if (a.title > b.title) return 1;
+        return 0;
+    });
     for (const so of sorted) {
         lines.push(renderSecurityObjective(so, headerLevel - 2, ctx));
     }

@@ -1,5 +1,3 @@
-import { HeadingNumberer } from './HeadingNumberer.js';
-
 /** Page break div matching Python's PAGEBREAK constant (no surrounding newlines) */
 export const PAGEBREAK = '<div class="pagebreak"></div>';
 
@@ -51,15 +49,9 @@ export function makeMarkdownLinkedHeader(
     skipTOC: boolean = false,
     tmObject: any = null
 ): string {
-    const numberer = HeadingNumberer.getInstance();
-    let number = "";
-    
-    if (HeadingNumberer.isEnabled()) {
-        number = numberer.getNumber(level);
-        if (number) {
-            number = number + " ";
-        }
-    }
+    // Python currently disables eager numbering in makeMarkdownLinkedHeader()
+    // and relies on a later report post-processing pass.
+    const number = "";
 
     // Create anchor
     let anchor = "";

@@ -33,14 +33,22 @@ export class ReportGenerator {
         fs.mkdirSync(outputDir, { recursive: true });
         fs.mkdirSync(path.join(outputDir, 'img'), { recursive: true });
 
+        // Copy static assets (TM assets + Python legend PUML assets) for parity
+        this.copyStaticAssets(tmo, outputDir);
+
         // Reset heading numbers
+        enableHeadingNumbering();
         resetHeadingNumbers();
+
+        const hasPrePostSections = fs.existsSync(path.join(tmo.assetDir(), 'markdown_sections_1'));
 
         // Set context defaults
         const context = {
             processToc: true,
+            process_toc: true,
             process_prepost_md: true,
             process_heading_numbering: true,
+            rootHeaderLevel: hasPrePostSections ? 2 : 1,
             mainTitle: ctx.mainTitle || null,
             ...ctx
         };
@@ -48,10 +56,15 @@ export class ReportGenerator {
         // Render report using the Python-aligned pipeline
         let mdReport = this.renderFullReport(tmo, context);
 
+        // Inject pre/post markdown sections from assets/markdown_sections_1 when present
+        mdReport = this.injectPrePostMarkdownSections(tmo, mdReport, context);
+
+        // Apply Python-style heading numbering pass after TOC placeholder
+        mdReport = this.applyHeadingNumberingPass(mdReport, context);
+
         // Inject TOC
-        if (context.processToc) {
-            const toc = this.generateTOC(mdReport);
-            mdReport = mdReport.replace('__TOC_PLACEHOLDER__', toc);
+        if ((context.process_toc ?? context.processToc ?? true)) {
+            mdReport = this.createTableOfContent(mdReport);
         }
 
         // Write markdown file (ensure trailing newline to match Python)
@@ -65,6 +78,104 @@ export class ReportGenerator {
         this.generatePlantUML(tmo, outputDir);
     }
 
+    private static injectPrePostMarkdownSections(tmo: ThreatModel, mdReport: string, ctx: any): string {
+        if (!(ctx.process_prepost_md ?? true)) {
+            return mdReport;
+        }
+
+        const sectionsDir = path.join(tmo.assetDir(), 'markdown_sections_1');
+        if (!fs.existsSync(sectionsDir) || !fs.statSync(sectionsDir).isDirectory()) {
+            return mdReport;
+        }
+
+        mdReport = mdReport.replace('__TOC_PLACEHOLDER__', '');
+        mdReport = mdReport.replace(/^\s*#\s*table\s+of\s+content\s*\r?\n?/gim, '');
+        mdReport = mdReport.replace(/(?:<div\s+[^>]*class=["']pagebreak["'][^>]*>\s*<\/div>\s*){2,}/gi, '<div class="pagebreak"></div>\n');
+
+        const files = fs.readdirSync(sectionsDir);
+        const preFiles = files
+            .filter((fileName) => /^pre_\d\d_.*\.md$/i.test(fileName))
+            .sort()
+            .reverse();
+        const postFiles = files
+            .filter((fileName) => /^post_\d\d_.*\.md$/i.test(fileName))
+            .sort();
+
+        for (const fileName of preFiles) {
+            const filePath = path.join(sectionsDir, fileName);
+            mdReport = fs.readFileSync(filePath, 'utf8') + '\n' + mdReport;
+        }
+
+        for (const fileName of postFiles) {
+            const filePath = path.join(sectionsDir, fileName);
+            mdReport = mdReport + '\n' + fs.readFileSync(filePath, 'utf8');
+        }
+
+        return mdReport;
+    }
+
+    private static applyHeadingNumberingPass(mdReport: string, ctx: any): string {
+        if (!(ctx.process_heading_numbering ?? true)) {
+            return mdReport;
+        }
+
+        const numberer = HeadingNumberer.getInstance();
+        numberer.reset();
+
+        const outputLines: string[] = [];
+        let inFence = false;
+        let numberStarted = false;
+
+        const fencePattern = /^\s*(```|~~~)/;
+        const headingPattern = /^(#{1,6})\s+(.*)$/;
+        const alreadyNumberedPattern = /^\d+(?:[\.\d]*\s*-?\s*)/;
+
+        for (const line of mdReport.split('\n')) {
+            if (fencePattern.test(line)) {
+                inFence = !inFence;
+                outputLines.push(line);
+                continue;
+            }
+
+            if (!numberStarted) {
+                if (line.includes('__TOC_PLACEHOLDER__')) {
+                    numberStarted = true;
+                }
+                outputLines.push(line);
+                continue;
+            }
+
+            if (inFence) {
+                outputLines.push(line);
+                continue;
+            }
+
+            const headingMatch = line.match(headingPattern);
+            if (!headingMatch) {
+                outputLines.push(line);
+                continue;
+            }
+
+            const hashes = headingMatch[1];
+            const title = headingMatch[2].trim();
+            if (alreadyNumberedPattern.test(title)) {
+                outputLines.push(line);
+                continue;
+            }
+
+            const headingLevel = hashes.length;
+            const number = numberer.getNumber(headingLevel);
+            if (!number) {
+                outputLines.push(line);
+                continue;
+            }
+
+            outputLines.push(`${hashes} ${number} ${title}`);
+        }
+
+        return outputLines.join('\n');
+    }
+
     /**
      * Render a full report matching Python render_full_report():
      * - render_tm_report_part(root, ancestor_data=True, toc=True, summary=True)
@@ -76,17 +187,18 @@ export class ReportGenerator {
     private static renderFullReport(tmo: ThreatModel, ctx: any): string {
         resetHeadingNumbers();
         const lines: string[] = [];
+        const rootHeaderLevel = ctx.rootHeaderLevel || 1;
 
         // Root part: with TOC and summary
-        lines.push(this.renderTmReportPart(tmo, true, true, true, 1, ctx));
+        lines.push(this.renderTmReportPart(tmo, true, true, true, rootHeaderLevel, ctx));
 
         // Descendants
         for (const descendant of tmo.getDescendantsTM()) {
-            lines.push(this.renderTmReportPart(descendant, false, false, false, 1, ctx));
+            lines.push(this.renderTmReportPart(descendant, false, false, false, rootHeaderLevel, ctx));
         }
 
         // Annexes
-        lines.push(renderAnnexes(tmo, 1, ctx));
+        lines.push(renderAnnexes(tmo, rootHeaderLevel, ctx));
 
         return lines.join('\n');
     }
@@ -282,81 +394,141 @@ export class ReportGenerator {
         return lines.join('\n');
     }
 
-    /**
-     * Generate TOC matching Python's createTableOfContent().
-     * 
-     * Python logic:
-     * - Scans headings line by line
-     * - Skips lines with 'skipTOC'
-     * - H1 (<2) = **bold**, H2 (==2) = ***bold-italic***, H3-H4 = plain, H5+ = skip
-     * - Indentation: &nbsp;&nbsp; per heading level + "  " separator
-     * - Blank line (\n\n) after each entry
-     * - Keeps <code> tags in titles
-     */
-    private static generateTOC(markdown: string): string {
-        let toc = '';
-        const SKIP_TOC = 'skipTOC';
-        const levelLimit = 4;
-        
-        const lines = markdown.split('\n');
-        for (const line of lines) {
-            // Check for heading lines
-            const headingMatch = line.match(/^(#+)\s/);
-            if (!headingMatch) continue;
-            if (line.includes(SKIP_TOC)) continue;
-            
-            const level = headingMatch[1].length;
-            if (level > levelLimit) continue;
-            
-            // Get full title (everything after the hashes + space)
-            let fullTitle = line.replace(/^#+\s*/, '');
-            
-            // Extract anchor from existing <a id='...'></a> or <a name='...'></a>
-            const anchorRegex = /\s*<a\s+(?:name|id)\s*=\s*['"]([^'"]+)['"][^>]*>\s*<\/a>\s*$/i;
-            const anchorMatch = fullTitle.match(anchorRegex);
-            let anchor = '';
-            let titleText = '';
-            
-            if (anchorMatch) {
-                anchor = anchorMatch[1];
-                titleText = fullTitle.replace(anchorRegex, '').trimEnd();
-            } else {
-                titleText = fullTitle.trim();
-                anchor = createTitleAnchorHash(titleText);
-            }
-            
-            // Build TOC link (keep <code> tags in display text, matching Python)
-            const tocLink = `[${titleText}](#${anchor}){.tocLink}`;
-            
-            // Format based on heading level (matching Python):
-            // level < 2 (i.e., H1) → **bold**
-            // level == 2 (H2) → ***bold-italic***
-            // level 3-4 → plain
-            let entry: string;
-            if (level < 2) {
-                entry = `**${tocLink}**`;
-            } else if (level === 2) {
-                entry = `***${tocLink}***`;
-            } else {
-                entry = tocLink;
-            }
-            
-            // Indentation: Python replaces each # with &nbsp;&nbsp;
-            // then adds space + explicit space before entry
-            const tabs = '&nbsp;&nbsp;'.repeat(level);
-            
-            toc += `${tabs}  ${entry}\n\n`;
+    private static transformNamedAnchorMd(text: string): string {
+        const pattern = /^(.*?)(?:\s*<a\s+(?:name|id)\s*=\s*['"]([^'"]+)['"][^>]*>\s*<\/a>\s*)$/s;
+        const match = text.match(pattern);
+        if (!match) {
+            return text;
         }
-        
-        return toc;
+        const titleText = match[1].trimEnd();
+        const anchor = match[2];
+        return `[${titleText}](#${anchor}){.tocLink}`;
+    }
+
+    private static createTableOfContent(mdData: string, levelLimit: number = 4): string {
+        let toc = '';
+        const newLines: string[] = [];
+        const skipToc = 'skipTOC';
+
+        for (const line of mdData.split('\n')) {
+            if (line.includes('__TOC_PLACEHOLDER__')) {
+                newLines.push('__TOC_PLACEHOLDER__');
+                continue;
+            }
+
+            if (/^#+\s/.test(line) && !line.includes(skipToc)) {
+                const title = line.replace(/#/g, '').trim();
+                const anchorPattern = /<a\s+(?:name|id)\s*=\s*['"][^'"]+['"][^>]*>\s*<\/a>/i;
+
+                let modifiedLine = line;
+                let titleWithAnchor = title;
+
+                if (!anchorPattern.test(line)) {
+                    const anchorName = createTitleAnchorHash(title);
+                    const anchorHtml = ` <a name='${anchorName}' class='tocLink'></a>`;
+                    modifiedLine = line + anchorHtml;
+                    titleWithAnchor = title + anchorHtml;
+                }
+
+                newLines.push(modifiedLine);
+
+                const tocTitle = this.transformNamedAnchorMd(titleWithAnchor);
+                const levelMatch = line.match(/^(#+)\s/);
+                if (!levelMatch) {
+                    continue;
+                }
+                const level = levelMatch[1].length;
+                if (level > levelLimit) {
+                    continue;
+                }
+
+                let tocEntry: string;
+                if (level < 2) {
+                    tocEntry = `**${tocTitle}**`;
+                } else if (level === 2) {
+                    tocEntry = `***${tocTitle}***`;
+                } else {
+                    tocEntry = tocTitle;
+                }
+
+                const tabs = '&nbsp;&nbsp;'.repeat(level);
+                toc += `${tabs}  ${tocEntry}\n\n`;
+            } else {
+                newLines.push(line);
+            }
+        }
+
+        const withAnchors = newLines.join('\n');
+        return withAnchors.replace('__TOC_PLACEHOLDER__', toc);
     }
 
     private static generatePlantUML(tmo: ThreatModel, outputDir: string): void {
         const id = (tmo as any)._id || tmo.id;
-        // Generate attack tree
-        const attackTree = AttackTreeGenerator.generate(tmo);
-        const pumlPath = path.join(outputDir, 'img', `${id}_ATTACKTREE.puml`);
-        fs.writeFileSync(pumlPath, attackTree, 'utf8');
-        console.log(`Generated: ${pumlPath}`);
+        const imgDir = path.join(outputDir, 'img');
+        const threatTreeDir = path.join(imgDir, 'threatTree');
+        const secObjDir = path.join(imgDir, 'secObjectives');
+
+        fs.mkdirSync(imgDir, { recursive: true });
+        fs.mkdirSync(threatTreeDir, { recursive: true });
+        fs.mkdirSync(secObjDir, { recursive: true });
+
+        const allModels = [tmo, ...tmo.getDescendantsTM()];
+
+        for (const model of allModels) {
+            const modelId = (model as any)._id || model.id;
+            const perTmAttackTree = AttackTreeGenerator.generate(model);
+            const perTmPath = path.join(imgDir, `${modelId}_ATTACKTREE.puml`);
+            fs.writeFileSync(perTmPath, perTmAttackTree, 'utf8');
+            console.log(`Generated: ${perTmPath}`);
+        }
+
+        const completeAttackTree = AttackTreeGenerator.generateComplete(tmo);
+        const completePath = path.join(imgDir, `COMPLETE_${id}_ATTACKTREE.puml`);
+        fs.writeFileSync(completePath, completeAttackTree, 'utf8');
+        console.log(`Generated: ${completePath}`);
+
+        for (const threat of AttackTreeGenerator.getAllThreats(tmo)) {
+            const threatId = (threat as any)._id || threat.id;
+            const threatTree = AttackTreeGenerator.generatePerThreat(threat);
+            const threatPath = path.join(threatTreeDir, `${threatId}.puml`);
+            fs.writeFileSync(threatPath, threatTree, 'utf8');
+            console.log(`Generated: ${threatPath}`);
+        }
+
+        for (const secObj of AttackTreeGenerator.getAllSecurityObjectives(tmo)) {
+            const secObjId = (secObj as any)._id || secObj.id;
+            const secObjTree = AttackTreeGenerator.generateSecObjectiveTree(tmo, secObj);
+            const secObjPath = path.join(secObjDir, `${secObjId}.puml`);
+            fs.writeFileSync(secObjPath, secObjTree, 'utf8');
+            console.log(`Generated: ${secObjPath}`);
+        }
+
+        const secObjectivesOverview = AttackTreeGenerator.generateSecObjectivesOverview(tmo);
+        const secObjectivesOverviewPath = path.join(imgDir, 'secObjectives.puml');
+        fs.writeFileSync(secObjectivesOverviewPath, secObjectivesOverview, 'utf8');
+        console.log(`Generated: ${secObjectivesOverviewPath}`);
+    }
+
+    private static copyStaticAssets(tmo: ThreatModel, outputDir: string): void {
+        const models = [tmo, ...tmo.getDescendantsTM()];
+        for (const model of models) {
+            const assetDir = model.assetDir();
+            if (fs.existsSync(assetDir) && fs.statSync(assetDir).isDirectory()) {
+                fs.cpSync(assetDir, outputDir, { recursive: true, force: true });
+            }
+        }
+
+        const repoRoot = path.resolve(process.cwd(), '..');
+        const pythonAssetImgDir = path.join(repoRoot, 'src', 'r3threatmodeling', 'assets', 'img');
+        const outImgDir = path.join(outputDir, 'img');
+        if (fs.existsSync(pythonAssetImgDir) && fs.statSync(pythonAssetImgDir).isDirectory()) {
+            for (const fileName of ['legend_AttackTree.puml', 'legend_SecObjTree.puml']) {
+                const srcFile = path.join(pythonAssetImgDir, fileName);
+                if (fs.existsSync(srcFile)) {
+                    fs.mkdirSync(outImgDir, { recursive: true });
+                    fs.copyFileSync(srcFile, path.join(outImgDir, fileName));
+                }
+            }
+        }
     }
 }

@@ -127,7 +127,8 @@ export default class Threat extends BaseThreatModelObject {
     }
 
     getSmartScoreVal(): number {
-        return this.cvssObject ? this.cvssObject.getSmartScoreVal() : 0.0;
+        const score = this.cvssObject ? this.cvssObject.getSmartScoreVal() : 0.0;
+        return Number.isFinite(score) ? score : 0.0;
     }
 
     getSmartScoreColor(): string {
