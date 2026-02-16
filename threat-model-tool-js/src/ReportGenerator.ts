@@ -386,8 +386,10 @@ export class ReportGenerator {
 
         // Release history
         if ((tmo as any).history) {
+            lines.push('<div markdown="1">');
             lines.push('**Release history**');
             lines.push((tmo as any).history);
+            lines.push('</div>');
         }
 
         lines.push('</div>');

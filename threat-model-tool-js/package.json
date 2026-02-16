@@ -12,7 +12,10 @@
     "test:build": "tsx src/scripts/build-threat-model.ts",
     "start": "node dist/index.js",
     "compile": "tsc --noEmit",
-    "build:example": "tsx src/scripts/build-threat-model.ts ../tests/exampleThreatModels/FullFeature/FullFeature.yaml ./test-output"
+    "build:example": "tsx src/scripts/build-threat-model.ts ../tests/exampleThreatModels/FullFeature/FullFeature.yaml ../build/examples/FullFeature",
+    "generate:examples": "for dir in tests/exampleThreatModels/*/; do name=$(basename \"$dir\"); if [ -f \"$dir/$name.yaml\" ]; then npx tsx src/scripts/build-threat-model.ts \"$dir/$name.yaml\" \"../build/examples/$name\"; fi; done",
+    "generate:example": "npx tsx src/scripts/build-threat-model.ts tests/exampleThreatModels/${npm_config_example}/${npm_config_example}.yaml ../build/examples/${npm_config_example}",
+    "generate:example:debug": "node --inspect-brk ./node_modules/tsx/dist/cli.mjs src/scripts/build-threat-model.ts tests/exampleThreatModels/${npm_config_example}/${npm_config_example}.yaml ../build/examples/${npm_config_example}"
   },
   "dependencies": {
     "cheerio": "^1.2.0",

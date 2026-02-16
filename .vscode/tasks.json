@@ -1,0 +1,58 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+        {
+            "label": "TS: Generate all example threat models",
+            "type": "shell",
+            "command": "npm",
+            "args": [
+                "run",
+                "generate:examples"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/threat-model-tool-js"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "TS: Generate selected example threat model",
+            "type": "shell",
+            "command": "npm",
+            "args": [
+                "run",
+                "generate:example",
+                "--example=${input:tmExample}"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/threat-model-tool-js"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "TS: Debug selected example threat model",
+            "type": "shell",
+            "command": "npm",
+            "args": [
+                "run",
+                "generate:example:debug",
+                "--example=${input:tmExample}"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/threat-model-tool-js"
+            },
+            "problemMatcher": []
+        }
+    ],
+	"inputs": [
+		{
+			"id": "tmExample",
+			"type": "pickString",
+			"description": "Select the example threat model",
+			"options": [
+				"Example1",
+				"Example2",
+				"FullFeature"
+			]
+		}
+	]
+}

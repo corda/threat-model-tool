@@ -1,0 +1,99 @@
+ID: ApiGateway
+schemaVersion: 2
+title: API Gateway Security Model
+version: '1.0'
+parent: FullFeature
+
+scope:
+  description: |
+    Security analysis for the API Gateway component.
+    The gateway handles authentication, rate limiting, and routing.
+
+  assets:
+    - ID: GW_TLS_CERT
+      title: Gateway TLS Certificate
+      description: TLS certificate for API Gateway HTTPS termination.
+      type: certificate
+      inScope: true
+      infrastructureRelated: true
+      properties:
+        algorithm: ECDSA P-256
+        issuer: Public CA
+        validity: 90 days
+
+    - ID: GW_JWT_SECRET
+      title: JWT Signing Secret
+      description: Secret key used to sign and verify JWT tokens.
+      type: secret
+      inScope: true
+      applicationRelated: true
+
+    # Dataflow that's out of scope (tests inScope: false rendering)
+    - ID: GW_LEGACY_API
+      title: Legacy API Passthrough
+      description: |
+        Traffic passthrough to legacy system without inspection.
+        Out of scope as legacy system has separate threat model.
+      type: dataflow
+      inScope: false
+
+threats:
+  - ID: GW_JWT_FORGERY
+    title: JWT Token Forgery
+    attack: |
+      Attacker forges JWT token by:
+      1. Exploiting weak algorithm (alg:none)
+      2. Brute-forcing weak secret
+      3. Key confusion attack (RS/HS)
+    threatType: Spoofing
+    impactDesc: Complete authentication bypass
+    attackers:
+      - REFID: ATT_EXTERNAL
+    assets:
+      - REFID: GW_JWT_SECRET
+    impactedSecObj:
+      - REFID: OBJ_CONFIDENTIALITY
+      - REFID: OBJ_INTEGRITY
+    CVSS:
+      base: 9.1
+      vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N
+    fullyMitigated: true
+    public: true
+    countermeasures:
+      - ID: GW_CM_ALG_WHITELIST
+        title: Algorithm Whitelist
+        description: Only allow RS256 algorithm, reject 'none' and HS*.
+        inPlace: true
+        public: true
+      - ID: GW_CM_STRONG_SECRET
+        title: Strong JWT Secret
+        description: Use cryptographically strong random secret (256+ bits).
+        inPlace: true
+        operational: true
+        operator: Security Operations Team
+        public: true
+
+  - ID: GW_RATE_LIMIT_BYPASS
+    title: Rate Limit Bypass
+    attack: Bypassing rate limits through distributed requests or header manipulation.
+    threatType: DoS
+    impactDesc: Service degradation through resource exhaustion
+    attackers:
+      - REFID: ATT_EXTERNAL
+    impactedSecObj:
+      - REFID: OBJ_AVAILABILITY
+    CVSS:
+      base: 5.9
+      vector: CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H
+    fullyMitigated: true
+    public: true
+    countermeasures:
+      # References same-TM countermeasure - tests REFID resolution
+      - REFID: GW_CM_ALG_WHITELIST
+      - ID: GW_CM_IP_FINGERPRINT
+        title: Client IP Fingerprinting
+        description: Use multiple headers and techniques to identify true client IP.
+        inPlace: true
+        operational: true
+        operator: DevOps Team
+        public: true

@@ -94,3 +94,5 @@ ENV/
 
 .obsidian
 **/node_modules/*
+
+**/build/*

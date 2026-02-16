@@ -1,0 +1,84 @@
+ID: SubComponent
+schemaVersion: 2
+title: Sub-Component Feature Test
+version: '1.1'
+parent: FullFeature
+
+scope:
+  description: |
+    Scope for the sub-component service.
+    Tests cross-reference countermeasures and nested TM hierarchies.
+
+  assets:
+    - ID: SUB_ASSET
+      title: Sub Asset
+      type: service
+      inScope: true
+      description: Internal microservice handling data processing.
+
+    # Key asset in sub-component (tests Keys Summary aggregation)
+    - ID: SUB_SERVICE_KEY
+      title: Sub-Component Service Key
+      description: Key for sub-component internal authentication.
+      type: key
+      inScope: true
+      applicationRelated: true
+      properties:
+        type: HMAC-SHA256
+        length: '256 bits'
+
+threats:
+  - ID: SUB_THREAT_DOS
+    title: Denial of Service on Sub Component
+    attack: |
+      Overwhelming the sub-component with excessive requests,
+      causing service degradation or unavailability.
+    threatType: DoS
+    attackers:
+      - REFID: ATT_EXTERNAL
+    assets:
+      - REFID: SUB_ASSET
+    impactDesc: Sub component becomes unavailable affecting dependent services.
+    impactedSecObj:
+      - REFID: OBJ_AVAILABILITY
+    CVSS:
+      base: 7.5
+      vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H
+    fullyMitigated: true
+    public: true
+    countermeasures:
+      - ID: SUB_CM_RATE_LIMIT
+        title: Rate Limiting
+        description: Limit requests to the sub component to 1000 req/sec.
+        inPlace: true
+        public: true
+        operational: true
+        operator: Platform Team
+
+  # Threat with REFID to same-TM countermeasure
+  - ID: SUB_THREAT_KEY_LEAK
+    title: Sub-Component Key Exposure
+    attack: API key for sub-component exposed through misconfiguration.
+    threatType: Information Disclosure
+    attackers:
+      - REFID: ATT_INSIDER
+    assets:
+      - REFID: SUB_SERVICE_KEY
+    impactDesc: Unauthorized access to sub-component services.
+    impactedSecObj:
+      - REFID: OBJ_CONFIDENTIALITY
+    CVSS:
+      base: 8.1
+      vector: CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N
+    fullyMitigated: true
+    public: true
+    countermeasures:
+      # Reference to countermeasure in same TM - tests REFID resolution
+      - REFID: SUB_CM_RATE_LIMIT
+      - ID: SUB_CM_KEY_AUDIT
+        title: Key Access Auditing
+        description: Log and monitor all key access attempts.
+        inPlace: true
+        public: true
+        operational: true
+        operator: Security Operations Team
