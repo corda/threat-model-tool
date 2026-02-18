@@ -1,0 +1,6 @@
+node_modules/
+public-build/
+resources/
+.hugo_build.lock
+content/docs/*
+!content/docs/_index.md

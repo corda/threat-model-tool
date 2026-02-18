@@ -14,6 +14,8 @@ init:
 	npm install
 	cd threat-model-tool-js && npm install
 	cd threat-model-tool-js/astro-site && npm install
+	cd threat-model-tool-js/docusaurus-site && npm install
+	cd threat-model-tool-js/hugo-site && npm install
 
 test:
 	uv run pytest
@@ -101,3 +103,12 @@ compare-totest: build-totest-python build-totest-ts render-totest-puml-tsvg comp
 
 build-site-ts:
 	cd threat-model-tool-js && npm run build:astroSite:examples
+
+build-site-docusaurus-ts:
+	cd threat-model-tool-js && npm run build:docusaurusSite:examples
+
+build-site-hugo-ts:
+	cd threat-model-tool-js && npm run build:hugoSite:examples
+
+build-site-mkdocs-ts:
+	cd threat-model-tool-js && npm run build:mkdocsSite:examples

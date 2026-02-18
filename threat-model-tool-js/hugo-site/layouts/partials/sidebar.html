@@ -1,0 +1,28 @@
+{{ $current := . }}
+{{ $docsSection := site.GetPage "section" "docs" }}
+
+<div class="tm-sidebar-search-wrap">
+  <input id="tm-sidebar-search" class="tm-sidebar-search" type="search" placeholder="Search pages..." aria-label="Search pages" />
+</div>
+
+<nav class="tm-nav" aria-label="Documentation navigation">
+  <ul id="tm-nav-list">
+    {{ if $docsSection }}
+    <li>
+      <a href="{{ $docsSection.RelPermalink }}" class="{{ if eq $current.RelPermalink $docsSection.RelPermalink }}active{{ end }}">Home</a>
+    </li>
+    {{ range $docsSection.RegularPagesRecursive.ByWeight }}
+    <li>
+      <a href="{{ .RelPermalink }}" class="{{ if eq $current.RelPermalink .RelPermalink }}active{{ end }}">{{ .Title }}</a>
+    </li>
+    {{ end }}
+    {{ else }}
+    <li><a href="/docs/">Home</a></li>
+    {{ end }}
+  </ul>
+</nav>
+
+<section class="tm-page-headings" aria-label="Page headings">
+  <h2 class="tm-page-headings-title">This page</h2>
+  <ul id="tm-page-headings-list"></ul>
+</section>

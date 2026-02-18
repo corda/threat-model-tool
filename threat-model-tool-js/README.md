@@ -74,6 +74,12 @@ Test fixtures live in the parent project at `../tests/exampleThreatModels/`.
 | `build:directory:examples` | Build all example TMs via `buildFullDirectory` |
 | `build:astroSite` | Build an Astro Starlight docs site (see below) |
 | `build:astroSite:examples` | Build a site from example TMs to `../build/site` |
+| `build:docusaurusSite` | Build a Docusaurus docs site (see below) |
+| `build:docusaurusSite:examples` | Build a Docusaurus site from example TMs to `../build/site-docusaurus` |
+| `serve:docusaurusSite` | Serve the generated Docusaurus site locally (port 4322) |
+| `build:hugoSite` | Build a Hugo docs site (see below) |
+| `build:hugoSite:examples` | Build a Hugo site from example TMs to `../build/site-hugo` |
+| `serve:hugoSite` | Serve the generated Hugo site locally (port 4323) |
 | `start` | Run the compiled output |
 
 ## Running the Tool
@@ -173,6 +179,47 @@ threatModels/
     utils.yaml           ← skipped (name mismatch)
 ```
 
+### Build a MkDocs docs site (legacy-compatible)
+
+Generate a static documentation site using Python MkDocs, while keeping the build orchestration in TypeScript.
+This path mirrors the legacy Python setup (same ReadTheDocs theme, same `mkdocs.css` / `threatmodel.css`, same `tm.js`, and the same `mkdocs.yml` structure).
+
+```bash
+npx tsx src/scripts/build-mkdocs-site.ts [options]
+```
+
+**Options:**
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--TMDirectory <path>` | `.` | Directory containing TM sub-folders |
+| `--outputDir <path>` | `<MKDocsDir>/docs` | MkDocs docs source directory |
+| `--MKDocsDir <path>` | `../build/mkdocs` | MkDocs working directory (`mkdocs.yml`) |
+| `--MKDocsSiteDir <path>` | `../build/site-mkdocs` | Final generated MkDocs static site |
+| `--template <name>` | `MKdocs` | Report template used for TM markdown generation |
+| `--visibility full\|public` | `full` | `public` strips non-public content |
+| `--siteName <name>` | `Threat Models` | Site name written into `mkdocs.yml` |
+| `--templateSiteFolderSRC <path>` | *(none)* | Extra overlay source folder (docs/css/assets) |
+| `--templateSiteFolderDST <path>` | `<MKDocsDir>` | Overlay destination folder |
+| `--no-headerNumbering` | *(numbering on)* | Disable automatic heading numbers |
+| `--generatePDF` | *(off)* | Also generate PDFs for each TM |
+| `--pdfHeaderNote <text>` | *(none)* | Custom header for PDF pages |
+
+**Examples:**
+
+```bash
+# Build MkDocs site from example TMs (uses legacy site template overlay)
+npm run build:mkdocsSite:examples
+
+# Build from a custom TM directory
+npx tsx src/scripts/build-mkdocs-site.ts \
+  --TMDirectory ./threatModels \
+  --MKDocsDir   ../build/mkdocs \
+  --MKDocsSiteDir ../build/site-mkdocs
+```
+
+This script copies baseline MkDocs assets from the parent Python project at `src/r3threatmodeling/assets/MKDOCS_init`, then applies any user-provided template overlay from `--templateSiteFolderSRC`.
+
 ### Build an Astro Starlight docs site
 
 Generate a searchable, static documentation site from a directory of threat models using [Astro Starlight](https://starlight.astro.build/). This is the TypeScript equivalent of the Python MkDocs pipeline.
@@ -243,13 +290,104 @@ The Astro project lives in `astro-site/` and is managed automatically by the bui
 - Vanilla JS copy-link-to-heading functionality (`tm.js`)
 - Starlight content collections with `docsLoader()` (Astro 5 API)
 
+### Build a Docusaurus docs site
+
+Generate a static documentation site from a directory of threat models using [Docusaurus](https://docusaurus.io/).
+This pipeline mirrors the Astro flow: discover all TMs, build reports using `MKdocs` template, stage docs/assets, then run `docusaurus build`.
+
+```bash
+npx tsx src/scripts/build-docusaurus-site.ts [options]
+```
+
+**Options:**
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--TMDirectory <path>` | `.` | Directory containing TM sub-folders |
+| `--outputDir <path>` | `./build/site-docusaurus` | Where the final static site is written |
+| `--template <name>` | `MKdocs` | Report template (`MKdocs` recommended) |
+| `--visibility full\|public` | `full` | `public` strips non-public content |
+| `--siteName <name>` | `Threat Models` | Site title shown in navbar |
+| `--base <path>` | `/` | Base URL path (for hosting under a sub-path) |
+| `--templateSiteFolderSRC <path>` | *(none)* | Overlay folder for extra pages, CSS, and static assets |
+| `--no-headerNumbering` | *(numbering on)* | Disable automatic heading numbers |
+| `--generatePDF` | *(off)* | Also generate PDFs for each TM |
+| `--pdfHeaderNote <text>` | *(none)* | Custom header for PDF pages |
+
+**Examples:**
+
+```bash
+# Build Docusaurus site from example TMs
+npm run build:docusaurusSite:examples
+
+# Build from a custom TM directory
+npx tsx src/scripts/build-docusaurus-site.ts \
+  --TMDirectory ./threatModels \
+  --outputDir   ./build/site-docusaurus \
+  --siteName    "My Project Security"
+
+# Serve site after build
+npm run serve:docusaurusSite
+```
+
+The Docusaurus project scaffold lives in `docusaurus-site/` and is managed by `build-docusaurus-site.ts`.
+
+### Build a Hugo docs site
+
+Generate a static documentation site from a directory of threat models using [Hugo](https://gohugo.io/).
+This pipeline discovers all TMs, builds reports with the `MKdocs` template, stages docs/assets into `hugo-site/`, and runs a Hugo build.
+
+Navigation behavior is opinionated by design:
+
+- **All page links are in the left sidebar**
+- **No right-side "On this page" column is rendered**
+
+```bash
+npx tsx src/scripts/build-hugo-site.ts [options]
+```
+
+**Options:**
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--TMDirectory <path>` | `.` | Directory containing TM sub-folders |
+| `--outputDir <path>` | `./build/site-hugo` | Where the final static site is written |
+| `--template <name>` | `MKdocs` | Report template (`MKdocs` recommended) |
+| `--visibility full\|public` | `full` | `public` strips non-public content |
+| `--siteName <name>` | `Threat Models` | Site title |
+| `--baseURL <url>` | `/` | Hugo base URL |
+| `--templateSiteFolderSRC <path>` | *(none)* | Overlay folder for extra pages, CSS, and static assets |
+| `--no-headerNumbering` | *(numbering on)* | Disable automatic heading numbers |
+| `--generatePDF` | *(off)* | Also generate PDFs for each TM |
+| `--pdfHeaderNote <text>` | *(none)* | Custom header for PDF pages |
+
+**Examples:**
+
+```bash
+# Build Hugo site from example TMs
+npm run build:hugoSite:examples
+
+# Build from a custom TM directory
+npx tsx src/scripts/build-hugo-site.ts \
+  --TMDirectory ./threatModels \
+  --outputDir   ./build/site-hugo \
+  --siteName    "My Project Security"
+
+# Serve site after build
+npm run serve:hugoSite
+```
+
+The Hugo project scaffold lives in `hugo-site/` and is managed by `build-hugo-site.ts`.
+
 ## Project Structure
 
 - `src/models/`: Core data models (Threat, Asset, Countermeasure, etc.).
 - `src/renderers/`: Logic for converting models into Markdown, PlantUML, or Table of Contents.
 - `src/utils/`: Shared utilities like `CVSSHelper` and `HeadingNumberer`.
-- `src/scripts/`: CLI entry points (`build-threat-model.ts`, `build-astro-site.ts`).
+- `src/scripts/`: CLI entry points (`build-threat-model.ts`, `build-astro-site.ts`, `build-docusaurus-site.ts`, `build-hugo-site.ts`, `build-mkdocs-site.ts`).
 - `astro-site/`: Starlight project scaffold (managed by `build-astro-site.ts`).
+- `docusaurus-site/`: Docusaurus project scaffold (managed by `build-docusaurus-site.ts`).
+- `hugo-site/`: Hugo project scaffold (managed by `build-hugo-site.ts`).
 - `tests/`: Test suites using `node:test` + `node:assert`.
 
 ## Troubleshooting

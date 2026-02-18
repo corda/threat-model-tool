@@ -5,7 +5,6 @@ title: "Abstract Example Threat Model Threat Model"
 
 
 
-# 1 Abstract Example Threat Model Threat Model   <div class='skipTOC'></div> <a id='Example1'></a>
 
 
 Version: 1.0

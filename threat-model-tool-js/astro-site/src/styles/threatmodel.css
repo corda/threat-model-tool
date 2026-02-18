@@ -99,26 +99,30 @@ div.current {
   cursor: pointer;
 }
 
-/* --- Hide left sidebar, widen content ------------------------------------ */
+/* --- Keep layout close to native Starlight ------------------------------- */
 
-.sidebar-pane {
-  display: none !important;
+:root {
+  --tm-topnav-height: 2.75rem;
 }
 
-/* Remove the sidebar gap so content takes full width */
-.main-frame {
-  padding-inline-start: 0 !important;
-}
-
-/* On large screens, give content more room */
 @media (min-width: 72rem) {
-  .lg\:sl-flex {
-    --sl-sidebar-width: 0px;
+  :root {
+    --tm-topnav-height: 0px;
   }
 }
 
 .sl-markdown-content {
   max-width: 100%;
+}
+
+/* Prevent in-page anchors from being hidden under sticky headers */
+.sl-markdown-content h1,
+.sl-markdown-content h2,
+.sl-markdown-content h3,
+.sl-markdown-content h4,
+.sl-markdown-content h5,
+.sl-markdown-content h6 {
+  scroll-margin-top: calc(var(--sl-nav-height) + var(--tm-topnav-height) + 1rem);
 }
 
 /* --- Top navigation bar -------------------------------------------------- */
@@ -131,6 +135,9 @@ div.current {
   background: var(--sl-color-gray-6, #f5f5f5);
   border-bottom: 1px solid var(--sl-color-gray-5, #ddd);
   font-size: 0.875rem;
+  position: sticky;
+  top: var(--sl-nav-height);
+  z-index: calc(var(--sl-z-index-navbar) - 1);
 }
 
 :root[data-theme='dark'] .tm-topnav {
@@ -173,9 +180,23 @@ div.current {
 
 /* Ensure tables don't overflow on narrow screens */
 .sl-markdown-content table {
-  display: block;
-  overflow-x: auto;
+  width: 100%;
+  margin: 1rem 0;
   max-width: 100%;
+}
+
+@media (max-width: 72rem) {
+  .sl-markdown-content table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+}
+
+.sl-markdown-content table th,
+.sl-markdown-content table td {
+  padding: 0.45rem 0.7rem;
+  vertical-align: top;
 }
 
 /* --- Image handling ------------------------------------------------------ */

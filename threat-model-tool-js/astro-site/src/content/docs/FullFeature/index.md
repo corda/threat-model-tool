@@ -5,7 +5,6 @@ title: "Comprehensive Reference TM Threat Model"
 
 
 
-# 1 Comprehensive Reference TM Threat Model   <div class='skipTOC'></div> <a id='FullFeature'></a>
 
 
 Version: 1.0

@@ -1,0 +1,9 @@
+node_modules/
+build/
+.docusaurus/
+.cache-loader/
+docs/*
+!docs/.gitkeep
+static/*
+!static/js/
+!static/js/tm.js

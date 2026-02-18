@@ -97,3 +97,7 @@ ENV/
 
 **/build/*
 threat-model-tool-js/astro-site/public/*
+threat-model-tool-js/docusaurus-site/static/example2/img/legend_AttackTree.puml
+threat-model-tool-js/hugo-site/public/
+threat-model-tool-js/hugo-site/public-build/
+threat-model-tool-js/hugo-site/.hugo_build.lock

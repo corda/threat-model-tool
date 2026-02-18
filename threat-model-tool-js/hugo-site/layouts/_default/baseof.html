@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ if .Title }}{{ .Title }} · {{ end }}{{ .Site.Title }}</title>
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('tm-theme');
+        var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (_) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="/css/site.css" />
+  <link rel="stylesheet" href="/css/threatmodel.css" />
+  {{ if fileExists "static/css" }}
+    {{ range readDir "static/css" }}
+      {{ if and (not .IsDir) (ne .Name "site.css") (ne .Name "threatmodel.css") }}
+  <link rel="stylesheet" href="/css/{{ .Name }}" />
+      {{ end }}
+    {{ end }}
+  {{ end }}
+</head>
+<body>
+  <header class="tm-header">
+    <button id="tm-sidebar-toggle" class="tm-sidebar-toggle" aria-label="Toggle navigation">☰</button>
+    <a class="tm-title" href="/docs/">{{ .Site.Title }}</a>
+    <button id="tm-theme-toggle" class="tm-theme-toggle" aria-label="Toggle dark mode">◐</button>
+  </header>
+
+  <div class="tm-layout">
+    <aside class="tm-sidebar" id="tm-sidebar">
+      {{ partial "sidebar.html" . }}
+    </aside>
+
+    <main class="tm-main">
+      {{ block "main" . }}{{ end }}
+    </main>
+  </div>
+
+  <script src="/js/site.js" defer></script>
+  <script src="/js/tm.js" defer></script>
+</body>
+</html>

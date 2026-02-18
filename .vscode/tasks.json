@@ -68,6 +68,73 @@
             },
             "isBackground": true,
             "problemMatcher": []
+        },
+        {
+            "label": "TS: Build Docusaurus docs site",
+            "type": "shell",
+            "command": "npm",
+            "args": [
+                "run",
+                "build:docusaurusSite:examples"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/threat-model-tool-js"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "TS: Serve Docusaurus docs site",
+            "type": "shell",
+            "command": "npm",
+            "args": [
+                "run",
+                "serve:docusaurusSite"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/threat-model-tool-js"
+            },
+            "isBackground": true,
+            "problemMatcher": []
+        },
+        {
+            "label": "TS: Build Hugo docs site",
+            "type": "shell",
+            "command": "npm",
+            "args": [
+                "run",
+                "build:hugoSite:examples"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/threat-model-tool-js"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "TS: Serve Hugo docs site",
+            "type": "shell",
+            "command": "npm",
+            "args": [
+                "run",
+                "serve:hugoSite"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/threat-model-tool-js"
+            },
+            "isBackground": true,
+            "problemMatcher": []
+        },
+        {
+            "label": "TS: Build MkDocs docs site",
+            "type": "shell",
+            "command": "npm",
+            "args": [
+                "run",
+                "build:mkdocsSite:examples"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/threat-model-tool-js"
+            },
+            "problemMatcher": []
         }
     ],
 	"inputs": [

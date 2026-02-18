@@ -111,9 +111,14 @@ function copyDirRecursive(src: string, dest: string): void {
  * Prepend Starlight-compatible YAML frontmatter to an MD file.
  */
 function injectFrontmatter(mdPath: string, title: string): void {
-    const content = fs.readFileSync(mdPath, 'utf-8');
+    let content = fs.readFileSync(mdPath, 'utf-8');
     // If file already has frontmatter, skip
     if (content.trimStart().startsWith('---')) return;
+
+    // Strip the first h1 from the MD — Starlight renders the frontmatter title as h1,
+    // so keeping both produces a duplicate heading.
+    // The h1 may not be at the very start (e.g. wrapped in <div>), so find the first one.
+    content = content.replace(/^([\s\S]*?)^#\s+[^\n]*\n/m, '$1');
 
     const frontmatter = [
         '---',
