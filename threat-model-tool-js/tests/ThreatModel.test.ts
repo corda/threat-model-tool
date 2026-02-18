@@ -2,9 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert';
 import path from 'node:path';
 import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import ThreatModel from '../src/models/ThreatModel.js';
 import { MarkdownRenderer } from '../src/renderers/MarkdownRenderer.js';
 import { PlantUMLRenderer } from '../src/renderers/PlantUMLRenderer.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const examplesDir = path.join(__dirname, 'exampleThreatModels');
 
 function getYamlFiles(dir: string, fileList: string[] = []): string[] {
     const files = fs.readdirSync(dir);
@@ -20,8 +24,6 @@ function getYamlFiles(dir: string, fileList: string[] = []): string[] {
 }
 
 test('Threat Model Parsing', async (t) => {
-    const examplesDir = '/workspaces/threat-model-tool/tests/exampleThreatModels';
-    
     if (!fs.existsSync(examplesDir)) {
         console.warn('Example threat models directory not found at ' + examplesDir);
         return;
@@ -48,15 +50,13 @@ test('Threat Model Parsing', async (t) => {
 });
 
 test('Markdown Rendering', async (t) => {
-    const examplesDir = '/workspaces/threat-model-tool/tests/exampleThreatModels';
-    
     if (!fs.existsSync(examplesDir)) {
         console.warn('Example threat models directory not found');
         return;
     }
 
     await t.test('should render full report', () => {
-        const tm = new ThreatModel('/workspaces/threat-model-tool/tests/exampleThreatModels/Example2/Example2.yaml');
+        const tm = new ThreatModel(path.join(examplesDir, 'Example2/Example2.yaml'));
         const renderer = new MarkdownRenderer(tm);
         const markdown = renderer.renderFullReport();
         
@@ -66,7 +66,7 @@ test('Markdown Rendering', async (t) => {
     });
 
     await t.test('should render summary', () => {
-        const tm = new ThreatModel('/workspaces/threat-model-tool/tests/exampleThreatModels/Example2/Example2.yaml');
+        const tm = new ThreatModel(path.join(examplesDir, 'Example2/Example2.yaml'));
         const renderer = new MarkdownRenderer(tm);
         const summary = renderer.renderSummary();
         
@@ -76,15 +76,13 @@ test('Markdown Rendering', async (t) => {
 });
 
 test('PlantUML Rendering', async (t) => {
-    const examplesDir = '/workspaces/threat-model-tool/tests/exampleThreatModels';
-    
     if (!fs.existsSync(examplesDir)) {
         console.warn('Example threat models directory not found');
         return;
     }
 
     await t.test('should render threat diagram', () => {
-        const tm = new ThreatModel('/workspaces/threat-model-tool/tests/exampleThreatModels/Example2/Example2.yaml');
+        const tm = new ThreatModel(path.join(examplesDir, 'Example2/Example2.yaml'));
         const renderer = new PlantUMLRenderer(tm);
         const puml = renderer.renderThreatDiagram();
         
@@ -94,7 +92,7 @@ test('PlantUML Rendering', async (t) => {
     });
 
     await t.test('should render security objectives diagram', () => {
-        const tm = new ThreatModel('/workspaces/threat-model-tool/tests/exampleThreatModels/Example2/Example2.yaml');
+        const tm = new ThreatModel(path.join(examplesDir, 'Example2/Example2.yaml'));
         const renderer = new PlantUMLRenderer(tm);
         const puml = renderer.renderSecurityObjectivesDiagram();
         
@@ -103,7 +101,7 @@ test('PlantUML Rendering', async (t) => {
     });
 
     await t.test('should render attack tree for threat', () => {
-        const tm = new ThreatModel('/workspaces/threat-model-tool/tests/exampleThreatModels/Example2/Example2.yaml');
+        const tm = new ThreatModel(path.join(examplesDir, 'Example2/Example2.yaml'));
         const renderer = new PlantUMLRenderer(tm);
         
         if (tm.threats.length > 0) {
@@ -118,7 +116,7 @@ test('PlantUML Rendering', async (t) => {
 
 test('TypeScript Models', async (t) => {
     await t.test('should create ThreatModel from YAML', () => {
-        const tm = new ThreatModel('/workspaces/threat-model-tool/tests/exampleThreatModels/Example2/Example2.yaml');
+        const tm = new ThreatModel(path.join(examplesDir, 'Example2/Example2.yaml'));
         
         assert.ok(tm._id === 'Example2', 'ThreatModel should have correct ID');
         assert.ok(tm.schemaVersion === 2, 'ThreatModel should have schema version');
@@ -126,7 +124,7 @@ test('TypeScript Models', async (t) => {
     });
 
     await t.test('should have CVSS scoring', () => {
-        const tm = new ThreatModel('/workspaces/threat-model-tool/tests/exampleThreatModels/Example2/Example2.yaml');
+        const tm = new ThreatModel(path.join(examplesDir, 'Example2/Example2.yaml'));
         
         if (tm.threats.length > 0) {
             const threat = tm.threats[0];
@@ -145,7 +143,7 @@ test('TypeScript Models', async (t) => {
     });
 
     await t.test('should resolve REFIDs', () => {
-        const tm = new ThreatModel('/workspaces/threat-model-tool/tests/exampleThreatModels/Example2/Example2.yaml');
+        const tm = new ThreatModel(path.join(examplesDir, 'Example2/Example2.yaml'));
         
         if (tm.threats.length > 0 && tm.threats[0].impactedSecObjs.length > 0) {
             const refid = tm.threats[0].impactedSecObjs[0];

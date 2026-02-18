@@ -4,8 +4,26 @@ import { ReportGenerator } from '../ReportGenerator.js';
 import { execSync } from 'child_process';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { marked } from 'marked';
 import { load } from 'cheerio';
+
+export interface BuildTMOptions {
+    /** Report template name, default 'full' */
+    template?: string;
+    /** 'full' (default) or 'public' — filters out non-public content */
+    visibility?: 'full' | 'public';
+    /** Number headings in the output, default true */
+    headerNumbering?: boolean;
+    /** Override output base filename (without extension) */
+    fileName?: string;
+    /** Generate a PDF via Docker+Puppeteer after HTML generation */
+    generatePDF?: boolean;
+    /** Text shown in the PDF header on every page */
+    pdfHeaderNote?: string;
+    /** Reserved for future use (e.g. link to a pre-built PDF artifact) */
+    pdfArtifactLink?: string;
+}
 
 function renderMarkdownWithMdInHtml(mdSource: string): string {
     const render = (src: string): string => marked.parse(src, { gfm: true, breaks: false, async: false }) as string;
@@ -13,7 +31,7 @@ function renderMarkdownWithMdInHtml(mdSource: string): string {
     let html = render(mdSource);
 
     for (let pass = 0; pass < 8; pass++) {
-        const $ = load(`<root>${html}</root>`, { decodeEntities: false });
+        const $ = load(`<root>${html}</root>`);
         const nodes = $('*[markdown="1"], *[markdown="block"]');
         if (nodes.length === 0) {
             return $('root').html() || html;
@@ -90,6 +108,53 @@ function toShellSingleQuoted(value: string): string {
     return `'${value.replace(/'/g, `'"'"'`)}'`;
 }
 
+function generatePDFFromHtml(outputDir: string, modelId: string, options: BuildTMOptions): void {
+    const htmlPath = path.join(outputDir, `${modelId}.html`);
+    if (!fs.existsSync(htmlPath)) {
+        console.warn(`HTML file missing, PDF not generated: ${htmlPath}`);
+        return;
+    }
+
+    // Locate pdfScript.js next to this script file
+    const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+    const pdfScriptSrc = path.join(scriptDir, 'pdfScript.js');
+    if (!fs.existsSync(pdfScriptSrc)) {
+        console.warn(`pdfScript.js not found at ${pdfScriptSrc}, skipping PDF generation`);
+        return;
+    }
+
+    // Write pdfScript.js into a scripts/ subdirectory of outputDir so Docker can mount it
+    const scriptsDir = path.join(outputDir, 'scripts');
+    fs.mkdirSync(scriptsDir, { recursive: true });
+    fs.copyFileSync(pdfScriptSrc, path.join(scriptsDir, 'pdfScript.js'));
+
+    const pdfName = `${modelId}.pdf`;
+    const pdfOutPath = path.join(outputDir, pdfName);
+    const headerNote = options.pdfHeaderNote ?? 'Private and confidential';
+
+    // Inside the container, outputDir is mounted at /home/pptruser/out
+    const containerHtmlUrl = `file:///home/pptruser/out/${modelId}.html`;
+    const containerPdfPath = `out/${pdfName}`;
+    const containerScriptsPath = `/home/pptruser/scripts`;
+
+    try {
+        execSync(
+            `docker run --init --rm ` +
+            `-v ${toShellSingleQuoted(outputDir)}:/home/pptruser/out ` +
+            `-v ${toShellSingleQuoted(scriptsDir)}:${containerScriptsPath} ` +
+            `ghcr.io/puppeteer/puppeteer:latest ` +
+            `node scripts/pdfScript.js ` +
+            `${toShellSingleQuoted(containerHtmlUrl)} ` +
+            `${toShellSingleQuoted(containerPdfPath)} ` +
+            `${toShellSingleQuoted(headerNote)}`,
+            { stdio: 'inherit' }
+        );
+        console.log(`Generated PDF: ${pdfOutPath}`);
+    } catch (error) {
+        console.warn(`PDF generation failed (Docker + ghcr.io/puppeteer/puppeteer:latest required): ${error}`);
+    }
+}
+
 function generateHtmlFromMarkdown(outputDir: string, modelId: string): void {
     const mdPath = path.join(outputDir, `${modelId}.md`);
     const htmlPath = path.join(outputDir, `${modelId}.html`);
@@ -118,49 +183,97 @@ function generateHtmlFromMarkdown(outputDir: string, modelId: string): void {
     console.log(`Generated: ${htmlPath}`);
 }
 
-const args = process.argv.slice(2);
-const yamlFile = args[0];
-const outputDir = args[1] || './output';
+function buildSingleTM(yamlFile: string, outputDir: string = './output', options: BuildTMOptions = {}): void {
+    const {
+        template = 'full',
+        visibility = 'full',
+        headerNumbering = true,
+        fileName,
+        generatePDF = false,
+        pdfHeaderNote,
+        pdfArtifactLink,
+    } = options;
 
-if (!yamlFile) {
-    console.error('Usage: build-threat-model.ts <yaml-file> [output-dir]');
-    process.exit(1);
+    const fullPath = path.resolve(yamlFile);
+    if (!fs.existsSync(fullPath)) {
+        console.error(`File not found: ${fullPath}`);
+        process.exit(1);
+    }
+
+    const isPublic = visibility === 'public';
+    const tmo = new ThreatModel(fullPath, null, isPublic);
+    ReportGenerator.generate(tmo, template, path.resolve(outputDir), { process_heading_numbering: headerNumbering });
+
+    const modelId: string = fileName ?? ((tmo as any)._id || (tmo as any).id);
+    const absOutputDir = path.resolve(outputDir);
+    generateHtmlFromMarkdown(absOutputDir, modelId);
+
+    if (generatePDF) {
+        generatePDFFromHtml(absOutputDir, modelId, { pdfHeaderNote, pdfArtifactLink });
+    }
+
+    // Run PlantUML via Docker
+    const imgDir = path.join(absOutputDir, 'img');
+    console.log('Generating PlantUML diagrams...');
+
+    try {
+        sanitizePumlFilesForLegacyPlantUml(imgDir);
+
+        const pumlFiles = collectPumlFiles(imgDir);
+        if (pumlFiles.length > 0) {
+            const quoted = pumlFiles.map(toShellSingleQuoted).join(' ');
+            try {
+                execSync(`plantuml -tsvg ${quoted}`, { stdio: 'inherit' });
+            } catch (e) {
+                console.log('Local plantuml failed, trying docker...');
+                execSync(`docker run --rm -v "${imgDir}:/data" plantuml/plantuml:sha-d2b2bcf *.puml -tsvg`, {
+                    stdio: 'inherit'
+                });
+            }
+        }
+    } catch (error) {
+        console.warn('PlantUML generation failed (Docker or local plantuml required)');
+    }
+
+    console.log('Done!');
 }
 
-// Load and generate
-const fullPath = path.resolve(yamlFile);
-if (!fs.existsSync(fullPath)) {
-    console.error(`File not found: ${fullPath}`);
-    process.exit(1);
-}
+export { buildSingleTM };
 
-const tmo = new ThreatModel(fullPath);
-ReportGenerator.generate(tmo, 'full', path.resolve(outputDir));
+// Only run CLI when this file is the entry point
+const isMain = process.argv[1] && (
+    process.argv[1].endsWith('build-threat-model.ts') ||
+    process.argv[1].endsWith('build-threat-model.js')
+);
+if (isMain) {
+    const args = process.argv.slice(2);
+    let yamlFile = '';
+    let outputDir = './output';
+    const options: BuildTMOptions = {};
 
-const modelId = (tmo as any)._id || (tmo as any).id;
-generateHtmlFromMarkdown(path.resolve(outputDir), modelId);
-
-// Run PlantUML via Docker
-const imgDir = path.join(path.resolve(outputDir), 'img');
-console.log('Generating PlantUML diagrams...');
-
-try {
-    sanitizePumlFilesForLegacyPlantUml(imgDir);
-
-    const pumlFiles = collectPumlFiles(imgDir);
-    if (pumlFiles.length > 0) {
-        const quoted = pumlFiles.map(toShellSingleQuoted).join(' ');
-        try {
-            execSync(`plantuml -tsvg ${quoted}`, { stdio: 'inherit' });
-        } catch (e) {
-            console.log('Local plantuml failed, trying docker...');
-            execSync(`docker run --rm -v "${imgDir}:/data" plantuml/plantuml:sha-d2b2bcf *.puml -tsvg`, {
-                stdio: 'inherit'
-            });
+    for (let i = 0; i < args.length; i++) {
+        const arg = args[i];
+        if (arg.startsWith('--template=')) {
+            options.template = arg.split('=')[1];
+        } else if (arg.startsWith('--visibility=')) {
+            options.visibility = arg.split('=')[1] as 'full' | 'public';
+        } else if (arg.startsWith('--fileName=')) {
+            options.fileName = arg.split('=')[1];
+        } else if (arg === '--generatePDF') {
+            options.generatePDF = true;
+        } else if (arg.startsWith('--pdfHeaderNote=')) {
+            options.pdfHeaderNote = arg.split('=')[1];
+        } else if (!yamlFile) {
+            yamlFile = arg;
+        } else if (outputDir === './output') {
+            outputDir = arg;
         }
     }
-} catch (error) {
-    console.warn('PlantUML generation failed (Docker or local plantuml required)');
-}
 
-console.log('Done!');
+    if (!yamlFile) {
+        console.error('Usage: build-threat-model.ts <yaml-file> [output-dir] [--template=...] [--visibility=...]');
+        process.exit(1);
+    }
+
+    buildSingleTM(yamlFile, outputDir, options);
+}

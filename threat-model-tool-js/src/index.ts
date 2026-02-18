@@ -19,3 +19,6 @@ export { MarkdownRenderer, PlantUMLRenderer, PDFRenderer } from './renderers/ind
 export { ReportGenerator } from './ReportGenerator.js';
 
 export * from './types.js';
+
+export { buildSingleTM, type BuildTMOptions } from './scripts/build-threat-model.js';
+export { buildFullDirectory, type DirectoryBuildOptions } from './scripts/build-threat-model-directory.js';

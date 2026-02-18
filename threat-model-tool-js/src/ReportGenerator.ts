@@ -10,13 +10,25 @@ import {
     renderAssumptions,
     renderAssets,
     renderThreats,
-    renderAnnexes
+    renderAnnexes,
+    renderOperationalHardening,
+    renderKeysSummary,
+    renderISO27001Summary,
+    renderTestingGuide
 } from './renderers/lib_py.js';
 import { AttackTreeGenerator } from './puml/AttackTreeGenerator.js';
 import { HeadingNumberer, resetHeadingNumbers, disableHeadingNumbering, enableHeadingNumbering, isHeadingNumberingEnabled } from './utils/HeadingNumberer.js';
 import { makeMarkdownLinkedHeader, createTitleAnchorHash, PAGEBREAK } from './utils/TemplateUtils.js';
 
 export class ReportGenerator {
+    private static TEMPLATE_MAPPING: Record<string, (tmo: ThreatModel, ctx: any) => string> = {
+        'TM_templateFull': (tmo, ctx) => ReportGenerator.renderFullReport(tmo, ctx),
+        'TM_templateMKDOCS': (tmo, ctx) => ReportGenerator.renderMKDOCSReport(tmo, ctx),
+        'TM_templateNoTocNoSummary': (tmo, ctx) => ReportGenerator.renderCompactReport(tmo, ctx),
+        'full': (tmo, ctx) => ReportGenerator.renderFullReport(tmo, ctx),
+        'TM_template': (tmo, ctx) => ReportGenerator.renderFullReport(tmo, ctx),
+    };
+
     /**
      * Generate full report for a threat model
      */
@@ -54,7 +66,7 @@ export class ReportGenerator {
         };
 
         // Render report using the Python-aligned pipeline
-        let mdReport = this.renderFullReport(tmo, context);
+        let mdReport = this.renderTemplateByName(template, tmo, context);
 
         // Inject pre/post markdown sections from assets/markdown_sections_1 when present
         mdReport = this.injectPrePostMarkdownSections(tmo, mdReport, context);
@@ -138,7 +150,7 @@ export class ReportGenerator {
             }
 
             if (!numberStarted) {
-                if (line.includes('__TOC_PLACEHOLDER__')) {
+                if (line.includes('__TOC_PLACEHOLDER__') || (ctx.process_prepost_md === false)) {
                     numberStarted = true;
                 }
                 outputLines.push(line);
@@ -184,6 +196,14 @@ export class ReportGenerator {
      * - Annex 2: Keys Classification
      * - (optional: ISO27001 Summary)
      */
+    /**
+     * Dispatcher to render template by name.
+     */
+    private static renderTemplateByName(name: string, tmo: ThreatModel, ctx: any): string {
+        const renderer = this.TEMPLATE_MAPPING[name] || this.TEMPLATE_MAPPING['full'];
+        return renderer(tmo, ctx);
+    }
+
     private static renderFullReport(tmo: ThreatModel, ctx: any): string {
         resetHeadingNumbers();
         const lines: string[] = [];
@@ -199,6 +219,58 @@ export class ReportGenerator {
 
         // Annexes
         lines.push(renderAnnexes(tmo, rootHeaderLevel, ctx));
+
+        return lines.join('\n');
+    }
+
+    private static renderMKDOCSReport(tmo: ThreatModel, ctx: any): string {
+        resetHeadingNumbers();
+        ctx.useMarkDown_attr_list_ext = ctx.useMarkDown_attr_list_ext ?? true;
+        ctx.process_toc = false;
+        ctx.process_prepost_md = false;
+
+        const lines: string[] = [];
+        const rootHeaderLevel = ctx.rootHeaderLevel || 1;
+
+        // Root part: no TOC, with summary
+        lines.push(this.renderTmReportPart(tmo, true, false, true, rootHeaderLevel, ctx));
+
+        // Descendants
+        for (const descendant of tmo.getDescendantsTM()) {
+            // Descendants keep base + 1 for consistency
+            lines.push(this.renderTmReportPart(descendant, false, false, false, rootHeaderLevel + 1, ctx));
+        }
+
+        // Additional sections for MKDOCS
+        lines.push(makeMarkdownLinkedHeader(rootHeaderLevel + 1, "Requests For Information", ctx));
+        lines.push("__RFI_PLACEHOLDER__");
+        lines.push(PAGEBREAK);
+        lines.push(renderOperationalHardening(tmo, rootHeaderLevel + 1, ctx));
+        lines.push(PAGEBREAK);
+        lines.push(renderTestingGuide(tmo, rootHeaderLevel + 1, ctx));
+        lines.push(PAGEBREAK);
+        lines.push(renderKeysSummary(tmo, rootHeaderLevel + 1, ctx));
+
+        // ISO27001 Summary (if applicable)
+        if ((tmo as any).ISO27001Ref) {
+            lines.push(PAGEBREAK);
+            lines.push(renderISO27001Summary(tmo, rootHeaderLevel + 1, ctx));
+        }
+
+        return lines.join('\n');
+    }
+
+    private static renderCompactReport(tmo: ThreatModel, ctx: any): string {
+        const lines: string[] = [];
+        const rootHeaderLevel = ctx.rootHeaderLevel || 1;
+
+        // Root part: no TOC, no summary, header + 1
+        lines.push(this.renderTmReportPart(tmo, true, false, false, rootHeaderLevel + 1, ctx));
+
+        // Descendants: header level remains base
+        for (const descendant of tmo.getDescendantsTM()) {
+            lines.push(this.renderTmReportPart(descendant, false, false, false, rootHeaderLevel, ctx));
+        }
 
         return lines.join('\n');
     }
@@ -345,7 +417,7 @@ export class ReportGenerator {
         // Inherited attackers
         if (ancestorData && tmo.parent !== null) {
             const parentTmo = tmo.parent as ThreatModel;
-            if (parentTmo.getAllAttackers && parentTmo.getAllAttackers().length > 0) {
+            if (parentTmo.attackers && parentTmo.attackers.length > 0) {
                 lines.push(makeMarkdownLinkedHeader(headerLevel + 2, 'Actors inherited from other threat models', ctx));
                 // Would render parent attackers
             }

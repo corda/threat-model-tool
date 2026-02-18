@@ -1,0 +1,73 @@
+ID: visibility-test
+schemaVersion: 2
+scope:
+  description: Visibility test scope
+  securityObjectives:
+    - ID: PUBLIC_OBJ
+      title: Public Objective
+      description: This should be visible
+      public: true
+    - ID: PRIVATE_OBJ
+      title: Private Objective
+      description: This should be hidden
+      public: false
+  assets:
+    - ID: PUBLIC_ASSET
+      title: Public Asset
+      description: This should be visible
+      public: true
+    - ID: PRIVATE_ASSET
+      title: Private Asset
+      description: This should be hidden
+      public: false
+  attackers:
+    - ID: PUBLIC_ATTACKER
+      description: Public attacker
+      public: true
+    - ID: PRIVATE_ATTACKER
+      description: Private attacker
+      public: false
+  assumptions:
+    - ID: PUBLIC_ASSUMPTION
+      description: Public assumption
+      public: true
+    - ID: PRIVATE_ASSUMPTION
+      description: Private assumption
+      public: false
+
+threats:
+  - ID: PUBLIC_THREAT
+    title: Public Threat
+    threatType: DOS
+    attack: Public attack description
+    public: true
+    CVSS: 
+      base: 5.0
+      vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L
+    ticketLink: http://jira/PUBLIC-1
+    countermeasures:
+      - ID: PUBLIC_CM
+        title: Public CM
+        description: This is public
+        public: true
+        inPlace: true
+      - ID: PRIVATE_CM_OF_PUBLIC_THREAT
+        title: Private CM of Public Threat
+        description: This is private
+        public: false
+        inPlace: true
+  - ID: PRIVATE_THREAT
+    title: Private Threat
+    threatType: SPOOFING
+    attack: Private attack description
+    public: false
+    CVSS:
+      base: 9.0
+      vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+    ticketLink: http://jira/PRIVATE-1
+    countermeasures:
+      - ID: PRIVATE_CM_OF_PRIVATE_THREAT
+        title: Private CM of Private Threat
+        description: This is private
+        public: false
+        inPlace: false

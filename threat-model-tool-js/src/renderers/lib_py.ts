@@ -156,7 +156,7 @@ function renderCountermeasure(cm: Countermeasure): string {
         lines.push(`<dd markdown="block"><strong>Mitigation type:</strong>${(cm as any).mitigationType}</dd>`);
     }
     
-    const ip = trueOrFalseMark(cm.inPlace);
+    const ip = trueOrFalseMark(cm.inPlace ?? false);
     const parentThreat = cm.parent as any;
     
     if (parentThreat?.fullyMitigated && !cm.inPlace) {
@@ -532,7 +532,7 @@ function renderAssetDetail(asset: any, headerLevel: number = 1, ctx: any = {}, t
         const specified = root.getDescendantById ? root.getDescendantById(asset.specifies) : null;
         if (specified) {
             lines.push('<dt>Specifies, inherit analysis and attribute from:</dt>');
-            lines.push(`<dd markdown="block"> ${specified.title}  (<a href="#${specified.anchor}">${specified._id}</a>) </dd>`);
+            lines.push(`<dd markdown="block"> ${(specified as any).title}  (<a href="#${(specified as any).anchor}">${(specified as any)._id}</a>) </dd>`);
         }
     }
     
@@ -666,6 +666,33 @@ export function renderKeysSummary(tmo: ThreatModel, headerLevel: number = 1, ctx
     return lines.join('\n');
 }
 
+/**
+ * Render testing guide section
+ * Python reference: render_testing_guide()
+ */
+export function renderTestingGuide(tmo: ThreatModel, headerLevel: number = 1, ctx: any = {}, printToc: boolean = false): string {
+    const lines: string[] = [makeMarkdownLinkedHeader(headerLevel, "Testing guide", ctx, !printToc)];
+    lines.push("\nThis guide lists all testable attacks described in the threat model\n");
+    
+    // In TS we use getAllDown(Threat) and filter by pentestTestable attribute
+    const allThreats = tmo.getAllDown(Threat);
+    const testable = allThreats.filter(t => (t as any).pentestTestable === true);
+    
+    lines.push('<table markdown="block" style="print-color-adjust: exact; -webkit-print-color-adjust: exact;">');
+    lines.push("<tr><th>Seq</th><th>Attack to test</th><th>Pass/Fail/NA</th></tr>");
+    
+    testable.forEach((threat, idx) => {
+        const condLine = (threat as any).conditional ? `\\n**Valid when:** ${(threat as any).conditional}` : "";
+        lines.push(
+            `<tr markdown="block"><td>${idx + 1}</td><td markdown="block">` +
+            `<a href="#${threat.id}">${threat.title}</a><br/>**Attack description:** ${threat.attack}${condLine}</td><td></td></tr>`
+        );
+    });
+    
+    lines.push("</table>");
+    return lines.join('\n');
+}
+
 function renderKeyTable(assets: any[]): string {
     const lines: string[] = [];
     lines.push('<table markdown="block" style="print-color-adjust: exact; -webkit-print-color-adjust: exact;">');
@@ -708,7 +735,7 @@ export function renderAnnexes(tmo: ThreatModel, headerLevel: number = 1, ctx: an
  * Render ISO27001 Summary section
  * Python reference: ISO27001Report1.render_summary()
  */
-function renderISO27001Summary(tmo: ThreatModel, headerLevel: number = 1, ctx: any = {}): string {
+export function renderISO27001Summary(tmo: ThreatModel, headerLevel: number = 1, ctx: any = {}): string {
     const lines: string[] = [];
     lines.push(makeMarkdownLinkedHeader(headerLevel, 'ISO27001 Summary', ctx));
     lines.push('');

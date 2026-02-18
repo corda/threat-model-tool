@@ -15,6 +15,8 @@ export default class Threat extends BaseThreatModelObject {
     fullyMitigated?: boolean;
     cvssObject: TMCVSS | null = null;
     ticketLink?: string;
+    pentestTestable?: boolean;
+    conditional?: string;
 
     constructor(dictData: Record<string, any>, threatModel: any, publicAccess: boolean = false) {
         super(dictData, threatModel);
@@ -25,6 +27,12 @@ export default class Threat extends BaseThreatModelObject {
         this.attackers = [];
         this.threatModel = threatModel;
 
+        // Reset arrays possibly overwritten by super check
+        this.countermeasures = [];
+        this.assets = [];
+        this.impactedSecObjs = [];
+        this.attackers = [];
+
         if ('description' in dictData) {
             throw new Error(`description is not allowed in Threat ${this.id}, please use 'attack' instead`);
         }
@@ -33,10 +41,14 @@ export default class Threat extends BaseThreatModelObject {
         this.cvssObject = new TMCVSS(dictData.CVSS);
         dictData.fullyMitigated = dictData.fullyMitigated !== undefined ? dictData.fullyMitigated : false;
         this.fullyMitigated = dictData.fullyMitigated;
+        this.pentestTestable = dictData.pentestTestable || false;
+        this.conditional = dictData.conditional;
 
         for (const [key, value] of Object.entries(dictData)) {
             if (key === 'ticketLink') {
-                 if (!publicAccess) {
+                 if (publicAccess) {
+                    this.ticketLink = undefined;
+                 } else {
                     this.ticketLink = value as string;
                  }
             } else if (key === 'countermeasures') {

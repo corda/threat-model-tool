@@ -62,31 +62,113 @@ Test fixtures live in the parent project at `../tests/exampleThreatModels/`.
 
 ### Available npm scripts
 
-| Script | Command | Description |
-|--------|---------|-------------|
-| `test` | `tsx --test tests/ThreatModel.test.ts` | Run the full test suite |
-| `test:unit` | `tsx --test tests/ThreatModel.test.ts` | Run unit tests |
-| `build` | `tsc` | Compile TypeScript to `dist/` |
-| `compile` | `tsc --noEmit` | Type-check without emitting |
-| `build:example` | `tsx src/scripts/build-threat-model.ts ...` | Build the FullFeature example to `./test-output` |
-| `start` | `node dist/index.js` | Run the compiled output |
+| Script | Description |
+|--------|-------------|
+| `test` / `test:unit` | Run the full test suite |
+| `build` | Compile TypeScript to `dist/` |
+| `compile` | Type-check without emitting |
+| `build:example` | Build the FullFeature example TM to `../build/examples/FullFeature` |
+| `generate:example` | Build a named example: `npm run generate:example --example=Example1` |
+| `generate:examples` | Build all examples via shell loop |
+| `build:directory` | Build a full directory of TMs (see below) |
+| `build:directory:examples` | Build all example TMs via `buildFullDirectory` |
+| `start` | Run the compiled output |
 
 ## Running the Tool
 
-To generate a threat model report from a YAML file:
+### Build a single threat model
 
 ```bash
-npx tsx src/scripts/build-threat-model.ts <path-to-yaml> [output-directory]
+npx tsx src/scripts/build-threat-model.ts <path-to-yaml> [output-dir] [options]
 ```
+
+#### Options:
+- `--template=<name>`: Specify the report template (default: `full`).
+    - `TM_templateFull` / `full`: The standard comprehensive report with TOC and summaries.
+    - `TM_templateMKDOCS`: Optimized for MkDocs (no internal TOC, includes RFI section and testing guide).
+    - `TM_templateNoTocNoSummary`: A compact view without TOC or executive summaries.
+- `--visibility=<full|public>`: Filter content (default: `full`).
+- `--fileName=<name>`: Override output filename (default: TM ID).
+- `--generatePDF`: Generate a PDF via Puppeteer (requires Docker).
+- `--pdfHeaderNote="text"`: Custom header for PDF pages.
 
 Example:
 ```bash
-npx tsx src/scripts/build-threat-model.ts ../tests/exampleThreatModels/FullFeature/FullFeature.yaml ./test-output
+npx tsx src/scripts/build-threat-model.ts ../tests/exampleThreatModels/FullFeature/FullFeature.yaml ./output --template=TM_templateMKDOCS
 ```
 
 Or via the convenience script:
 ```bash
 npm run build:example
+```
+
+### Build a directory of threat models
+
+Use `build-threat-model-directory.ts` to scan a folder for independent TMs (each following the `<name>/<name>.yaml` convention) and build them all. Each TM is written to its own sub-folder under `--outputDir`.
+
+```bash
+npx tsx src/scripts/build-threat-model-directory.ts [options]
+```
+
+**Options:**
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--TMDirectory <path>` | `.` | Directory containing TM sub-folders |
+| `--outputDir <path>` | `./build` | Root output directory; each TM lands in `<outputDir>/<TM_name>/` |
+| `--template <name>` | `full` | Report template name |
+| `--visibility full\|public` | `full` | `public` strips non-public content from the output |
+| `--no-headerNumbering` | *(numbering on)* | Disable automatic heading numbers |
+| `--fileName <name>` | *(TM ID)* | Override the output base filename (`.md` / `.html`) |
+| `--generatePDF` | *(off)* | Generate a PDF via Docker + Puppeteer after HTML generation |
+| `--pdfHeaderNote <text>` | `Private and confidential` | Text shown in the PDF page header |
+| `--pdfArtifactLink <url>` | *(none)* | Reserved for future artifact linking |
+| `--help` | | Print this help and exit |
+
+**Examples:**
+
+```bash
+# Build all TMs in ./threatModels into ./build (one sub-folder per TM)
+npx tsx src/scripts/build-threat-model-directory.ts \
+  --TMDirectory ./threatModels \
+  --outputDir   ./build
+
+# Public-only output, no heading numbers
+npx tsx src/scripts/build-threat-model-directory.ts \
+  --TMDirectory ./threatModels \
+  --outputDir   ./build-public \
+  --visibility  public \
+  --no-headerNumbering
+
+# Generate PDFs (requires Docker)
+npx tsx src/scripts/build-threat-model-directory.ts \
+  --TMDirectory ./threatModels \
+  --outputDir   ./build \
+  --generatePDF \
+  --pdfHeaderNote "Confidential — Internal Use Only"
+
+# Or via the npm shortcut (builds example TMs):
+npm run build:directory:examples
+```
+
+#### PDF generation
+
+When `--generatePDF` is set the tool:
+1. Copies `pdfScript.js` into `<tmOutputDir>/scripts/`
+2. Runs `ghcr.io/puppeteer/puppeteer:latest` in Docker, pointing headless Chromium at the generated HTML
+3. Writes `<TM_ID>.pdf` next to the HTML file
+
+Requires Docker to be available on the `PATH`.
+
+#### TM discovery convention
+
+A sub-folder is included only when the directory name exactly matches the YAML filename inside it:
+```
+threatModels/
+  MyThreatModel/
+    MyThreatModel.yaml   ← included
+  helpers/
+    utils.yaml           ← skipped (name mismatch)
 ```
 
 ## Project Structure

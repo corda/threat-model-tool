@@ -99,6 +99,9 @@ export default class ThreatModel extends BaseThreatModelObject {
         // Parse security objectives
         if (scopeDict.securityObjectives && Array.isArray(scopeDict.securityObjectives)) {
             for (const secObjDict of scopeDict.securityObjectives) {
+                if (this.filterOutForPublicOrVersions(publicFlag, secObjDict)) {
+                    continue;
+                }
                 const secObj = new SecurityObjective(secObjDict, this);
                 this.securityObjectives.push(secObj);
             }
@@ -121,6 +124,9 @@ export default class ThreatModel extends BaseThreatModelObject {
         // Parse attackers
         if (scopeDict.attackers && Array.isArray(scopeDict.attackers)) {
             for (const attackerDict of scopeDict.attackers) {
+                if (this.filterOutForPublicOrVersions(publicFlag, attackerDict)) {
+                    continue;
+                }
                 const attacker = new Attacker(attackerDict, this);
                 this.attackers.push(attacker);
             }
@@ -129,6 +135,9 @@ export default class ThreatModel extends BaseThreatModelObject {
         // Parse assumptions
         if (scopeDict.assumptions && Array.isArray(scopeDict.assumptions)) {
             for (const assumptionDict of scopeDict.assumptions) {
+                if (this.filterOutForPublicOrVersions(publicFlag, assumptionDict)) {
+                    continue;
+                }
                 const assumption = new Assumption(assumptionDict, this);
                 this.assumptions.push(assumption);
             }

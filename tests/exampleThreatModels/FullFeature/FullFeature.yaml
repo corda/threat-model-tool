@@ -1,8 +1,8 @@
 ID: FullFeature
 schemaVersion: 2
-title: Comprehensive Reference Threat Model
+title: Comprehensive Reference TM
 version: '1.0'
-appliesToVersions: '>=5.1'
+
 children:
   - REFID: SubComponent
   - REFID: ApiGateway

@@ -18,7 +18,7 @@ export default class BaseThreatModelObject extends TreeNode {
 
         // Set attributes from dictionary
         for (const [key, value] of Object.entries(dictData)) {
-            if (key !== "ID" && key !== "children" && key !== "parent") {
+            if (key !== "ID" && key !== "children" && key !== "parent" && key !== "threats" && key !== "scope") {
                 // Check if the property has a setter or is not a getter
                 const descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(this), key);
                 if (!descriptor || descriptor.set || descriptor.writable !== false) {
