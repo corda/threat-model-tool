@@ -13,6 +13,7 @@ init:
 	sudo uv pip install --system -e .
 	npm install
 	cd threat-model-tool-js && npm install
+	cd threat-model-tool-js/astro-site && npm install
 
 test:
 	uv run pytest
@@ -97,3 +98,6 @@ render-totest-puml-tsvg:
 compare-totest-current: compare-totest-md compare-totest-html compare-totest-puml
 
 compare-totest: build-totest-python build-totest-ts render-totest-puml-tsvg compare-totest-md compare-totest-html compare-totest-puml
+
+build-site-ts:
+	cd threat-model-tool-js && npm run build:astroSite:examples

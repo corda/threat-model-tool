@@ -17,7 +17,10 @@
     "generate:example": "npx tsx src/scripts/build-threat-model.ts tests/exampleThreatModels/${npm_config_example}/${npm_config_example}.yaml ../build/examples/${npm_config_example}",
     "generate:example:debug": "node --inspect-brk ./node_modules/tsx/dist/cli.mjs src/scripts/build-threat-model.ts tests/exampleThreatModels/${npm_config_example}/${npm_config_example}.yaml ../build/examples/${npm_config_example}",
     "build:directory": "tsx src/scripts/build-threat-model-directory.ts",
-    "build:directory:examples": "tsx src/scripts/build-threat-model-directory.ts --TMDirectory tests/exampleThreatModels --outputDir ../build/examples"
+    "build:directory:examples": "tsx src/scripts/build-threat-model-directory.ts --TMDirectory tests/exampleThreatModels --outputDir ../build/examples --generatePDF -- pdfHeaderNote \"Confidential - Internal Use Only\"",
+    "build:astroSite": "tsx src/scripts/build-astro-site.ts",
+    "build:astroSite:examples": "tsx src/scripts/build-astro-site.ts --TMDirectory tests/exampleThreatModels --outputDir ../build/site",
+    "serve:astroSite": "npm run --prefix astro-site preview -- --port 4321"
   },
   "dependencies": {
     "cheerio": "^1.2.0",

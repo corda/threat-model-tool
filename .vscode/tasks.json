@@ -41,6 +41,33 @@
                 "cwd": "${workspaceFolder}/threat-model-tool-js"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "TS: Build Astro docs site",
+            "type": "shell",
+            "command": "npm",
+            "args": [
+                "run",
+                "build:astroSite:examples"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/threat-model-tool-js"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "TS: Serve Astro docs site",
+            "type": "shell",
+            "command": "npm",
+            "args": [
+                "run",
+                "serve:astroSite"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/threat-model-tool-js"
+            },
+            "isBackground": true,
+            "problemMatcher": []
         }
     ],
 	"inputs": [

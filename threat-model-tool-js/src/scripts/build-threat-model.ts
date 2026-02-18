@@ -138,18 +138,28 @@ function generatePDFFromHtml(outputDir: string, modelId: string, options: BuildT
     const containerScriptsPath = `/home/pptruser/scripts`;
 
     try {
-        execSync(
-            `docker run --init --rm ` +
-            `-v ${toShellSingleQuoted(outputDir)}:/home/pptruser/out ` +
-            `-v ${toShellSingleQuoted(scriptsDir)}:${containerScriptsPath} ` +
-            `ghcr.io/puppeteer/puppeteer:latest ` +
-            `node scripts/pdfScript.js ` +
-            `${toShellSingleQuoted(containerHtmlUrl)} ` +
-            `${toShellSingleQuoted(containerPdfPath)} ` +
-            `${toShellSingleQuoted(headerNote)}`,
-            { stdio: 'inherit' }
-        );
-        console.log(`Generated PDF: ${pdfOutPath}`);
+        // The puppeteer container runs as pptruser (uid 10042).  Make the
+        // output directory world-writable so it can create the PDF file,
+        // then restore the original permissions afterwards.
+        const origMode = fs.statSync(outputDir).mode;
+        fs.chmodSync(outputDir, 0o777);
+
+        try {
+            execSync(
+                `docker run --init --rm ` +
+                `-v ${toShellSingleQuoted(outputDir)}:/home/pptruser/out ` +
+                `-v ${toShellSingleQuoted(scriptsDir)}:${containerScriptsPath} ` +
+                `ghcr.io/puppeteer/puppeteer:latest ` +
+                `node scripts/pdfScript.js ` +
+                `${toShellSingleQuoted(containerHtmlUrl)} ` +
+                `${toShellSingleQuoted(containerPdfPath)} ` +
+                `${toShellSingleQuoted(headerNote)}`,
+                { stdio: 'inherit' }
+            );
+            console.log(`Generated PDF: ${pdfOutPath}`);
+        } finally {
+            fs.chmodSync(outputDir, origMode);
+        }
     } catch (error) {
         console.warn(`PDF generation failed (Docker + ghcr.io/puppeteer/puppeteer:latest required): ${error}`);
     }
@@ -206,13 +216,8 @@ function buildSingleTM(yamlFile: string, outputDir: string = './output', options
 
     const modelId: string = fileName ?? ((tmo as any)._id || (tmo as any).id);
     const absOutputDir = path.resolve(outputDir);
-    generateHtmlFromMarkdown(absOutputDir, modelId);
 
-    if (generatePDF) {
-        generatePDFFromHtml(absOutputDir, modelId, { pdfHeaderNote, pdfArtifactLink });
-    }
-
-    // Run PlantUML via Docker
+    // Run PlantUML first so SVGs exist before HTML/PDF generation
     const imgDir = path.join(absOutputDir, 'img');
     console.log('Generating PlantUML diagrams...');
 
@@ -233,6 +238,12 @@ function buildSingleTM(yamlFile: string, outputDir: string = './output', options
         }
     } catch (error) {
         console.warn('PlantUML generation failed (Docker or local plantuml required)');
+    }
+
+    generateHtmlFromMarkdown(absOutputDir, modelId);
+
+    if (generatePDF) {
+        generatePDFFromHtml(absOutputDir, modelId, { pdfHeaderNote, pdfArtifactLink });
     }
 
     console.log('Done!');

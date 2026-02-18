@@ -6,7 +6,8 @@ async function printPDF(aurl, headerNote) {
   const browser = await puppeteer.launch({
     headless: "new", args: [
       '--no-sandbox',
-      '--disable-setuid-sandbox'
+      '--disable-setuid-sandbox',
+      '--allow-file-access-from-files'
     ]
   });
   const page = await browser.newPage();

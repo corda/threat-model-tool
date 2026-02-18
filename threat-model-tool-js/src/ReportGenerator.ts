@@ -24,6 +24,7 @@ export class ReportGenerator {
     private static TEMPLATE_MAPPING: Record<string, (tmo: ThreatModel, ctx: any) => string> = {
         'TM_templateFull': (tmo, ctx) => ReportGenerator.renderFullReport(tmo, ctx),
         'TM_templateMKDOCS': (tmo, ctx) => ReportGenerator.renderMKDOCSReport(tmo, ctx),
+        'MKdocs': (tmo, ctx) => ReportGenerator.renderMKDOCSReport(tmo, ctx),
         'TM_templateNoTocNoSummary': (tmo, ctx) => ReportGenerator.renderCompactReport(tmo, ctx),
         'full': (tmo, ctx) => ReportGenerator.renderFullReport(tmo, ctx),
         'TM_template': (tmo, ctx) => ReportGenerator.renderFullReport(tmo, ctx),

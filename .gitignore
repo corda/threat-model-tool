@@ -96,3 +96,4 @@ ENV/
 **/node_modules/*
 
 **/build/*
+threat-model-tool-js/astro-site/public/*
