@@ -28,7 +28,8 @@
     "build:hugoSite:examples": "tsx src/scripts/build-hugo-site.ts --TMDirectory tests/exampleThreatModels --outputDir ../build/site-hugo",
     "serve:hugoSite": "npm run --prefix hugo-site serve",
     "build:mkdocsSite": "tsx src/scripts/build-mkdocs-site.ts",
-    "build:mkdocsSite:examples": "tsx src/scripts/build-mkdocs-site.ts --TMDirectory tests/exampleThreatModels --MKDocsDir ../build/mkdocs --MKDocsSiteDir ../build/site-mkdocs --outputDir ../build/mkdocs/docs --templateSiteFolderSRC ../tests/siteTemplate/mkdocs --templateSiteFolderDST ../build/mkdocs"
+    "build:mkdocsSite:examples": "tsx src/scripts/build-mkdocs-site.ts --TMDirectory tests/exampleThreatModels --MKDocsDir ../build/mkdocs --MKDocsSiteDir ../build/site-mkdocs --outputDir ../build/mkdocs/docs --templateSiteFolderSRC ../tests/siteTemplate/mkdocs --templateSiteFolderDST ../build/mkdocs",
+    "serve:mkdocsSite": "mkdocs serve --config-file ../build/mkdocs/mkdocs.yml --dev-addr 127.0.0.1:4324"
   },
   "dependencies": {
     "cheerio": "^1.2.0",

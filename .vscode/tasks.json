@@ -135,6 +135,20 @@
                 "cwd": "${workspaceFolder}/threat-model-tool-js"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "TS: Serve MkDocs docs site",
+            "type": "shell",
+            "command": "npm",
+            "args": [
+                "run",
+                "serve:mkdocsSite"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/threat-model-tool-js"
+            },
+            "isBackground": true,
+            "problemMatcher": []
         }
     ],
 	"inputs": [
