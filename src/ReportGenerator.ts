@@ -239,14 +239,15 @@ export class ReportGenerator {
     private static renderMKDOCSReport(tmo: ThreatModel, ctx: any): string {
         resetHeadingNumbers();
         ctx.useMarkDown_attr_list_ext = ctx.useMarkDown_attr_list_ext ?? true;
-        ctx.process_toc = false;
+        const includeToc = Boolean(ctx.process_toc ?? false);
+        ctx.process_toc = includeToc;
         ctx.process_prepost_md = false;
 
         const lines: string[] = [];
         const rootHeaderLevel = ctx.rootHeaderLevel || 1;
 
-        // Root part: no TOC, with summary
-        lines.push(this.renderTmReportPart(tmo, true, false, true, rootHeaderLevel, ctx));
+        // Root part: TOC is optional for MKDOCS, driven by process_toc
+        lines.push(this.renderTmReportPart(tmo, true, includeToc, true, rootHeaderLevel, ctx));
 
         // Descendants
         for (const descendant of tmo.getDescendantsTM()) {

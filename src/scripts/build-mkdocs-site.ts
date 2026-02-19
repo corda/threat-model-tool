@@ -190,18 +190,24 @@ function stageTM(
     tmStagingDir: string,
     tm: TMEntry,
     docsDir: string,
+    markdownOverride: string | null = null,
     options: { expectPdf?: boolean } = {}
 ): StagedTMEntry | null {
-    const mdSource = resolveBuiltMarkdown(tmStagingDir, tm);
-    if (!mdSource) {
-        console.warn(`No markdown output found for ${tm.name}; skipping`);
-        return null;
+    let mdContent: string;
+    if (markdownOverride !== null) {
+        mdContent = markdownOverride;
+    } else {
+        const mdSource = resolveBuiltMarkdown(tmStagingDir, tm);
+        if (!mdSource) {
+            console.warn(`No markdown output found for ${tm.name}; skipping`);
+            return null;
+        }
+        mdContent = fs.readFileSync(mdSource, 'utf-8');
     }
 
     const tmDocsDir = path.join(docsDir, tm.id);
     fs.mkdirSync(tmDocsDir, { recursive: true });
 
-    const mdContent = fs.readFileSync(mdSource, 'utf-8');
     fs.writeFileSync(path.join(tmDocsDir, 'index.md'), mdContent, 'utf-8');
 
     const htmlSource = path.join(tmStagingDir, `${tm.id}.html`);
@@ -265,7 +271,7 @@ export function buildMkdocsSite(
         templateSiteFolderDST,
         template = 'MKdocs',
         pdfArtifactLink,
-        headerNumbering = false,
+        headerNumbering = true,
         ...tmOptions
     } = options;
 
@@ -318,6 +324,7 @@ export function buildMkdocsSite(
     fs.mkdirSync(stagingDir, { recursive: true });
 
     const staged: StagedTMEntry[] = [];
+    const mkdocsMarkdownByTm = new Map<string, string>();
     const built: Array<{ tm: TMEntry; tmStagingDir: string }> = [];
     for (const tm of tmList) {
         console.log(`\n--- Building ${tm.name} ---`);
@@ -325,7 +332,31 @@ export function buildMkdocsSite(
         fs.mkdirSync(tmStagingDir, { recursive: true });
 
         try {
-            buildSingleTM(tm.yamlPath, tmStagingDir, { ...tmOptions, template, headerNumbering });
+            // Pass 1: MkDocs markdown source (no TOC, no numbering)
+            buildSingleTM(tm.yamlPath, tmStagingDir, {
+                ...tmOptions,
+                template,
+                headerNumbering: false,
+                forceToc: false,
+                generatePDF: false,
+            });
+
+            const mkdocsMdSource = resolveBuiltMarkdown(tmStagingDir, tm);
+            if (!mkdocsMdSource) {
+                console.warn(`No markdown output found for ${tm.name}; skipping`);
+                continue;
+            }
+            mkdocsMarkdownByTm.set(tm.id, fs.readFileSync(mkdocsMdSource, 'utf-8'));
+
+            // Pass 2: HTML/PDF artifacts (with TOC + numbering)
+            buildSingleTM(tm.yamlPath, tmStagingDir, {
+                ...tmOptions,
+                template,
+                headerNumbering,
+                forceToc: true,
+                generatePDF: Boolean(tmOptions.generatePDF),
+            });
+
             built.push({ tm, tmStagingDir });
         } catch (err) {
             console.error(`ERROR building ${tm.name}: ${err}`);
@@ -333,11 +364,12 @@ export function buildMkdocsSite(
     }
 
     for (const entry of built) {
-        const stagedTm = stageTM(entry.tmStagingDir, entry.tm, absDocsDir, {
+        const mkdocsMarkdown = mkdocsMarkdownByTm.get(entry.tm.id) ?? null;
+        const stagedTmWithMarkdown = stageTM(entry.tmStagingDir, entry.tm, absDocsDir, mkdocsMarkdown, {
             expectPdf: Boolean(tmOptions.generatePDF),
         });
-        if (stagedTm) {
-            staged.push(stagedTm);
+        if (stagedTmWithMarkdown) {
+            staged.push(stagedTmWithMarkdown);
         }
     }
 
@@ -390,7 +422,7 @@ Options:
     --siteUrl <url>                   Optional canonical site URL in mkdocs.yml
   --templateSiteFolderSRC <path>    Extra site overlay source folder
   --templateSiteFolderDST <path>    Overlay destination (default: <MKDocsDir>)
-  --headerNumbering                 Enable auto heading numbers (default: OFF for MkDocs)
+    --headerNumbering                 Enable auto heading numbers (default: ON)
   --no-headerNumbering              Force-disable auto heading numbers
   --generatePDF                     Generate PDF per TM
   --pdfHeaderNote <text>            PDF page header text
@@ -411,8 +443,8 @@ const siteName = parseOption(cliArgs, 'siteName') ?? 'Threat Models';
 const siteUrl = parseOption(cliArgs, 'siteUrl');
 const templateSiteFolderSRC = parseOption(cliArgs, 'templateSiteFolderSRC');
 const templateSiteFolderDST = parseOption(cliArgs, 'templateSiteFolderDST');
-// MkDocs default: no heading numbering (site TOC/navigation already provides structure).
-const headerNumbering = parseFlag(cliArgs, 'headerNumbering') && !parseFlag(cliArgs, 'no-headerNumbering');
+// MkDocs default: heading numbering is enabled unless explicitly disabled.
+const headerNumbering = !parseFlag(cliArgs, 'no-headerNumbering');
 const generatePDF = parseFlag(cliArgs, 'generatePDF');
 const pdfHeaderNote = parseOption(cliArgs, 'pdfHeaderNote') ?? 'Private and confidential';
 const pdfArtifactLink = parseOption(cliArgs, 'pdfArtifactLink');

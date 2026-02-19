@@ -156,6 +156,7 @@ export interface BuildTMOptions {
     mainTitle?: string;
     generatePDF?: boolean;
     headerNumbering?: boolean;
+    forceToc?: boolean;
     fileName?: string;
     pdfHeaderNote?: string;
     pdfArtifactLink?: string;
@@ -169,6 +170,7 @@ export function buildSingleTM(yamlFile: string, outputDir: string, options: Buil
         mainTitle = '',
         generatePDF = false,
         headerNumbering = true,
+        forceToc,
         fileName,
         pdfHeaderNote = 'Private and confidential',
         assetFolders = [DEFAULT_ASSET_FOLDER]
@@ -188,6 +190,7 @@ export function buildSingleTM(yamlFile: string, outputDir: string, options: Buil
         fileName,
         // Canonical ReportGenerator switch for heading numbering.
         process_heading_numbering: headerNumbering,
+        process_toc: forceToc,
         // Keep alias for backward compatibility with existing callers.
         headerNumbering,
     });
@@ -195,20 +198,6 @@ export function buildSingleTM(yamlFile: string, outputDir: string, options: Buil
     copyAssetFolders(assetFolders, absOutputDir);
 
     const modelId = fileName || (tmo as any)._id || (tmo as any).id;
-    generateHtmlFromMarkdown(absOutputDir, modelId);
-
-    // Generate PDF if requested
-    if (generatePDF) {
-        console.log('Generating PDF...');
-        const pdfRenderer = new PDFRenderer(tmo);
-        const pdfPath = path.join(absOutputDir, `${modelId}.pdf`);
-        try {
-            pdfRenderer.renderToPDF(pdfPath, { headerNote: pdfHeaderNote });
-        } catch (err: any) {
-            console.warn(`PDF generation failed: ${err.message}`);
-        }
-    }
-
     const imgDir = path.join(absOutputDir, 'img');
     console.log('Generating PlantUML diagrams...');
 
@@ -236,6 +225,20 @@ export function buildSingleTM(yamlFile: string, outputDir: string, options: Buil
         console.warn('PlantUML generation failed (Docker or local plantuml required)');
         if (error instanceof Error && error.message) {
             console.warn(error.message);
+        }
+    }
+
+    generateHtmlFromMarkdown(absOutputDir, modelId);
+
+    // Generate PDF if requested
+    if (generatePDF) {
+        console.log('Generating PDF...');
+        const pdfRenderer = new PDFRenderer(tmo);
+        const pdfPath = path.join(absOutputDir, `${modelId}.pdf`);
+        try {
+            pdfRenderer.renderToPDF(pdfPath, { headerNote: pdfHeaderNote });
+        } catch (err: any) {
+            console.warn(`PDF generation failed: ${err.message}`);
         }
     }
 }
