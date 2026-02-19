@@ -244,13 +244,19 @@ export function buildSingleTM(yamlFile: string, outputDir: string, options: Buil
                 console.log('Local plantuml not found, using docker...');
             }
 
+            const uid = typeof process.getuid === 'function' ? process.getuid() : 1000;
+            const gid = typeof process.getgid === 'function' ? process.getgid() : 1000;
+
             execSync(
-                `docker run --rm -v "${imgDir}:/data" -w /data plantuml/plantuml:sha-d2b2bcf -tsvg ${dockerRelativeQuoted}`,
+                `docker run --rm --user ${uid}:${gid} -v "${imgDir}:/data" -w /data plantuml/plantuml:sha-d2b2bcf -tsvg ${dockerRelativeQuoted}`,
                 { stdio: 'inherit' }
             );
         }
     } catch (error) {
         console.warn('PlantUML generation failed (Docker or local plantuml required)');
+        if (error instanceof Error && error.message) {
+            console.warn(error.message);
+        }
     }
 }
 
