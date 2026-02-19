@@ -1,0 +1,61 @@
+{
+  "name": "threat-model-tool-js",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A TypeScript/JavaScript implementation of a threat modeling tool, inspired by a Python version.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "threat-model-tool": "src/scripts/build-threat-model.ts",
+    "threat-model-directory": "src/scripts/build-threat-model-directory.ts",
+    "threat-model-mkdocs": "src/scripts/build-mkdocs-site.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "tsx --test $(find tests -name '*.test.ts')",
+    "test:unit": "tsx --test $(find tests -name '*.test.ts')",
+    "test:build": "tsx src/scripts/build-threat-model.ts",
+    "start": "node dist/index.js",
+    "compile": "tsc --noEmit",
+    "build:example": "tsx src/scripts/build-threat-model.ts ../tests/exampleThreatModels/FullFeature/FullFeature.yaml ./build/examples/FullFeature",
+    "generate:examples": "for dir in tests/exampleThreatModels/*/; do name=$(basename \"$dir\"); if [ -f \"$dir/$name.yaml\" ]; then npx tsx src/scripts/build-threat-model.ts \"$dir/$name.yaml\" \"./build/examples/$name\"; fi; done",
+    "generate:example": "npx tsx src/scripts/build-threat-model.ts tests/exampleThreatModels/${npm_config_example}/${npm_config_example}.yaml ./build/examples/${npm_config_example}",
+    "generate:example:debug": "node --inspect-brk ./node_modules/tsx/dist/cli.mjs src/scripts/build-threat-model.ts tests/exampleThreatModels/${npm_config_example}/${npm_config_example}.yaml ./build/examples/${npm_config_example}",
+    "build:directory": "tsx src/scripts/build-threat-model-directory.ts",
+    "build:directory:examples": "tsx src/scripts/build-threat-model-directory.ts --TMDirectory tests/exampleThreatModels --outputDir ./build/examples --generatePDF -- pdfHeaderNote \"Confidential - Internal Use Only\"",
+    "build:astroSite": "tsx src/scripts/build-astro-site.ts",
+    "build:astroSite:examples": "tsx src/scripts/build-astro-site.ts --TMDirectory tests/exampleThreatModels --outputDir ./build/site",
+    "serve:astroSite": "npm run --prefix astro-site preview -- --port 4321",
+    "build:docusaurusSite": "tsx src/scripts/build-docusaurus-site.ts",
+    "build:docusaurusSite:examples": "tsx src/scripts/build-docusaurus-site.ts --TMDirectory tests/exampleThreatModels --outputDir ./build/site-docusaurus",
+    "serve:docusaurusSite": "npm run --prefix docusaurus-site serve -- --port 4322",
+    "build:hugoSite": "tsx src/scripts/build-hugo-site.ts",
+    "build:hugoSite:examples": "tsx src/scripts/build-hugo-site.ts --TMDirectory tests/exampleThreatModels --outputDir ./build/site-hugo",
+    "serve:hugoSite": "npm run --prefix hugo-site serve",
+    "build:mkdocsSite": "tsx src/scripts/build-mkdocs-site.ts",
+    "build:mkdocsSite:examples": "tsx src/scripts/build-mkdocs-site.ts --TMDirectory tests/exampleThreatModels --MKDocsDir ./build/mkdocs --MKDocsSiteDir ./build/site-mkdocs --outputDir ./build/mkdocs/docs --templateSiteFolderSRC ../tests/siteTemplate/mkdocs --templateSiteFolderDST ./build/mkdocs",
+    "serve:mkdocsSite": "mkdocs serve --config-file ./build/mkdocs/mkdocs.yml --dev-addr 127.0.0.1:4324"
+  },
+  "dependencies": {
+    "cheerio": "^1.2.0",
+    "cvss": "^1.0.5",
+    "js-yaml": "^4.1.0",
+    "marked": "^17.0.2"
+  },
+  "devDependencies": {
+    "@types/cvss": "^1.0.3",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^25.2.3",
+    "eslint": "^7.32.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "keywords": [
+    "threat-modeling",
+    "security",
+    "javascript"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

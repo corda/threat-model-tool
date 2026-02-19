@@ -1,0 +1,10 @@
+# Generated outputs for threat-model-tool-js
+build/
+
+# Temporary staging folders used by site generators
+astro-site/.staging/
+docusaurus-site/.staging/
+hugo-site/.staging/
+
+# Optional local output folder used by ad-hoc runs
+output/
