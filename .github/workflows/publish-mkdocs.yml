@@ -50,22 +50,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pandoc
 
-      - name: Resolve threat model directory
-        id: tm_dir
-        run: |
-          if [ -d "threatModels" ]; then
-            echo "tm_dir=../threatModels" >> "$GITHUB_OUTPUT"
-          elif [ -d "tests/exampleThreatModels" ]; then
-            echo "tm_dir=../tests/exampleThreatModels" >> "$GITHUB_OUTPUT"
-          else
-            echo "No threat model directory found (expected threatModels/ or tests/exampleThreatModels/)" >&2
-            exit 1
-          fi
-
       - name: Build MkDocs site + PDFs
         run: >
           npm run build:mkdocsSite:withPDF --
-          --TMDirectory ${{ steps.tm_dir.outputs.tm_dir }}
+          --TMDirectory ../tests/exampleThreatModels
           --MKDocsDir ../build/mkdocs
           --MKDocsSiteDir ../build/site-mkdocs
           --outputDir ../build/mkdocs/docs
