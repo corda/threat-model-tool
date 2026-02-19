@@ -7,7 +7,9 @@ on:
     paths:
       - 'threatModels/**/*.yaml'
       - 'tests/exampleThreatModels/**/*.yaml'
-      - 'threat-model-tool-js/**'
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/publish-mkdocs.yml'
 
 permissions:
@@ -31,7 +33,7 @@ jobs:
         with:
           node-version: '20'
           cache: npm
-          cache-dependency-path: threat-model-tool-js/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -40,7 +42,6 @@ jobs:
 
       - name: Install Node dependencies
         run: npm ci
-        working-directory: threat-model-tool-js
 
       - name: Install MkDocs
         run: pip install mkdocs mkdocs-material
@@ -53,11 +54,10 @@ jobs:
       - name: Build MkDocs site + PDFs
         run: >
           npm run build:mkdocsSite:withPDF --
-          --TMDirectory ../tests/exampleThreatModels
-          --MKDocsDir ../build/mkdocs
-          --MKDocsSiteDir ../build/site-mkdocs
-          --outputDir ../build/mkdocs/docs
-        working-directory: threat-model-tool-js
+          --TMDirectory tests/exampleThreatModels
+          --MKDocsDir build/mkdocs
+          --MKDocsSiteDir build/site-mkdocs
+          --outputDir build/mkdocs/docs
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
