@@ -46,10 +46,9 @@ jobs:
       - name: Install MkDocs
         run: pip install mkdocs mkdocs-material
 
-      - name: Install PDF dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y pandoc
+      # - name: Install PDF dependencies
+      #   run: |
+      #     sudo apt-get update
 
       - name: Build MkDocs site + PDFs
         run: >

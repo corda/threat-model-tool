@@ -84,7 +84,7 @@ export class PDFRenderer {
 
     /**
      * Alternative PDF generation using markdown-pdf (Node.js library)
-     * This is a fallback if pandoc is not available
+        * This is an optional alternative to the Docker Puppeteer flow
      */
     async renderToPDFWithNodeLibrary(outputPath: string): Promise<void> {
         const markdown = this.markdownRenderer.renderFullReport();
@@ -112,7 +112,7 @@ export class PDFRenderer {
         } catch (error) {
             throw new Error(
                 `markdown-pdf library not found. Install it with: npm install markdown-pdf\n` +
-                `Or use pandoc for PDF generation.`
+                `Or use the default Docker Puppeteer PDF generation path.`
             );
         }
     }
@@ -124,6 +124,6 @@ export class PDFRenderer {
         const markdown = this.markdownRenderer.renderFullReport();
         fs.writeFileSync(outputPath, markdown, 'utf8');
         console.log(`Markdown saved to: ${outputPath}`);
-        console.log(`To convert to PDF, run: pandoc ${outputPath} -o ${outputPath.replace('.md', '.pdf')}`);
+        console.log('Convert this Markdown using your preferred toolchain if you need a manual PDF workflow.');
     }
 }
