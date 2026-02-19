@@ -106,8 +106,11 @@ function generateHtmlFromMarkdown(outputDir: string, modelId: string): void {
 <html>
 <head>
 <meta charset="utf-8" />
+<link rel="stylesheet" href="../css/tm.css">
 <link rel="stylesheet" href="css/tm.css">
+<link rel="stylesheet" href="../css/github.min.css">
 <link rel="stylesheet" href="css/github.min.css">
+<script src="../js/highlight.min.js"></script>
 <script src="js/highlight.min.js"></script>
 <script>hljs.highlightAll();</script>
 </head>
@@ -186,7 +189,7 @@ export function buildSingleTM(yamlFile: string, outputDir: string, options: Buil
                 execSync(`plantuml -tsvg ${quoted}`, { stdio: 'inherit' });
             } catch (e) {
                 console.log('Local plantuml failed, trying docker...');
-                execSync(`docker run --rm -v "${imgDir}:/data" plantuml/plantuml:sha-d2b2bcf *.puml -tsvg`, {
+                execSync(`docker run --rm -v "${imgDir}:/data" -w /data plantuml/plantuml:sha-d2b2bcf sh -lc "find . -name '*.puml' -print0 | xargs -0 -r plantuml -tsvg"`, {
                     stdio: 'inherit'
                 });
             }
