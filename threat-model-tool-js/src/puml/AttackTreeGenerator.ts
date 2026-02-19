@@ -15,7 +15,7 @@ export class AttackTreeGenerator {
         lines.push('@startuml');
         lines.push('digraph G {');
         lines.push('  rankdir="RL";');
-        lines.push('  node [shape=plaintext, fontname="Arial" fontsize="12", align="left"];');
+        lines.push('  node [shape=plaintext, fontname="Arial" fontsize="12"];');
         lines.push('');
 
         // Render threat model node
@@ -59,28 +59,25 @@ export class AttackTreeGenerator {
         lines.push('  node [shape=plaintext, fontname="Arial" fontsize="12"];');
 
         const statusColors = threat.statusColors ? threat.statusColors() : { fill: '#F8CECC', border: this.customRed };
-        lines.push(`"${id}" [ fillcolor="${statusColors.fill}", style=filled, shape=polygon, color="${statusColors.border}"`);
-        lines.push('    label= ');
-        lines.push('    <<table border="0" cellborder="0" cellspacing="0">');
-        lines.push(`     <tr><td align="center"><b>Threat</b><br/> ${this.wrapTextForPuml(threat.title, 80)}</td></tr>`);
+        lines.push(`"${id}" [ fillcolor="${statusColors.fill}" style=filled shape=box color="${statusColors.border}" label=<<table border="0" cellborder="0" cellspacing="0">`);
+        lines.push(`     <tr><td><b>Threat</b><br/> ${this.wrapTextForPuml(threat.title, 80)}</td></tr>`);
 
         if ((threat as any).impactedSecObjs && (threat as any).impactedSecObjs.length > 0) {
             lines.push('     <tr><td><table border="0" cellborder="0" cellspacing="8"><tr>');
             for (const secObjRef of (threat as any).impactedSecObjs) {
                 const secObj = secObjRef.resolve ? secObjRef.resolve() : secObjRef;
                 const secObjId = (secObj as any)?._id || (secObj as any)?.id || secObjRef.REFIDValue || 'UNKNOWN';
-                lines.push(`     <td align="center" href="#${secObjId}" bgcolor="#EEEEEE"><font color="blue">${this.escapeHtml(secObjId)}</font></td>`);
+                lines.push(`     <td href="#${secObjId}" bgcolor="#EEEEEE"><font color="blue">${this.escapeHtml(secObjId)}</font></td>`);
             }
             lines.push('     </tr></table></td></tr>');
         }
 
         lines.push('   </table>>');
-        lines.push('   ];');
+        lines.push('   ]');
 
         const attackText = this.wrapTextForPuml((threat as any).attack || '', 80);
-        lines.push(`"${id}_attack" [ fillcolor="#f5f5f5", style=filled, shape=polygon, color="#666666", label =`);
-        lines.push('    <<table border="0" cellborder="0" cellspacing="0">');
-        lines.push(`     <tr><td align="center"><b>Attack</b><br/>${attackText}</td></tr>`);
+        lines.push(`"${id}_attack" [ fillcolor="#f5f5f5" style=filled shape=box color="#666666" label=<<table border="0" cellborder="0" cellspacing="0">`);
+        lines.push(`     <tr><td><b>Attack</b><br/>${attackText}</td></tr>`);
         lines.push('   </table>>');
         lines.push('    ]');
         lines.push(`"${id}_attack" -> "${id}"  [label = " exploits"]`);
@@ -90,10 +87,8 @@ export class AttackTreeGenerator {
             const cmResolved = (cm as any).resolve ? (cm as any).resolve() : cm;
             if (!cmResolved || !cmResolved.description) continue;
             const colors = cmResolved.statusColors ? cmResolved.statusColors() : { fill: '#FFF2CC', border: '#D6B656' };
-            lines.push(`"${id}_countermeasure${cmIndex}" [`);
-            lines.push(`    fillcolor="${colors.fill}", style=filled, shape=polygon, color="${colors.border}", label =`);
-            lines.push('    <<table border="0" cellborder="0" cellspacing="0">');
-            lines.push(`     <tr><td align="left"><b>Countermeasure</b><br/> ${this.wrapTextForPuml(cmResolved.title || '', 80)}</td></tr>`);
+            lines.push(`"${id}_countermeasure${cmIndex}" [fillcolor="${colors.fill}" style=filled shape=box color="${colors.border}" label=<<table border="0" cellborder="0" cellspacing="0">`);
+            lines.push(`     <tr><td><b>Countermeasure</b><br/> ${this.wrapTextForPuml(cmResolved.title || '', 80)}</td></tr>`);
             lines.push('   </table>>');
             lines.push('   ]');
             lines.push(`     "${id}_countermeasure${cmIndex}" -> "${id}_attack" [label = " mitigates"]`);
@@ -111,12 +106,11 @@ export class AttackTreeGenerator {
         lines.push('@startuml');
         lines.push('digraph G {');
         lines.push('rankdir="RL";');
-        lines.push('node [shape=plaintext, fontname="Arial" fontsize="12", align="left"];');
+        lines.push('node [shape=plaintext, fontname="Arial" fontsize="12"];');
         lines.push('');
 
-        lines.push(`"${secObjId}" [fillcolor="#bae9ff", style=filled, shape=ellipse, color="${this.customRed}", penwidth=2, label=`);
-        lines.push('<<table border="0" cellborder="0" cellspacing="0">');
-        lines.push(`  <tr><td align="center"><b>${this.wrapTextForPuml(secObjId, 27)}</b><br/>${this.wrapTextForPuml((secObj as any).description || '', 80)}</td></tr>`);
+        lines.push(`"${secObjId}" [fillcolor="#bae9ff" style=filled shape=box color="${this.customRed}" penwidth=2 label=<<table border="0" cellborder="0" cellspacing="0">`);
+        lines.push(`  <tr><td><b>${this.wrapTextForPuml(secObjId, 27)}</b><br/>${this.wrapTextForPuml((secObj as any).description || '', 80)}</td></tr>`);
         lines.push('</table>>]');
 
         const allThreats = this.getAllThreats(root);
@@ -196,10 +190,8 @@ export class AttackTreeGenerator {
         lines.push(this.renderThreatModelNode(tmo));
         for (const threat of tmo.threats) {
             lines.push(this.renderThreatNode(threat, tmo));
-            lines.push(`"${(threat as any)._id || threat.id}" -> "${(tmo as any)._id || tmo.id}" [label=" impacts"]`);
         }
         for (const child of tmo.getDescendantsTM().filter((candidate) => candidate.parent === tmo)) {
-            lines.push(this.renderThreatModelNode(child));
             lines.push(`"${(child as any)._id || child.id}" -> "${(tmo as any)._id || tmo.id}" [label=" in scope for "]`);
             this.appendRecursiveThreatModel(lines, child);
         }
@@ -209,10 +201,8 @@ export class AttackTreeGenerator {
         const lines: string[] = [];
         const id = (tmo as any)._id || tmo.id;
         
-        lines.push(`"${id}" [fillcolor="#bae9ff", style=filled, shape=ellipse, color="${this.customRed}",`);
-        lines.push(' label=');
-        lines.push(' <<table border="0" cellborder="0" cellspacing="0">');
-        lines.push('   <tr><td align="left">');
+        lines.push(`"${id}" [fillcolor="#bae9ff" style=filled shape=box color="${this.customRed}" label=<<table border="0" cellborder="0" cellspacing="0">`);
+        lines.push('   <tr><td>');
         
         // Split title into multiple lines if needed
         const titleLines = this.wrapText(this.escapeHtml(this.cleanMarkdownText(tmo.title || '')), 27);
@@ -241,18 +231,15 @@ export class AttackTreeGenerator {
         const cvssColor = (threat as any).getSmartScoreColor ? (threat as any).getSmartScoreColor() : "gray";
         const cvssDesc = (threat as any).getSmartScoreDesc ? (threat as any).getSmartScoreDesc() : "TODO";
 
-        lines.push(`"${id}" [ fillcolor="${fillColor}", style=filled, shape=polygon, color="${borderColor}", penwidth=2,`);
-        lines.push(`    URL="../index.html#${id}",  target="_top", `);
-        lines.push('    label= ');
-        lines.push('    <<table border="0" cellborder="0" cellspacing="0" width="530">');
-        lines.push(`     <tr><td align="left"><b>${this.wrapTextForPuml(threat.title, 80)} <i>-${mitigationStatus}</i></b> `);
+        lines.push(`"${id}" [ fillcolor="${fillColor}" style=filled shape=box color="${borderColor}" penwidth=2 URL="../index.html#${id}" target="_top" label=<<table border="0" cellborder="0" cellspacing="0" width="530">`);
+        lines.push(`     <tr><td><b>${this.wrapTextForPuml(threat.title, 80)} <i>-${mitigationStatus}</i></b> `);
         lines.push(`     </td>  <td BGCOLOR="${cvssColor}">${cvssDesc}</td></tr>`);
         
         // Attack description
-        lines.push(`     <tr><td align="center" COLSPAN="2">${this.wrapTextForPuml((threat as any).attack || '', 80)}</td></tr>   `);
+        lines.push(`     <tr><td COLSPAN="2">${this.wrapTextForPuml((threat as any).attack || '', 80)}</td></tr>   `);
         
         lines.push('   </table>>');
-        lines.push('];');
+        lines.push(']');
         lines.push('');
 
         // Render countermeasures
@@ -267,12 +254,8 @@ export class AttackTreeGenerator {
             const lineColor = cmResolved.inPlace ? 'green' : this.customRed;
             const lineText = cmResolved.inPlace ? 'mitigates' : '';
             
-            lines.push(`"${cmId}" [`);
-            lines.push(`    fillcolor="${colors.fill}", style=filled, shape=polygon, penwidth=2,`);
-            lines.push(`    color="${colors.border}", `);
-            lines.push('    label=');
-            lines.push('    <<table border="0" cellborder="0" cellspacing="0" width="530">');
-            lines.push('      <tr><td align="left">');
+            lines.push(`"${cmId}" [fillcolor="${colors.fill}" style=filled shape=box penwidth=2 color="${colors.border}" label=<<table border="0" cellborder="0" cellspacing="0" width="530">`);
+            lines.push('      <tr><td>');
             lines.push(`        <b>${this.wrapTextForPuml(cmResolved.title || '', 80)}</b><br/><br/> `);
             
             lines.push(`        ${this.wrapTextForPuml(cmResolved.description || '', 80)}`);
@@ -305,15 +288,12 @@ export class AttackTreeGenerator {
         const cvssDesc = (threat as any).getSmartScoreDesc ? (threat as any).getSmartScoreDesc() : 'TODO';
 
         const lines: string[] = [];
-        lines.push(`"${id}" [ fillcolor="${statusColors.fill}", style=filled, shape=polygon, color="${statusColors.border}", penwidth=2,`);
-        lines.push(`    URL="../index.html#${id}",  target="_top", `);
-        lines.push('    label= ');
-        lines.push('    <<table border="0" cellborder="0" cellspacing="0" width="530">');
-        lines.push(`     <tr><td align="left"><b>${this.wrapTextForPuml(threat.title, 80)} <i>-${mitigationStatus}</i></b> `);
+        lines.push(`"${id}" [ fillcolor="${statusColors.fill}" style=filled shape=box color="${statusColors.border}" penwidth=2 URL="../index.html#${id}"  target="_top" label=<<table border="0" cellborder="0" cellspacing="0" width="530">`);
+        lines.push(`     <tr><td><b>${this.wrapTextForPuml(threat.title, 80)} <i>-${mitigationStatus}</i></b> `);
         lines.push(`     </td>  <td BGCOLOR="${cvssColor}">${cvssDesc}</td></tr>`);
-        lines.push(`     <tr><td align="center" COLSPAN="2">${this.wrapTextForPuml((threat as any).attack || '', 80)}</td></tr>   `);
+        lines.push(`     <tr><td COLSPAN="2">${this.wrapTextForPuml((threat as any).attack || '', 80)}</td></tr>   `);
         lines.push('   </table>>');
-        lines.push('];');
+        lines.push(']');
         lines.push('');
 
         let cmIndex = 0;
@@ -327,12 +307,8 @@ export class AttackTreeGenerator {
             const lineText = cmResolved.inPlace ? 'mitigates' : '';
             const cmId = `${id}_countermeasure${cmIndex}`;
 
-            lines.push(`"${cmId}" [`);
-            lines.push(`    fillcolor="${colors.fill}", style=filled, shape=polygon, penwidth=2,`);
-            lines.push(`    color="${colors.border}", `);
-            lines.push('    label=');
-            lines.push('    <<table border="0" cellborder="0" cellspacing="0" width="530">');
-            lines.push('      <tr><td align="left">');
+            lines.push(`"${cmId}" [fillcolor="${colors.fill}" style=filled shape=box penwidth=2 color="${colors.border}" label=<<table border="0" cellborder="0" cellspacing="0" width="530">`);
+            lines.push('      <tr><td>');
             lines.push(`        <b>${this.wrapTextForPuml(cmResolved.title || '', 80)}</b><br/><br/> `);
             lines.push(`        ${this.wrapTextForPuml(cmResolved.description || '', 80)}`);
             lines.push('      </td></tr>');

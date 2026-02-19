@@ -65,7 +65,7 @@ export function makeMarkdownLinkedHeader(
     //   code = "\n\n" + header + (" " + skip_html if skip_html else "") + " <a id='...'></a>\n"
     //   return "\n" + code + "\n"
     const hashes = '#'.repeat(level);
-    const skipTOCHtml = skipTOC ? "  <div class='skipTOC'></div>" : "";
+    const skipTOCHtml = skipTOC ? "  <span class='skipTOC'></span>" : "";
     const header = `${hashes} ${number}${title.trimEnd()}`;
     const code = `\n\n${header}${skipTOCHtml ? ' ' + skipTOCHtml : ''} <a id='${anchor}'></a>\n`;
     return `\n${code}\n`;

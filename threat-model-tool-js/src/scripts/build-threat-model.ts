@@ -1,29 +1,12 @@
 #!/usr/bin/env node
 import ThreatModel from '../models/ThreatModel.js';
 import { ReportGenerator } from '../ReportGenerator.js';
+import { PDFRenderer } from '../renderers/index.js';
 import { execSync } from 'child_process';
 import path from 'path';
 import fs from 'fs';
-import { fileURLToPath } from 'url';
 import { marked } from 'marked';
 import { load } from 'cheerio';
-
-export interface BuildTMOptions {
-    /** Report template name, default 'full' */
-    template?: string;
-    /** 'full' (default) or 'public' — filters out non-public content */
-    visibility?: 'full' | 'public';
-    /** Number headings in the output, default true */
-    headerNumbering?: boolean;
-    /** Override output base filename (without extension) */
-    fileName?: string;
-    /** Generate a PDF via Docker+Puppeteer after HTML generation */
-    generatePDF?: boolean;
-    /** Text shown in the PDF header on every page */
-    pdfHeaderNote?: string;
-    /** Reserved for future use (e.g. link to a pre-built PDF artifact) */
-    pdfArtifactLink?: string;
-}
 
 function renderMarkdownWithMdInHtml(mdSource: string): string {
     const render = (src: string): string => marked.parse(src, { gfm: true, breaks: false, async: false }) as string;
@@ -31,7 +14,7 @@ function renderMarkdownWithMdInHtml(mdSource: string): string {
     let html = render(mdSource);
 
     for (let pass = 0; pass < 8; pass++) {
-        const $ = load(`<root>${html}</root>`);
+        const $ = load(`<root>${html}</root>`, { decodeEntities: false });
         const nodes = $('*[markdown="1"], *[markdown="block"]');
         if (nodes.length === 0) {
             return $('root').html() || html;
@@ -108,63 +91,6 @@ function toShellSingleQuoted(value: string): string {
     return `'${value.replace(/'/g, `'"'"'`)}'`;
 }
 
-function generatePDFFromHtml(outputDir: string, modelId: string, options: BuildTMOptions): void {
-    const htmlPath = path.join(outputDir, `${modelId}.html`);
-    if (!fs.existsSync(htmlPath)) {
-        console.warn(`HTML file missing, PDF not generated: ${htmlPath}`);
-        return;
-    }
-
-    // Locate pdfScript.js next to this script file
-    const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-    const pdfScriptSrc = path.join(scriptDir, 'pdfScript.js');
-    if (!fs.existsSync(pdfScriptSrc)) {
-        console.warn(`pdfScript.js not found at ${pdfScriptSrc}, skipping PDF generation`);
-        return;
-    }
-
-    // Write pdfScript.js into a scripts/ subdirectory of outputDir so Docker can mount it
-    const scriptsDir = path.join(outputDir, 'scripts');
-    fs.mkdirSync(scriptsDir, { recursive: true });
-    fs.copyFileSync(pdfScriptSrc, path.join(scriptsDir, 'pdfScript.js'));
-
-    const pdfName = `${modelId}.pdf`;
-    const pdfOutPath = path.join(outputDir, pdfName);
-    const headerNote = options.pdfHeaderNote ?? 'Private and confidential';
-
-    // Inside the container, outputDir is mounted at /home/pptruser/out
-    const containerHtmlUrl = `file:///home/pptruser/out/${modelId}.html`;
-    const containerPdfPath = `out/${pdfName}`;
-    const containerScriptsPath = `/home/pptruser/scripts`;
-
-    try {
-        // The puppeteer container runs as pptruser (uid 10042).  Make the
-        // output directory world-writable so it can create the PDF file,
-        // then restore the original permissions afterwards.
-        const origMode = fs.statSync(outputDir).mode;
-        fs.chmodSync(outputDir, 0o777);
-
-        try {
-            execSync(
-                `docker run --init --rm ` +
-                `-v ${toShellSingleQuoted(outputDir)}:/home/pptruser/out ` +
-                `-v ${toShellSingleQuoted(scriptsDir)}:${containerScriptsPath} ` +
-                `ghcr.io/puppeteer/puppeteer:latest ` +
-                `node scripts/pdfScript.js ` +
-                `${toShellSingleQuoted(containerHtmlUrl)} ` +
-                `${toShellSingleQuoted(containerPdfPath)} ` +
-                `${toShellSingleQuoted(headerNote)}`,
-                { stdio: 'inherit' }
-            );
-            console.log(`Generated PDF: ${pdfOutPath}`);
-        } finally {
-            fs.chmodSync(outputDir, origMode);
-        }
-    } catch (error) {
-        console.warn(`PDF generation failed (Docker + ghcr.io/puppeteer/puppeteer:latest required): ${error}`);
-    }
-}
-
 function generateHtmlFromMarkdown(outputDir: string, modelId: string): void {
     const mdPath = path.join(outputDir, `${modelId}.md`);
     const htmlPath = path.join(outputDir, `${modelId}.html`);
@@ -193,31 +119,56 @@ function generateHtmlFromMarkdown(outputDir: string, modelId: string): void {
     console.log(`Generated: ${htmlPath}`);
 }
 
-function buildSingleTM(yamlFile: string, outputDir: string = './output', options: BuildTMOptions = {}): void {
+export interface BuildTMOptions {
+    template?: string;
+    visibility?: 'full' | 'public';
+    mainTitle?: string;
+    generatePDF?: boolean;
+    headerNumbering?: boolean;
+    fileName?: string;
+    pdfHeaderNote?: string;
+}
+
+export function buildSingleTM(yamlFile: string, outputDir: string, options: BuildTMOptions = {}): void {
     const {
         template = 'full',
         visibility = 'full',
+        mainTitle = '',
+        generatePDF = false,
         headerNumbering = true,
         fileName,
-        generatePDF = false,
-        pdfHeaderNote,
-        pdfArtifactLink,
+        pdfHeaderNote = 'Private and confidential'
     } = options;
 
     const fullPath = path.resolve(yamlFile);
     if (!fs.existsSync(fullPath)) {
-        console.error(`File not found: ${fullPath}`);
-        process.exit(1);
+        throw new Error(`File not found: ${fullPath}`);
     }
 
-    const isPublic = visibility === 'public';
-    const tmo = new ThreatModel(fullPath, null, isPublic);
-    ReportGenerator.generate(tmo, template, path.resolve(outputDir), { process_heading_numbering: headerNumbering });
+    const tmo = new ThreatModel(fullPath);
+    (tmo as any)._visibility = visibility;
 
-    const modelId: string = fileName ?? ((tmo as any)._id || (tmo as any).id);
     const absOutputDir = path.resolve(outputDir);
+    ReportGenerator.generate(tmo, template, absOutputDir, {
+        mainTitle,
+        headerNumbering,
+        fileName
+    });
 
-    // Run PlantUML first so SVGs exist before HTML/PDF generation
+    const modelId = fileName || (tmo as any)._id || (tmo as any).id;
+    generateHtmlFromMarkdown(absOutputDir, modelId);
+
+    // Generate PDF if requested
+    if (generatePDF) {
+        console.log('Generating PDF...');
+        const pdfRenderer = new PDFRenderer(tmo);
+        const pdfPath = path.join(absOutputDir, `${modelId}.pdf`);
+        pdfRenderer.renderToPDF(pdfPath, { headerNote: pdfHeaderNote }).catch(err => {
+            console.warn(`PDF generation failed: ${err.message}`);
+        });
+    }
+
+    // Run PlantUML via Docker
     const imgDir = path.join(absOutputDir, 'img');
     console.log('Generating PlantUML diagrams...');
 
@@ -239,41 +190,28 @@ function buildSingleTM(yamlFile: string, outputDir: string = './output', options
     } catch (error) {
         console.warn('PlantUML generation failed (Docker or local plantuml required)');
     }
-
-    generateHtmlFromMarkdown(absOutputDir, modelId);
-
-    if (generatePDF) {
-        generatePDFFromHtml(absOutputDir, modelId, { pdfHeaderNote, pdfArtifactLink });
-    }
-
-    console.log('Done!');
 }
 
-export { buildSingleTM };
-
-// Only run CLI when this file is the entry point
-const isMain = process.argv[1] && (
-    process.argv[1].endsWith('build-threat-model.ts') ||
-    process.argv[1].endsWith('build-threat-model.js')
-);
-if (isMain) {
+if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('build-threat-model.ts')) {
     const args = process.argv.slice(2);
     let yamlFile = '';
     let outputDir = './output';
-    const options: BuildTMOptions = {};
+    let mainTitle = '';
+    let generatePDF = false;
+    let template = 'full';
+    let visibility: 'full' | 'public' = 'full';
 
     for (let i = 0; i < args.length; i++) {
         const arg = args[i];
-        if (arg.startsWith('--template=')) {
-            options.template = arg.split('=')[1];
-        } else if (arg.startsWith('--visibility=')) {
-            options.visibility = arg.split('=')[1] as 'full' | 'public';
-        } else if (arg.startsWith('--fileName=')) {
-            options.fileName = arg.split('=')[1];
+        if (arg === '--mainTitle' && i + 1 < args.length) {
+            mainTitle = args[++i];
         } else if (arg === '--generatePDF') {
-            options.generatePDF = true;
-        } else if (arg.startsWith('--pdfHeaderNote=')) {
-            options.pdfHeaderNote = arg.split('=')[1];
+            generatePDF = true;
+        } else if (arg.startsWith('--template=') || arg === '--template') {
+            template = arg.includes('=') ? arg.split('=')[1] : args[++i];
+        } else if (arg.startsWith('--visibility=') || arg === '--visibility') {
+            const v = arg.includes('=') ? arg.split('=')[1] : args[++i];
+            visibility = v === 'public' ? 'public' : 'full';
         } else if (!yamlFile) {
             yamlFile = arg;
         } else if (outputDir === './output') {
@@ -282,9 +220,20 @@ if (isMain) {
     }
 
     if (!yamlFile) {
-        console.error('Usage: build-threat-model.ts <yaml-file> [output-dir] [--template=...] [--visibility=...]');
+        console.error('Usage: build-threat-model.ts <yaml-file> [output-dir] [--mainTitle "Title"] [--generatePDF] [--template name] [--visibility full|public]');
         process.exit(1);
     }
 
-    buildSingleTM(yamlFile, outputDir, options);
+    try {
+        buildSingleTM(yamlFile, outputDir, {
+            mainTitle,
+            generatePDF,
+            template,
+            visibility
+        });
+        console.log('Done!');
+    } catch (err: any) {
+        console.error(err.message);
+        process.exit(1);
+    }
 }

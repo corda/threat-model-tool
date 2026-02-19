@@ -5,6 +5,11 @@
   "description": "A TypeScript/JavaScript implementation of a threat modeling tool, inspired by a Python version.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "threat-model-tool": "src/scripts/build-threat-model.ts",
+    "threat-model-directory": "src/scripts/build-threat-model-directory.ts",
+    "threat-model-mkdocs": "src/scripts/build-mkdocs-site.ts"
+  },
   "scripts": {
     "build": "tsc",
     "test": "tsx --test $(find tests -name '*.test.ts')",

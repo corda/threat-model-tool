@@ -68,7 +68,7 @@ export function executiveSummary(tmo: ThreatModel, headerLevel: number = 1, ctx:
                 row += `<br/><a href="${html.escape(threat.ticketLink)}"> Ticket link  </a>`;
             }
             
-            row += `${cvssTd}</tr>`;
+            row += `</td>${cvssTd}</tr>`;
             lines.push(row);
         }
         
