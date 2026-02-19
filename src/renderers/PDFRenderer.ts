@@ -1,12 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { execSync } from 'child_process';
 import ThreatModel from '../models/ThreatModel.js';
 import { MarkdownRenderer } from './MarkdownRenderer.js';
-
-const execAsync = promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -22,7 +19,7 @@ export class PDFRenderer {
     /**
      * Renders threat model to PDF using Puppeteer via Docker
      */
-    async renderToPDF(outputPath: string, options?: { headerNote?: string }): Promise<void> {
+    renderToPDF(outputPath: string, options?: { headerNote?: string }): void {
         const headerNote = options?.headerNote ?? 'Private and confidential';
         const absOutputPath = path.resolve(outputPath);
         const outputDir = path.dirname(absOutputPath);
@@ -71,7 +68,7 @@ export class PDFRenderer {
             `"${headerNote.replace(/"/g, '\\"')}"`;
 
         try {
-            await execAsync(dockerCommand);
+            execSync(dockerCommand, { stdio: 'inherit' });
             console.log(`PDF generated successfully: ${outputPath}`);
         } catch (error) {
             throw new Error(`Docker PDF generation failed: ${(error as Error).message}`);

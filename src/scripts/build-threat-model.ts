@@ -202,9 +202,11 @@ export function buildSingleTM(yamlFile: string, outputDir: string, options: Buil
         console.log('Generating PDF...');
         const pdfRenderer = new PDFRenderer(tmo);
         const pdfPath = path.join(absOutputDir, `${modelId}.pdf`);
-        pdfRenderer.renderToPDF(pdfPath, { headerNote: pdfHeaderNote }).catch(err => {
+        try {
+            pdfRenderer.renderToPDF(pdfPath, { headerNote: pdfHeaderNote });
+        } catch (err: any) {
             console.warn(`PDF generation failed: ${err.message}`);
-        });
+        }
     }
 
     // Run PlantUML via Docker
