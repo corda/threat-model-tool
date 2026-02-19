@@ -1,10 +1,14 @@
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import ThreatModel from '../models/ThreatModel.js';
 import { MarkdownRenderer } from './MarkdownRenderer.js';
 
 const execAsync = promisify(exec);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export class PDFRenderer {
     private threatModel: ThreatModel;
@@ -16,32 +20,59 @@ export class PDFRenderer {
     }
 
     /**
-     * Renders threat model to PDF using pandoc (if available)
-     * Requires pandoc to be installed: https://pandoc.org/
+     * Renders threat model to PDF using Puppeteer via Docker
      */
-    async renderToPDF(outputPath: string, _options?: { headerNote?: string }): Promise<void> {
-        // Generate markdown
-        const markdown = this.markdownRenderer.renderFullReport();
+    async renderToPDF(outputPath: string, options?: { headerNote?: string }): Promise<void> {
+        const headerNote = options?.headerNote ?? 'Private and confidential';
+        const absOutputPath = path.resolve(outputPath);
+        const outputDir = path.dirname(absOutputPath);
+        const fileName = path.basename(absOutputPath);
+        const htmlFileName = fileName.replace('.pdf', '.html');
+        const absHtmlPath = path.join(outputDir, htmlFileName);
+
+        if (!fs.existsSync(absHtmlPath)) {
+            // Fallback: if HTML doesn't exist yet, we might be calling this from a context 
+            // where only Markdown is expected. But the Docker approach REQUIRES HTML.
+            console.warn(`HTML file not found at ${absHtmlPath}. PDF generation requires HTML when using Puppeteer.`);
+            return;
+        }
+
+        const userDir = "/home/pptruser";
         
-        // Write markdown to temp file
-        const tempMdPath = outputPath.replace('.pdf', '.md');
-        fs.writeFileSync(tempMdPath, markdown, 'utf8');
+        // Find pdfScript.js. It should be in src/scripts/pdfScript.js
+        const scriptSource = path.join(__dirname, '..', 'scripts', 'pdfScript.js');
+        
+        if (!fs.existsSync(scriptSource)) {
+            throw new Error(`Puppeteer script not found at ${scriptSource}`);
+        }
+
+        // We'll copy it to a temporary location in the output directory to make mounting easier
+        const tempScriptsDir = path.join(outputDir, '.scripts');
+        fs.mkdirSync(tempScriptsDir, { recursive: true });
+        const scriptDest = path.join(tempScriptsDir, 'pdfScript.js');
+        fs.copyFileSync(scriptSource, scriptDest);
+
+        const dockerCommand = `docker run --init --platform linux/amd64 ` +
+            `-v "${path.resolve(tempScriptsDir)}:${userDir}/scripts" ` +
+            `-v "${path.resolve(outputDir)}:${userDir}/output" ` +
+            `--rm ghcr.io/puppeteer/puppeteer:latest ` +
+            `node scripts/pdfScript.js ` +
+            `"file://${userDir}/output/${htmlFileName}" ` +
+            `"output/${fileName}" ` +
+            `"${headerNote.replace(/"/g, '\\"')}"`;
 
         try {
-            // Check if pandoc is available
-            await execAsync('pandoc --version');
-            
-            // Convert markdown to PDF using pandoc
-            const pandocCommand = `pandoc "${tempMdPath}" -o "${outputPath}" --pdf-engine=xelatex -V geometry:margin=1in`;
-            await execAsync(pandocCommand);
-            
+            await execAsync(dockerCommand);
             console.log(`PDF generated successfully: ${outputPath}`);
         } catch (error) {
-            throw new Error(
-                `PDF generation failed. Make sure pandoc is installed: ${(error as Error).message}\n` +
-                `Markdown file saved at: ${tempMdPath}\n` +
-                `You can manually convert it to PDF using: pandoc ${tempMdPath} -o ${outputPath}`
-            );
+            throw new Error(`Docker PDF generation failed: ${(error as Error).message}`);
+        } finally {
+            // Cleanup the temporary script
+            try {
+                fs.rmSync(tempScriptsDir, { recursive: true, force: true });
+            } catch (e) {
+                // Ignore cleanup errors
+            }
         }
     }
 

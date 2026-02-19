@@ -43,7 +43,8 @@ interface StagedTMEntry extends TMEntry {
 }
 
 function getParentMkdocsInitDir(): string {
-    return path.resolve(__dirname, '..', '..', '..', 'src', 'r3threatmodeling', 'assets', 'MKDOCS_init');
+    // Assets are now located in src/assets/MKDOCS_init
+    return path.resolve(__dirname, '..', 'assets', 'MKDOCS_init');
 }
 
 function copyDirRecursive(src: string, dest: string): void {

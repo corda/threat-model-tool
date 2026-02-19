@@ -159,12 +159,11 @@ jobs:
         uses: actions/deploy-pages@v4
 ```
 
-### Dependency notes for CI (PlantUML + headless Chrome/PDF)
+### Dependency notes for CI (PlantUML + PDF)
 
 - **PlantUML diagrams**: generation first tries local `plantuml`; if unavailable, the script falls back to Docker image `plantuml/plantuml:sha-d2b2bcf`.
-- **PDF generation (current TS pipeline)**: `--generatePDF` uses the tool PDF renderer, so install `pandoc` in CI.
-- **Runner requirement**: Docker is still useful for PlantUML fallback if local `plantuml` is unavailable.
-- **Headless Chrome option**: if you switch PDF generation to Puppeteer/Chrome in your fork, use Dockerized Chrome/Puppeteer (recommended in CI) so no manual Chrome install is needed.
+- **PDF generation (current TS pipeline)**: `--generatePDF` uses Dockerized Chrome/Puppeteer (recommended in CI) so no manual Chrome install is needed.
+- **Runner requirement**: Docker is required for both PlantUML fallback and PDF generation.
 
 ## Development and Testing
 
@@ -320,9 +319,9 @@ npm run build:directory:examples
 #### PDF generation
 
 When `--generatePDF` is set the tool:
-1. Copies `pdfScript.js` into `<tmOutputDir>/scripts/`
-2. Runs `ghcr.io/puppeteer/puppeteer:latest` in Docker, pointing headless Chromium at the generated HTML
-3. Writes `<TM_ID>.pdf` next to the HTML file
+1. Generates an HTML report.
+2. Runs `ghcr.io/puppeteer/puppeteer:latest` in Docker, pointing headless Chromium at the generated HTML.
+3. Writes `<TM_ID>.pdf` next to the HTML file.
 
 Requires Docker to be available on the `PATH`.
 
@@ -377,7 +376,7 @@ npx tsx src/scripts/build-mkdocs-site.ts \
   --MKDocsSiteDir ./build/site-mkdocs
 ```
 
-This script copies baseline MkDocs assets from the parent Python project at `src/r3threatmodeling/assets/MKDOCS_init`, then applies any user-provided template overlay from `--templateSiteFolderSRC`.
+This script copies baseline MkDocs assets from `src/assets/MKDOCS_init`, then applies any user-provided template overlay from `--templateSiteFolderSRC`.
 
 ### Build an Astro Starlight docs site
 
