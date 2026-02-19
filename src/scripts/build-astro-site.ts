@@ -27,6 +27,7 @@ import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
 import { buildSingleTM, type BuildTMOptions } from './build-threat-model.js';
+import { parseFlag, parseOption } from './cli-options.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -510,22 +511,6 @@ function stageTM(
         const cssDest = path.join(publicDir, slug, 'css');
         copyDirRecursive(cssSrc, cssDest);
     }
-}
-
-// ---------------------------------------------------------------------------
-// CLI argument parser
-// ---------------------------------------------------------------------------
-
-function parseFlag(args: string[], flag: string): boolean {
-    return args.includes(`--${flag}`);
-}
-
-function parseOption(args: string[], flag: string): string | undefined {
-    const idx = args.indexOf(`--${flag}`);
-    if (idx !== -1 && idx + 1 < args.length && !args[idx + 1].startsWith('--')) {
-        return args[idx + 1];
-    }
-    return undefined;
 }
 
 // ---------------------------------------------------------------------------

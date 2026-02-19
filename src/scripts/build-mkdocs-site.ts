@@ -27,6 +27,7 @@ import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import yaml from 'js-yaml';
 import { buildSingleTM, type BuildTMOptions } from './build-threat-model.js';
+import { parseFlag, parseOption } from './cli-options.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -378,18 +379,6 @@ export function buildMkdocsSite(
     console.log('MkDocs site generation complete!');
     console.log(`Open ${absMkdocsSiteDir}/index.html to view the site.`);
     console.log('='.repeat(60));
-}
-
-function parseFlag(args: string[], flag: string): boolean {
-    return args.includes(`--${flag}`);
-}
-
-function parseOption(args: string[], flag: string): string | undefined {
-    const idx = args.indexOf(`--${flag}`);
-    if (idx !== -1 && idx + 1 < args.length && !args[idx + 1].startsWith('--')) {
-        return args[idx + 1];
-    }
-    return undefined;
 }
 
 const cliArgs = process.argv.slice(2);

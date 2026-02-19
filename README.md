@@ -256,10 +256,16 @@ npx tsx src/scripts/build-threat-model.ts <path-to-yaml> [output-dir] [options]
 - `--headerNumbering`: Explicitly enable heading numbering.
 - `--generatePDF`: Generate a PDF (requires PDF tooling configured in your environment/CI).
 - `--pdfHeaderNote="text"`: Custom header for PDF pages.
+- `--assetFolder <path>`: Additional asset folder(s) to copy into the output root. Repeat the option or use comma-separated values.
 
 Example:
 ```bash
 npx tsx src/scripts/build-threat-model.ts ../tests/exampleThreatModels/FullFeature/FullFeature.yaml ./build --template=TM_templateMKDOCS
+
+# Add one or more extra asset folders
+npx tsx src/scripts/build-threat-model.ts ../tests/exampleThreatModels/FullFeature/FullFeature.yaml ./build \
+  --assetFolder ./my-assets \
+  --assetFolder ./brand-assets,./shared-assets
 ```
 
 Or via the convenience script:
@@ -288,6 +294,7 @@ npx tsx src/scripts/build-threat-model-directory.ts [options]
 | `--generatePDF` | *(off)* | Generate a PDF after HTML generation |
 | `--pdfHeaderNote <text>` | `Private and confidential` | Text shown in the PDF page header |
 | `--pdfArtifactLink <url>` | *(none)* | Reserved for future artifact linking |
+| `--assetFolder <path>` | `src/assets_MD_HTML` | Extra asset folder(s) copied into each TM output (repeat option or comma-separate) |
 | `--help` | | Print this help and exit |
 
 **Examples:**
@@ -312,9 +319,29 @@ npx tsx src/scripts/build-threat-model-directory.ts \
   --generatePDF \
   --pdfHeaderNote "Confidential — Internal Use Only"
 
+# Copy additional assets into every generated TM output
+npx tsx src/scripts/build-threat-model-directory.ts \
+  --TMDirectory ./threatModels \
+  --outputDir   ./build \
+  --assetFolder ./my-assets \
+  --assetFolder ./brand-assets,./shared-assets
+
 # Or via the npm shortcut (builds example TMs):
 npm run build:directory:examples
 ```
+
+#### Asset sources and override order
+
+For single-model and directory builds, output assets come from these sources:
+
+1. **Generated artifacts** from the model pipeline (`.md`, `.html`, `.puml`, `.svg`, optional `.pdf`).
+2. **YAML-relative asset folders** copied by `ReportGenerator` (each model's `assetDir()`, including descendants).
+3. **Default tool assets** from `src/assets_MD_HTML` (copied by `buildSingleTM` when `--assetFolder` is not provided).
+4. **Renderer/site-specific assets** for site pipelines (for example MkDocs template bootstrap/overlays).
+
+When file paths collide, the last copied source wins. For custom assets this means:
+- if you pass `--assetFolder`, those folders are copied in the order provided;
+- if you do **not** pass `--assetFolder`, only the default `src/assets_MD_HTML` folder is applied at this stage.
 
 #### PDF generation
 

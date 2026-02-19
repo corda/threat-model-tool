@@ -7,6 +7,9 @@ import path from 'path';
 import fs from 'fs';
 import { marked } from 'marked';
 import { load } from 'cheerio';
+import { parseMultiOption } from './cli-options.js';
+
+const DEFAULT_ASSET_FOLDER = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../assets_MD_HTML');
 
 function renderMarkdownWithMdInHtml(mdSource: string): string {
     const render = (src: string): string => marked.parse(src, { gfm: true, breaks: false, async: false }) as string;
@@ -91,6 +94,34 @@ function toShellSingleQuoted(value: string): string {
     return `'${value.replace(/'/g, `'"'"'`)}'`;
 }
 
+function copyDirectoryContents(sourceDir: string, destinationDir: string): void {
+    if (!fs.existsSync(sourceDir) || !fs.statSync(sourceDir).isDirectory()) {
+        console.warn(`Asset folder not found or not a directory, skipping: ${sourceDir}`);
+        return;
+    }
+
+    fs.mkdirSync(destinationDir, { recursive: true });
+    const entries = fs.readdirSync(sourceDir, { withFileTypes: true });
+
+    for (const entry of entries) {
+        const sourcePath = path.join(sourceDir, entry.name);
+        const destinationPath = path.join(destinationDir, entry.name);
+
+        if (entry.isDirectory()) {
+            fs.cpSync(sourcePath, destinationPath, { recursive: true, force: true });
+        } else if (entry.isFile()) {
+            fs.copyFileSync(sourcePath, destinationPath);
+        }
+    }
+}
+
+function copyAssetFolders(assetFolders: string[], outputDir: string): void {
+    for (const folder of assetFolders) {
+        const resolvedFolder = path.resolve(folder);
+        copyDirectoryContents(resolvedFolder, outputDir);
+    }
+}
+
 function generateHtmlFromMarkdown(outputDir: string, modelId: string): void {
     const mdPath = path.join(outputDir, `${modelId}.md`);
     const htmlPath = path.join(outputDir, `${modelId}.html`);
@@ -106,11 +137,8 @@ function generateHtmlFromMarkdown(outputDir: string, modelId: string): void {
 <html>
 <head>
 <meta charset="utf-8" />
-<link rel="stylesheet" href="../css/tm.css">
-<link rel="stylesheet" href="css/tm.css">
-<link rel="stylesheet" href="../css/github.min.css">
+<link rel="stylesheet" href="css/threatmodel.css">
 <link rel="stylesheet" href="css/github.min.css">
-<script src="../js/highlight.min.js"></script>
 <script src="js/highlight.min.js"></script>
 <script>hljs.highlightAll();</script>
 </head>
@@ -131,6 +159,7 @@ export interface BuildTMOptions {
     fileName?: string;
     pdfHeaderNote?: string;
     pdfArtifactLink?: string;
+    assetFolders?: string[];
 }
 
 export function buildSingleTM(yamlFile: string, outputDir: string, options: BuildTMOptions = {}): void {
@@ -141,7 +170,8 @@ export function buildSingleTM(yamlFile: string, outputDir: string, options: Buil
         generatePDF = false,
         headerNumbering = true,
         fileName,
-        pdfHeaderNote = 'Private and confidential'
+        pdfHeaderNote = 'Private and confidential',
+        assetFolders = [DEFAULT_ASSET_FOLDER]
     } = options;
 
     const fullPath = path.resolve(yamlFile);
@@ -161,6 +191,8 @@ export function buildSingleTM(yamlFile: string, outputDir: string, options: Buil
         // Keep alias for backward compatibility with existing callers.
         headerNumbering,
     });
+
+    copyAssetFolders(assetFolders, absOutputDir);
 
     const modelId = fileName || (tmo as any)._id || (tmo as any).id;
     generateHtmlFromMarkdown(absOutputDir, modelId);
@@ -208,6 +240,7 @@ if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith
     let template = 'full';
     let visibility: 'full' | 'public' = 'full';
     let headerNumbering = true;
+    let assetFolders: string[] | undefined;
 
     for (let i = 0; i < args.length; i++) {
         const arg = args[i];
@@ -231,8 +264,13 @@ if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith
         }
     }
 
+    const parsedAssetFolders = parseMultiOption(args, 'assetFolder');
+    if (parsedAssetFolders.length > 0) {
+        assetFolders = parsedAssetFolders;
+    }
+
     if (!yamlFile) {
-        console.error('Usage: build-threat-model.ts <yaml-file> [output-dir (default: ./build)] [--mainTitle "Title"] [--generatePDF] [--template name] [--visibility full|public] [--no-headerNumbering]');
+        console.error('Usage: build-threat-model.ts <yaml-file> [output-dir (default: ./build)] [--mainTitle "Title"] [--generatePDF] [--template name] [--visibility full|public] [--no-headerNumbering] [--assetFolder <path>]');
         console.error('Note: defaults keep generated artifacts under ./build/* to avoid polluting source folders.');
         process.exit(1);
     }
@@ -244,6 +282,7 @@ if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith
             template,
             visibility,
             headerNumbering,
+            assetFolders,
         });
         console.log('Done!');
     } catch (err: any) {

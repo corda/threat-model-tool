@@ -24,6 +24,7 @@
 import path from 'path';
 import fs from 'fs';
 import { buildSingleTM, type BuildTMOptions } from './build-threat-model.js';
+import { parseFlag, parseOption, parseMultiOption } from './cli-options.js';
 
 // ---------------------------------------------------------------------------
 // Core library function (importable by external consumers)
@@ -105,18 +106,6 @@ export function buildFullDirectory(
 // CLI entry point
 // ---------------------------------------------------------------------------
 
-function parseFlag(args: string[], flag: string): boolean {
-    return args.includes(`--${flag}`);
-}
-
-function parseOption(args: string[], flag: string): string | undefined {
-    const idx = args.indexOf(`--${flag}`);
-    if (idx !== -1 && idx + 1 < args.length && !args[idx + 1].startsWith('--')) {
-        return args[idx + 1];
-    }
-    return undefined;
-}
-
 const cliArgs = process.argv.slice(2);
 
 if (parseFlag(cliArgs, 'help') || parseFlag(cliArgs, 'h')) {
@@ -135,6 +124,7 @@ Options:
   --generatePDF              Generate PDF via Docker+Puppeteer
   --pdfHeaderNote <text>     Text shown in PDF page headers
   --pdfArtifactLink <url>    Reserved for future artifact linking
+    --assetFolder <path>       Asset folder(s) copied into each output (repeat or comma-separate)
 `);
     process.exit(0);
 }
@@ -150,6 +140,7 @@ const fileName        = parseOption(cliArgs, 'fileName');
 const generatePDF     = parseFlag(cliArgs, 'generatePDF');
 const pdfHeaderNote   = parseOption(cliArgs, 'pdfHeaderNote') ?? 'Private and confidential';
 const pdfArtifactLink = parseOption(cliArgs, 'pdfArtifactLink');
+const assetFolders    = parseMultiOption(cliArgs, 'assetFolder');
 
 buildFullDirectory(tmDirectory, outputDir, {
     template,
@@ -159,4 +150,5 @@ buildFullDirectory(tmDirectory, outputDir, {
     generatePDF,
     pdfHeaderNote,
     pdfArtifactLink,
+    assetFolders: assetFolders.length > 0 ? assetFolders : undefined,
 });
