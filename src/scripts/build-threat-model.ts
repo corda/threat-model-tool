@@ -94,6 +94,15 @@ function toShellSingleQuoted(value: string): string {
     return `'${value.replace(/'/g, `'"'"'`)}'`;
 }
 
+function hasLocalPlantUml(): boolean {
+    try {
+        execSync('plantuml -version', { stdio: 'ignore' });
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 function copyDirectoryContents(sourceDir: string, destinationDir: string): void {
     if (!fs.existsSync(sourceDir) || !fs.statSync(sourceDir).isDirectory()) {
         console.warn(`Asset folder not found or not a directory, skipping: ${sourceDir}`);
@@ -218,15 +227,27 @@ export function buildSingleTM(yamlFile: string, outputDir: string, options: Buil
 
         const pumlFiles = collectPumlFiles(imgDir);
         if (pumlFiles.length > 0) {
-            const quoted = pumlFiles.map(toShellSingleQuoted).join(' ');
-            try {
-                execSync(`plantuml -tsvg ${quoted}`, { stdio: 'inherit' });
-            } catch (e) {
-                console.log('Local plantuml failed, trying docker...');
-                execSync(`docker run --rm -v "${imgDir}:/data" -w /data plantuml/plantuml:sha-d2b2bcf sh -lc "find . -name '*.puml' -print0 | xargs -0 -r plantuml -tsvg"`, {
-                    stdio: 'inherit'
-                });
+            const localQuoted = pumlFiles.map(toShellSingleQuoted).join(' ');
+            const dockerRelativeQuoted = pumlFiles
+                .map(filePath => path.relative(imgDir, filePath).replace(/\\/g, '/'))
+                .map(toShellSingleQuoted)
+                .join(' ');
+
+            if (hasLocalPlantUml()) {
+                try {
+                    execSync(`plantuml -tsvg ${localQuoted}`, { stdio: 'inherit' });
+                    return;
+                } catch {
+                    console.log('Local plantuml failed, trying docker...');
+                }
+            } else {
+                console.log('Local plantuml not found, using docker...');
             }
+
+            execSync(
+                `docker run --rm -v "${imgDir}:/data" -w /data plantuml/plantuml:sha-d2b2bcf -tsvg ${dockerRelativeQuoted}`,
+                { stdio: 'inherit' }
+            );
         }
     } catch (error) {
         console.warn('PlantUML generation failed (Docker or local plantuml required)');
