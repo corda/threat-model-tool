@@ -1,9 +1,0 @@
-README.md
-pyproject.toml
-src/tree_node/__init__.py
-src/tree_node/tree_node.py
-src/tree_node.egg-info/PKG-INFO
-src/tree_node.egg-info/SOURCES.txt
-src/tree_node.egg-info/dependency_links.txt
-src/tree_node.egg-info/top_level.txt
-tests/test_tree_node.py
