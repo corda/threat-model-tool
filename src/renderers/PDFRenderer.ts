@@ -52,6 +52,15 @@ export class PDFRenderer {
         const scriptDest = path.join(tempScriptsDir, 'pdfScript.js');
         fs.copyFileSync(scriptSource, scriptDest);
 
+        // Pre-create the PDF file with open permissions so the Docker user (pptruser) can write to it.
+        // This avoids EACCES errors when the host directory is owned by a different user than the container user.
+        try {
+            fs.writeFileSync(absOutputPath, '');
+            fs.chmodSync(absOutputPath, 0o666);
+        } catch (e) {
+            console.warn(`Warning: Could not pre-create or chmod PDF file: ${e}`);
+        }
+
         const dockerCommand = `docker run --init --platform linux/amd64 ` +
             `-v "${path.resolve(tempScriptsDir)}:${userDir}/scripts" ` +
             `-v "${path.resolve(outputDir)}:${userDir}/output" ` +
