@@ -9,14 +9,16 @@
  * CLI usage:
  *   tsx src/scripts/build-mkdocs-site.ts \
  *     --TMDirectory ./threatModels \
- *     --MKDocsDir   ../build/mkdocs \
- *     --MKDocsSiteDir ../build/site-mkdocs \
+ *     --MKDocsDir   ./build/mkdocs \
+ *     --MKDocsSiteDir ./build/site-mkdocs \
  *     [--template MKdocs] \
  *     [--visibility full|public] \
  *     [--templateSiteFolderSRC ../tests/siteTemplate/mkdocs] \
- *     [--templateSiteFolderDST ../build/mkdocs] \
- *     [--no-headerNumbering] \
+ *     [--templateSiteFolderDST ./build/mkdocs] \
+ *     [--headerNumbering] \
  *     [--generatePDF]
+ *
+ * Note: default outputs are under ./build/* to avoid polluting source folders.
  */
 
 import path from 'path';
@@ -34,6 +36,10 @@ interface TMEntry {
     yamlPath: string;
     id: string;
     title: string;
+}
+
+interface StagedTMEntry extends TMEntry {
+    hasPdf: boolean;
 }
 
 function getParentMkdocsInitDir(): string {
@@ -142,7 +148,7 @@ function writeMkdocsConfig(
     fs.writeFileSync(path.join(mkdocsDir, 'mkdocs.yml'), lines.join('\n'), 'utf-8');
 }
 
-function writeIndexMarkdown(tmList: TMEntry[], docsDir: string, pdfArtifactLink?: string): void {
+function writeIndexMarkdown(tmList: StagedTMEntry[], docsDir: string, pdfArtifactLink?: string): void {
     const lines: string[] = ['# Threat Models Index', ''];
     if (pdfArtifactLink) {
         lines.push(`PDF Artifact: ${pdfArtifactLink}`, '');
@@ -150,7 +156,12 @@ function writeIndexMarkdown(tmList: TMEntry[], docsDir: string, pdfArtifactLink?
 
     const sorted = [...tmList].sort((a, b) => (a.title || a.id).localeCompare(b.title || b.id));
     for (const tm of sorted) {
-        lines.push(`* [${tm.title}](${tm.id}/${tm.id}.html)`);
+        const links: string[] = [];
+        links.push(`[HTML](${tm.id}/${tm.id}.html)`);
+        if (tm.hasPdf) {
+            links.push(`[PDF](${tm.id}/${tm.id}.pdf)`);
+        }
+        lines.push(`* **${tm.title}** — ${links.join(' | ')}`);
     }
     lines.push('');
 
@@ -171,31 +182,65 @@ function resolveBuiltMarkdown(tmStagingDir: string, tm: TMEntry): string | null 
     return firstMd ? path.join(tmStagingDir, firstMd) : null;
 }
 
-function stageTM(tmStagingDir: string, tm: TMEntry, docsDir: string): boolean {
+function rewriteTmLocalAssetRefs(content: string, tmId: string): string {
+    const tmAssetPrefix = `/${tmId}/`;
+
+    return content
+        .replace(/\b(src|data)\s*=\s*"(?:\.\/)?img\//g, `$1="${tmAssetPrefix}img/`)
+        .replace(/\b(src|data)\s*=\s*'(?:\.\/)?img\//g, `$1='${tmAssetPrefix}img/`)
+        .replace(/\((?:\.\/)?img\//g, `(${tmAssetPrefix}img/`)
+        .replace(/\b(src|data)\s*=\s*"(?:\.\/)?assets\//g, `$1="${tmAssetPrefix}assets/`)
+        .replace(/\b(src|data)\s*=\s*'(?:\.\/)?assets\//g, `$1='${tmAssetPrefix}assets/`)
+        .replace(/\((?:\.\/)?assets\//g, `(${tmAssetPrefix}assets/`);
+}
+
+function stageTM(
+    tmStagingDir: string,
+    tm: TMEntry,
+    docsDir: string,
+    options: { expectPdf?: boolean } = {}
+): StagedTMEntry | null {
     const mdSource = resolveBuiltMarkdown(tmStagingDir, tm);
     if (!mdSource) {
         console.warn(`No markdown output found for ${tm.name}; skipping`);
-        return false;
+        return null;
     }
 
     const tmDocsDir = path.join(docsDir, tm.id);
     fs.mkdirSync(tmDocsDir, { recursive: true });
 
-    fs.copyFileSync(mdSource, path.join(tmDocsDir, 'index.md'));
+    const mdContent = fs.readFileSync(mdSource, 'utf-8');
+    const rewrittenMdContent = rewriteTmLocalAssetRefs(mdContent, tm.id);
+    fs.writeFileSync(path.join(tmDocsDir, 'index.md'), rewrittenMdContent, 'utf-8');
 
     const htmlSource = path.join(tmStagingDir, `${tm.id}.html`);
     if (fs.existsSync(htmlSource)) {
-        fs.copyFileSync(htmlSource, path.join(tmDocsDir, `${tm.id}.html`));
+        const htmlContent = fs.readFileSync(htmlSource, 'utf-8');
+        const rewrittenHtmlContent = rewriteTmLocalAssetRefs(htmlContent, tm.id);
+        fs.writeFileSync(path.join(tmDocsDir, `${tm.id}.html`), rewrittenHtmlContent, 'utf-8');
     }
 
-    for (const folder of ['img', 'css', 'js']) {
+    let hasPdf = false;
+    const pdfSourceCandidates = [
+        path.join(tmStagingDir, `${tm.id}.pdf`),
+        path.join(tmStagingDir, `${tm.name}.pdf`),
+    ];
+    const pdfSource = pdfSourceCandidates.find(candidate => fs.existsSync(candidate));
+    if (pdfSource) {
+        fs.copyFileSync(pdfSource, path.join(tmDocsDir, `${tm.id}.pdf`));
+        hasPdf = true;
+    } else if (options.expectPdf) {
+        console.warn(`PDF not found for ${tm.name}; index will include HTML only.`);
+    }
+
+    for (const folder of ['img', 'css', 'js', 'assets']) {
         const src = path.join(tmStagingDir, folder);
         if (fs.existsSync(src)) {
             copyDirRecursive(src, path.join(tmDocsDir, folder));
         }
     }
 
-    return true;
+    return { ...tm, hasPdf };
 }
 
 function hasMkdocsOnPath(): boolean {
@@ -222,12 +267,13 @@ export function buildMkdocsSite(
 ): void {
     const {
         siteName = 'Threat Models',
-        MKDocsDir = '../build/mkdocs',
-        MKDocsSiteDir = '../build/site-mkdocs',
+        MKDocsDir = './build/mkdocs',
+        MKDocsSiteDir = './build/site-mkdocs',
         templateSiteFolderSRC,
         templateSiteFolderDST,
         template = 'MKdocs',
         pdfArtifactLink,
+        headerNumbering = false,
         ...tmOptions
     } = options;
 
@@ -279,19 +325,27 @@ export function buildMkdocsSite(
     const stagingDir = path.join(absMkdocsDir, '.staging');
     fs.mkdirSync(stagingDir, { recursive: true });
 
-    const staged: TMEntry[] = [];
+    const staged: StagedTMEntry[] = [];
+    const built: Array<{ tm: TMEntry; tmStagingDir: string }> = [];
     for (const tm of tmList) {
         console.log(`\n--- Building ${tm.name} ---`);
         const tmStagingDir = path.join(stagingDir, tm.name);
         fs.mkdirSync(tmStagingDir, { recursive: true });
 
         try {
-            buildSingleTM(tm.yamlPath, tmStagingDir, { ...tmOptions, template });
-            if (stageTM(tmStagingDir, tm, absDocsDir)) {
-                staged.push(tm);
-            }
+            buildSingleTM(tm.yamlPath, tmStagingDir, { ...tmOptions, template, headerNumbering });
+            built.push({ tm, tmStagingDir });
         } catch (err) {
             console.error(`ERROR building ${tm.name}: ${err}`);
+        }
+    }
+
+    for (const entry of built) {
+        const stagedTm = stageTM(entry.tmStagingDir, entry.tm, absDocsDir, {
+            expectPdf: Boolean(tmOptions.generatePDF),
+        });
+        if (stagedTm) {
+            staged.push(stagedTm);
         }
     }
 
@@ -343,17 +397,20 @@ if (parseFlag(cliArgs, 'help') || parseFlag(cliArgs, 'h')) {
     console.log(`
 Usage: build-mkdocs-site.ts [options]
 
+Defaults: generated outputs are written under ./build/* unless overridden.
+
 Options:
   --TMDirectory <path>              Directory containing TM sub-folders (default: .)
   --outputDir <path>                MkDocs docs source directory (default: <MKDocsDir>/docs)
-  --MKDocsDir <path>                MkDocs working dir containing mkdocs.yml (default: ../build/mkdocs)
-  --MKDocsSiteDir <path>            Final generated static site output (default: ../build/site-mkdocs)
+    --MKDocsDir <path>                MkDocs working dir containing mkdocs.yml (default: ./build/mkdocs)
+    --MKDocsSiteDir <path>            Final generated static site output (default: ./build/site-mkdocs)
   --template <name>                 Report template (default: MKdocs)
   --visibility full|public          Content visibility (default: full)
   --siteName <text>                 Site title in mkdocs.yml (default: Threat Models)
   --templateSiteFolderSRC <path>    Extra site overlay source folder
   --templateSiteFolderDST <path>    Overlay destination (default: <MKDocsDir>)
-  --no-headerNumbering              Disable auto heading numbers
+  --headerNumbering                 Enable auto heading numbers (default: OFF for MkDocs)
+  --no-headerNumbering              Force-disable auto heading numbers
   --generatePDF                     Generate PDF per TM
   --pdfHeaderNote <text>            PDF page header text
   --pdfArtifactLink <url>           Optional link shown on index page
@@ -364,15 +421,16 @@ Options:
 
 const tmDirectory = parseOption(cliArgs, 'TMDirectory') ?? '.';
 const outputDir = parseOption(cliArgs, 'outputDir');
-const MKDocsDir = parseOption(cliArgs, 'MKDocsDir') ?? '../build/mkdocs';
-const MKDocsSiteDir = parseOption(cliArgs, 'MKDocsSiteDir') ?? '../build/site-mkdocs';
+const MKDocsDir = parseOption(cliArgs, 'MKDocsDir') ?? './build/mkdocs';
+const MKDocsSiteDir = parseOption(cliArgs, 'MKDocsSiteDir') ?? './build/site-mkdocs';
 const template = parseOption(cliArgs, 'template') ?? 'MKdocs';
 const visibilityArg = parseOption(cliArgs, 'visibility');
 const visibility: 'full' | 'public' = visibilityArg === 'public' ? 'public' : 'full';
 const siteName = parseOption(cliArgs, 'siteName') ?? 'Threat Models';
 const templateSiteFolderSRC = parseOption(cliArgs, 'templateSiteFolderSRC');
 const templateSiteFolderDST = parseOption(cliArgs, 'templateSiteFolderDST');
-const headerNumbering = !parseFlag(cliArgs, 'no-headerNumbering');
+// MkDocs default: no heading numbering (site TOC/navigation already provides structure).
+const headerNumbering = parseFlag(cliArgs, 'headerNumbering') && !parseFlag(cliArgs, 'no-headerNumbering');
 const generatePDF = parseFlag(cliArgs, 'generatePDF');
 const pdfHeaderNote = parseOption(cliArgs, 'pdfHeaderNote') ?? 'Private and confidential';
 const pdfArtifactLink = parseOption(cliArgs, 'pdfArtifactLink');

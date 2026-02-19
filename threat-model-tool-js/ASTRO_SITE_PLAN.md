@@ -95,7 +95,7 @@ Main orchestrator script:
 | Argument | Default | Description |
 |----------|---------|-------------|
 | `--TMDirectory <path>` | `.` | Root directory with TM subdirectories |
-| `--outputDir <path>` | `../build/site` | Final static site output directory |
+| `--outputDir <path>` | `./build/site` | Final static site output directory |
 | `--template <name>` | `MKdocs` | Render template (MKdocs recommended for site) |
 | `--visibility full\|public` | `full` | Content visibility filter |
 | `--templateSiteFolderSRC <path>` | *(none)* | User-provided extra pages/CSS/assets to overlay |
@@ -134,7 +134,7 @@ In `threat-model-tool-js/package.json`:
 
 ```json
 "build:astroSite": "tsx src/scripts/build-astro-site.ts",
-"build:astroSite:examples": "tsx src/scripts/build-astro-site.ts --TMDirectory tests/exampleThreatModels --outputDir ../build/site"
+"build:astroSite:examples": "tsx src/scripts/build-astro-site.ts --TMDirectory tests/exampleThreatModels --outputDir ./build/site"
 ```
 
 ### 6. Add VS Code task

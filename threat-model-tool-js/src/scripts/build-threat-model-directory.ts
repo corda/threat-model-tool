@@ -17,6 +17,8 @@
  *     [--generatePDF]             \
  *     [--pdfHeaderNote "Private and confidential"] \
  *     [--pdfArtifactLink <url>]
+ *
+ * Note: default outputs are under ./build/* to avoid polluting source folders.
  */
 
 import path from 'path';
@@ -121,12 +123,14 @@ if (parseFlag(cliArgs, 'help') || parseFlag(cliArgs, 'h')) {
     console.log(`
 Usage: build-threat-model-directory.ts [options]
 
+Defaults: generated outputs are written under ./build/* unless overridden.
+
 Options:
   --TMDirectory <path>       Directory containing TM sub-folders (default: .)
-  --outputDir   <path>       Root output directory (default: ./build)
+    --outputDir   <path>       Root output directory (default: ./build)
   --template    <name>       Report template (default: full)
   --visibility  full|public  Content visibility (default: full)
-  --no-headerNumbering       Disable auto heading numbers
+  --no-headerNumbering       Disable auto heading numbers (default: ON)
   --fileName    <name>       Override output base filename
   --generatePDF              Generate PDF via Docker+Puppeteer
   --pdfHeaderNote <text>     Text shown in PDF page headers

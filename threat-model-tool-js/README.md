@@ -29,6 +29,143 @@ The core functionality has been ported, including:
    make init
    ```
 
+## Quick start: create a new threat model project (easy path)
+
+If you just want to start quickly, follow these 3 steps.
+
+### 1) Create your YAML files
+
+Use the directory naming convention `<modelName>/<modelName>.yaml` (this is required for directory/site generation).
+
+```text
+threatModels/
+  MySystem/
+    MySystem.yaml
+```
+
+You can copy one of these as a starting point:
+- `tests/exampleThreatModels/Example1/Example1.yaml`
+- `tests/exampleThreatModels/FullFeature/FullFeature.yaml`
+
+After copying, update the YAML `ID` to match your file/folder name (for example `MySystem`) to avoid filename/ID mismatch warnings.
+
+### 2) Add simple scripts to `package.json`
+
+Use scripts like these (adjust paths as needed for your repo layout):
+
+```json
+{
+  "scripts": {
+    "tm:generate": "npx tsx src/scripts/build-threat-model.ts threatModels/MySystem/MySystem.yaml build/reports/MySystem --template=full",
+    "tm:generate:all": "npx tsx src/scripts/build-threat-model-directory.ts --TMDirectory threatModels --outputDir build/reports",
+    "tm:site:mkdocs": "npx tsx src/scripts/build-mkdocs-site.ts --TMDirectory threatModels --MKDocsDir build/mkdocs --MKDocsSiteDir build/site-mkdocs --outputDir build/mkdocs/docs",
+    "tm:site:mkdocs:pdf": "npx tsx src/scripts/build-mkdocs-site.ts --TMDirectory threatModels --MKDocsDir build/mkdocs --MKDocsSiteDir build/site-mkdocs --outputDir build/mkdocs/docs --generatePDF --pdfHeaderNote \"Private and confidential\"",
+    "tm:site:serve": "mkdocs serve --config-file build/mkdocs/mkdocs.yml --dev-addr 127.0.0.1:4324"
+  }
+}
+```
+
+### 3) Run generation
+
+```bash
+npm run tm:generate
+npm run tm:generate:all
+npm run tm:site:mkdocs
+# optional: site + per-model PDFs (homepage includes PDF links when present)
+npm run tm:site:mkdocs:pdf
+```
+
+Optional local preview:
+
+```bash
+npm run tm:site:serve
+```
+
+## Publish MkDocs site with GitHub Actions (GitHub Pages)
+
+Create `.github/workflows/publish-mkdocs.yml`:
+
+```yaml
+name: Publish MkDocs Site
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'threatModels/**/*.yaml'
+      - 'threat-model-tool-js/**'
+      - '.github/workflows/publish-mkdocs.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: threat-model-tool-js/package-lock.json
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Node dependencies
+        run: npm ci
+        working-directory: threat-model-tool-js
+
+      - name: Install MkDocs
+        run: pip install mkdocs mkdocs-material
+
+      - name: Install PDF dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc
+
+      - name: Build MkDocs site + PDFs from threat models
+        run: >
+          npm run build:mkdocsSite:withPDF --
+          --TMDirectory ../threatModels
+          --MKDocsDir ./build/mkdocs
+          --MKDocsSiteDir ./build/site-mkdocs
+          --outputDir ./build/mkdocs/docs
+        working-directory: threat-model-tool-js
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/site-mkdocs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+### Dependency notes for CI (PlantUML + headless Chrome/PDF)
+
+- **PlantUML diagrams**: generation first tries local `plantuml`; if unavailable, the script falls back to Docker image `plantuml/plantuml:sha-d2b2bcf`.
+- **PDF generation (current TS pipeline)**: `--generatePDF` uses the tool PDF renderer, so install `pandoc` in CI.
+- **Runner requirement**: Docker is still useful for PlantUML fallback if local `plantuml` is unavailable.
+- **Headless Chrome option**: if you switch PDF generation to Puppeteer/Chrome in your fork, use Dockerized Chrome/Puppeteer (recommended in CI) so no manual Chrome install is needed.
+
 ## Development and Testing
 
 ### TypeScript Execution
@@ -67,20 +204,39 @@ Test fixtures live in the parent project at `../tests/exampleThreatModels/`.
 | `test` / `test:unit` | Run the full test suite |
 | `build` | Compile TypeScript to `dist/` |
 | `compile` | Type-check without emitting |
-| `build:example` | Build the FullFeature example TM to `../build/examples/FullFeature` |
+| `build:example` | Build the FullFeature example TM to `./build/examples/FullFeature` |
 | `generate:example` | Build a named example: `npm run generate:example --example=Example1` |
 | `generate:examples` | Build all examples via shell loop |
 | `build:directory` | Build a full directory of TMs (see below) |
 | `build:directory:examples` | Build all example TMs via `buildFullDirectory` |
 | `build:astroSite` | Build an Astro Starlight docs site (see below) |
-| `build:astroSite:examples` | Build a site from example TMs to `../build/site` |
+| `build:astroSite:examples` | Build a site from example TMs to `./build/site` |
 | `build:docusaurusSite` | Build a Docusaurus docs site (see below) |
-| `build:docusaurusSite:examples` | Build a Docusaurus site from example TMs to `../build/site-docusaurus` |
+| `build:docusaurusSite:examples` | Build a Docusaurus site from example TMs to `./build/site-docusaurus` |
 | `serve:docusaurusSite` | Serve the generated Docusaurus site locally (port 4322) |
 | `build:hugoSite` | Build a Hugo docs site (see below) |
-| `build:hugoSite:examples` | Build a Hugo site from example TMs to `../build/site-hugo` |
+| `build:hugoSite:examples` | Build a Hugo site from example TMs to `./build/site-hugo` |
 | `serve:hugoSite` | Serve the generated Hugo site locally (port 4323) |
+| `build:mkdocsSite` | Build a MkDocs site (see below) |
+| `build:mkdocsSite:withPDF` | Build a MkDocs site and generate PDFs |
+| `build:mkdocsSite:examples` | Build a MkDocs site from example TMs to `./build/site-mkdocs` |
+| `serve:mkdocsSite` | Serve the generated MkDocs site locally (port 4324) |
 | `start` | Run the compiled output |
+
+### Heading numbering defaults
+
+- **Single TM / HTML / PDF builds**: heading numbering is **ON** by default.
+- **Astro / Docusaurus / Hugo site pipelines**: heading numbering is **ON** by default.
+- **MkDocs site pipeline**: heading numbering is **OFF** by default (enable with `--headerNumbering`).
+
+Numbering supports configurable top-level normalization to avoid prefixes like `0.1`.
+Example (top level = `##`):
+
+```markdown
+## Executive Summary   -> 1
+### Threats Summary    -> 1.1
+## Scope               -> 2
+```
 
 ## Running the Tool
 
@@ -97,12 +253,14 @@ npx tsx src/scripts/build-threat-model.ts <path-to-yaml> [output-dir] [options]
     - `TM_templateNoTocNoSummary`: A compact view without TOC or executive summaries.
 - `--visibility=<full|public>`: Filter content (default: `full`).
 - `--fileName=<name>`: Override output filename (default: TM ID).
-- `--generatePDF`: Generate a PDF via Puppeteer (requires Docker).
+- `--no-headerNumbering`: Disable automatic heading numbering (default: ON).
+- `--headerNumbering`: Explicitly enable heading numbering.
+- `--generatePDF`: Generate a PDF (requires PDF tooling configured in your environment/CI).
 - `--pdfHeaderNote="text"`: Custom header for PDF pages.
 
 Example:
 ```bash
-npx tsx src/scripts/build-threat-model.ts ../tests/exampleThreatModels/FullFeature/FullFeature.yaml ./output --template=TM_templateMKDOCS
+npx tsx src/scripts/build-threat-model.ts ../tests/exampleThreatModels/FullFeature/FullFeature.yaml ./build --template=TM_templateMKDOCS
 ```
 
 Or via the convenience script:
@@ -128,7 +286,7 @@ npx tsx src/scripts/build-threat-model-directory.ts [options]
 | `--visibility full\|public` | `full` | `public` strips non-public content from the output |
 | `--no-headerNumbering` | *(numbering on)* | Disable automatic heading numbers |
 | `--fileName <name>` | *(TM ID)* | Override the output base filename (`.md` / `.html`) |
-| `--generatePDF` | *(off)* | Generate a PDF via Docker + Puppeteer after HTML generation |
+| `--generatePDF` | *(off)* | Generate a PDF after HTML generation |
 | `--pdfHeaderNote <text>` | `Private and confidential` | Text shown in the PDF page header |
 | `--pdfArtifactLink <url>` | *(none)* | Reserved for future artifact linking |
 | `--help` | | Print this help and exit |
@@ -194,14 +352,15 @@ npx tsx src/scripts/build-mkdocs-site.ts [options]
 |--------|---------|-------------|
 | `--TMDirectory <path>` | `.` | Directory containing TM sub-folders |
 | `--outputDir <path>` | `<MKDocsDir>/docs` | MkDocs docs source directory |
-| `--MKDocsDir <path>` | `../build/mkdocs` | MkDocs working directory (`mkdocs.yml`) |
-| `--MKDocsSiteDir <path>` | `../build/site-mkdocs` | Final generated MkDocs static site |
+| `--MKDocsDir <path>` | `./build/mkdocs` | MkDocs working directory (`mkdocs.yml`) |
+| `--MKDocsSiteDir <path>` | `./build/site-mkdocs` | Final generated MkDocs static site |
 | `--template <name>` | `MKdocs` | Report template used for TM markdown generation |
 | `--visibility full\|public` | `full` | `public` strips non-public content |
 | `--siteName <name>` | `Threat Models` | Site name written into `mkdocs.yml` |
 | `--templateSiteFolderSRC <path>` | *(none)* | Extra overlay source folder (docs/css/assets) |
 | `--templateSiteFolderDST <path>` | `<MKDocsDir>` | Overlay destination folder |
-| `--no-headerNumbering` | *(numbering on)* | Disable automatic heading numbers |
+| `--headerNumbering` | *(off)* | Enable automatic heading numbers for generated TM markdown |
+| `--no-headerNumbering` | *(off)* | Force-disable automatic heading numbers |
 | `--generatePDF` | *(off)* | Also generate PDFs for each TM |
 | `--pdfHeaderNote <text>` | *(none)* | Custom header for PDF pages |
 
@@ -214,8 +373,8 @@ npm run build:mkdocsSite:examples
 # Build from a custom TM directory
 npx tsx src/scripts/build-mkdocs-site.ts \
   --TMDirectory ./threatModels \
-  --MKDocsDir   ../build/mkdocs \
-  --MKDocsSiteDir ../build/site-mkdocs
+  --MKDocsDir   ./build/mkdocs \
+  --MKDocsSiteDir ./build/site-mkdocs
 ```
 
 This script copies baseline MkDocs assets from the parent Python project at `src/r3threatmodeling/assets/MKDOCS_init`, then applies any user-provided template overlay from `--templateSiteFolderSRC`.

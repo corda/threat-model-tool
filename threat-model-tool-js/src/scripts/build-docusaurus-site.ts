@@ -8,7 +8,7 @@
  * CLI usage:
  *   tsx src/scripts/build-docusaurus-site.ts \
  *     --TMDirectory ./threatModels \
- *     --outputDir   ../build/site-docusaurus \
+ *     --outputDir   ./build/site-docusaurus \
  *     [--template MKdocs] \
  *     [--visibility full|public] \
  *     [--siteName "Threat Models"] \
@@ -16,6 +16,8 @@
  *     [--templateSiteFolderSRC ./myTemplate] \
  *     [--no-headerNumbering] \
  *     [--generatePDF]
+ *
+ * Note: default outputs are under ./build/* to avoid polluting source folders.
  */
 
 import path from 'path';
@@ -410,7 +412,7 @@ export interface DocusaurusSiteOptions extends BuildTMOptions {
 
 export function buildDocusaurusSite(
     tmDirectory: string,
-    outputDir: string = '../build/site-docusaurus',
+    outputDir: string = './build/site-docusaurus',
     options: DocusaurusSiteOptions = {}
 ): void {
     const {
@@ -555,15 +557,17 @@ if (parseFlag(cliArgs, 'help') || parseFlag(cliArgs, 'h')) {
     console.log(`
 Usage: build-docusaurus-site.ts [options]
 
+Defaults: generated outputs are written under ./build/* unless overridden.
+
 Options:
   --TMDirectory <path>              Directory containing TM sub-folders (default: .)
-  --outputDir   <path>              Output directory for the site (default: ../build/site-docusaurus)
+    --outputDir   <path>              Output directory for the site (default: ./build/site-docusaurus)
   --template    <name>              Report template (default: MKdocs)
   --visibility  full|public         Content visibility (default: full)
   --siteName    <text>              Site title (default: "Threat Models")
   --base        <path>              Base URL path for deployment (default: /)
   --templateSiteFolderSRC <path>    Extra pages/CSS/assets to overlay
-  --no-headerNumbering              Disable auto heading numbers
+  --no-headerNumbering              Disable auto heading numbers (default: ON)
   --generatePDF                     Generate PDF per TM
   --pdfHeaderNote <text>            PDF page header text
   --help                            Print this help
@@ -572,7 +576,7 @@ Options:
 }
 
 const tmDirectory = parseOption(cliArgs, 'TMDirectory') ?? '.';
-const outputDir = parseOption(cliArgs, 'outputDir') ?? '../build/site-docusaurus';
+const outputDir = parseOption(cliArgs, 'outputDir') ?? './build/site-docusaurus';
 const template = parseOption(cliArgs, 'template') ?? 'MKdocs';
 const visibilityArg = parseOption(cliArgs, 'visibility');
 const visibility: 'full' | 'public' = visibilityArg === 'public' ? 'public' : 'full';

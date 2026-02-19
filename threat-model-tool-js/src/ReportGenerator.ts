@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import ThreatModel from './models/ThreatModel.js';
 import { 
     executiveSummary, 
@@ -17,6 +18,7 @@ import {
     renderTestingGuide
 } from './renderers/lib_py.js';
 import { AttackTreeGenerator } from './puml/AttackTreeGenerator.js';
+import { fileURLToPath } from 'url';
 import { HeadingNumberer, resetHeadingNumbers, disableHeadingNumbering, enableHeadingNumbering, isHeadingNumberingEnabled } from './utils/HeadingNumberer.js';
 import { makeMarkdownLinkedHeader, createTitleAnchorHash, PAGEBREAK } from './utils/TemplateUtils.js';
 
@@ -139,6 +141,17 @@ export class ReportGenerator {
         let inFence = false;
         let numberStarted = false;
 
+        // Which markdown heading depth is considered numbering level "1".
+        // Default is 1 (H1 starts at 1), but callers can override via context.
+        //
+        // Example (topLevel=2):
+        //   ## Executive Summary  -> 1
+        //   ### Threats Summary   -> 1.1
+        // This prevents legacy "0.1" prefixes when the first numbered heading is H2.
+        const topLevel = Number.isInteger(ctx.heading_numbering_top_level)
+            ? Number(ctx.heading_numbering_top_level)
+            : Number(ctx.rootHeaderLevel ?? 1);
+
         const fencePattern = /^\s*(```|~~~)/;
         const headingPattern = /^(#{1,6})\s+(.*)$/;
         const alreadyNumberedPattern = /^\d+(?:[\.\d]*\s*-?\s*)/;
@@ -177,7 +190,7 @@ export class ReportGenerator {
             }
 
             const headingLevel = hashes.length;
-            const number = numberer.getNumber(headingLevel);
+            const number = numberer.getNumber(headingLevel, topLevel);
             if (!number) {
                 outputLines.push(line);
                 continue;
@@ -593,8 +606,11 @@ export class ReportGenerator {
             }
         }
 
-        const repoRoot = path.resolve(process.cwd(), '..');
-        const pythonAssetRootDir = path.join(repoRoot, 'src', 'r3threatmodeling', 'assets');
+        // Resolve the Python asset folder relative to this package (not process.cwd()).
+        // When this tool is invoked from another repo (e.g. `threat-modeling`) process.cwd()
+        // points to the consumer and the previous code failed to find Python assets.
+        const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+        const pythonAssetRootDir = path.join(packageRoot, 'src', 'r3threatmodeling', 'assets');
         for (const subdir of ['css', 'img', 'js']) {
             const srcDir = path.join(pythonAssetRootDir, subdir);
             const dstDir = path.join(outputDir, subdir);
@@ -604,7 +620,7 @@ export class ReportGenerator {
             }
         }
 
-        const pythonAssetImgDir = path.join(repoRoot, 'src', 'r3threatmodeling', 'assets', 'img');
+        const pythonAssetImgDir = path.join(pythonAssetRootDir, 'img');
         const outImgDir = path.join(outputDir, 'img');
         if (fs.existsSync(pythonAssetImgDir) && fs.statSync(pythonAssetImgDir).isDirectory()) {
             for (const fileName of ['legend_AttackTree.puml', 'legend_SecObjTree.puml']) {

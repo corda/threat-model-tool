@@ -4,6 +4,20 @@
  *
  * Discovers threat models in a directory, builds each one, then generates
  * a Hugo documentation site wrapping them all.
+ *
+ * CLI usage:
+ *   tsx src/scripts/build-hugo-site.ts \
+ *     --TMDirectory ./threatModels \
+ *     --outputDir   ./build/site-hugo \
+ *     [--template MKdocs] \
+ *     [--visibility full|public] \
+ *     [--siteName "Threat Models"] \
+ *     [--baseURL /] \
+ *     [--templateSiteFolderSRC ./myTemplate] \
+ *     [--no-headerNumbering] \
+ *     [--generatePDF]
+ *
+ * Note: default outputs are under ./build/* to avoid polluting source folders.
  */
 
 import path from 'path';
@@ -249,7 +263,7 @@ export interface HugoSiteOptions extends BuildTMOptions {
 
 export function buildHugoSite(
     tmDirectory: string,
-    outputDir: string = '../build/site-hugo',
+    outputDir: string = './build/site-hugo',
     options: HugoSiteOptions = {}
 ): void {
     const {
@@ -374,16 +388,18 @@ if (parseFlag(cliArgs, 'help') || parseFlag(cliArgs, 'h')) {
     console.log(`
 Usage: build-hugo-site.ts [options]
 
+Defaults: generated outputs are written under ./build/* unless overridden.
+
 Options:
   --TMDirectory <path>              Directory containing TM sub-folders (default: .)
-  --outputDir   <path>              Output directory for the site (default: ../build/site-hugo)
+    --outputDir   <path>              Output directory for the site (default: ./build/site-hugo)
   --template    <name>              Report template (default: MKdocs)
   --visibility  full|public         Content visibility (default: full)
   --siteName    <text>              Site title (default: "Threat Models")
   --baseURL     <url>               Hugo baseURL (default: /)
   --base        <path>              Alias for --baseURL
   --templateSiteFolderSRC <path>    Extra pages/CSS/assets to overlay
-  --no-headerNumbering              Disable auto heading numbers
+  --no-headerNumbering              Disable auto heading numbers (default: ON)
   --generatePDF                     Generate PDF per TM
   --pdfHeaderNote <text>            PDF page header text
   --help                            Print this help
@@ -392,7 +408,7 @@ Options:
 }
 
 const tmDirectory = parseOption(cliArgs, 'TMDirectory') ?? '.';
-const outputDir = parseOption(cliArgs, 'outputDir') ?? '../build/site-hugo';
+const outputDir = parseOption(cliArgs, 'outputDir') ?? './build/site-hugo';
 const template = parseOption(cliArgs, 'template') ?? 'MKdocs';
 const visibilityArg = parseOption(cliArgs, 'visibility');
 const visibility: 'full' | 'public' = visibilityArg === 'public' ? 'public' : 'full';

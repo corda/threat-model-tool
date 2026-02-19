@@ -127,6 +127,7 @@ export interface BuildTMOptions {
     headerNumbering?: boolean;
     fileName?: string;
     pdfHeaderNote?: string;
+    pdfArtifactLink?: string;
 }
 
 export function buildSingleTM(yamlFile: string, outputDir: string, options: BuildTMOptions = {}): void {
@@ -151,8 +152,11 @@ export function buildSingleTM(yamlFile: string, outputDir: string, options: Buil
     const absOutputDir = path.resolve(outputDir);
     ReportGenerator.generate(tmo, template, absOutputDir, {
         mainTitle,
+        fileName,
+        // Canonical ReportGenerator switch for heading numbering.
+        process_heading_numbering: headerNumbering,
+        // Keep alias for backward compatibility with existing callers.
         headerNumbering,
-        fileName
     });
 
     const modelId = fileName || (tmo as any)._id || (tmo as any).id;
@@ -195,11 +199,12 @@ export function buildSingleTM(yamlFile: string, outputDir: string, options: Buil
 if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('build-threat-model.ts')) {
     const args = process.argv.slice(2);
     let yamlFile = '';
-    let outputDir = './output';
+    let outputDir = './build';
     let mainTitle = '';
     let generatePDF = false;
     let template = 'full';
     let visibility: 'full' | 'public' = 'full';
+    let headerNumbering = true;
 
     for (let i = 0; i < args.length; i++) {
         const arg = args[i];
@@ -207,6 +212,10 @@ if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith
             mainTitle = args[++i];
         } else if (arg === '--generatePDF') {
             generatePDF = true;
+        } else if (arg === '--no-headerNumbering') {
+            headerNumbering = false;
+        } else if (arg === '--headerNumbering') {
+            headerNumbering = true;
         } else if (arg.startsWith('--template=') || arg === '--template') {
             template = arg.includes('=') ? arg.split('=')[1] : args[++i];
         } else if (arg.startsWith('--visibility=') || arg === '--visibility') {
@@ -214,13 +223,14 @@ if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith
             visibility = v === 'public' ? 'public' : 'full';
         } else if (!yamlFile) {
             yamlFile = arg;
-        } else if (outputDir === './output') {
+        } else if (outputDir === './build') {
             outputDir = arg;
         }
     }
 
     if (!yamlFile) {
-        console.error('Usage: build-threat-model.ts <yaml-file> [output-dir] [--mainTitle "Title"] [--generatePDF] [--template name] [--visibility full|public]');
+        console.error('Usage: build-threat-model.ts <yaml-file> [output-dir (default: ./build)] [--mainTitle "Title"] [--generatePDF] [--template name] [--visibility full|public] [--no-headerNumbering]');
+        console.error('Note: defaults keep generated artifacts under ./build/* to avoid polluting source folders.');
         process.exit(1);
     }
 
@@ -229,7 +239,8 @@ if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith
             mainTitle,
             generatePDF,
             template,
-            visibility
+            visibility,
+            headerNumbering,
         });
         console.log('Done!');
     } catch (err: any) {

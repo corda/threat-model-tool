@@ -136,7 +136,7 @@ Main orchestrator script.
 | Argument | Default | Description |
 |----------|---------|-------------|
 | `--TMDirectory <path>` | `.` | Root directory with TM subdirectories |
-| `--outputDir <path>` | `../build/site-hugo` | Final static site output directory |
+| `--outputDir <path>` | `./build/site-hugo` | Final static site output directory |
 | `--template <name>` | `MKdocs` | Render template used per TM generation |
 | `--visibility full\|public` | `full` | Content visibility filter |
 | `--templateSiteFolderSRC <path>` | *(none)* | User-provided pages/CSS/assets overlay |
@@ -177,7 +177,7 @@ In `threat-model-tool-js/package.json`:
 
 ```json
 "build:hugoSite": "tsx src/scripts/build-hugo-site.ts",
-"build:hugoSite:examples": "tsx src/scripts/build-hugo-site.ts --TMDirectory tests/exampleThreatModels --outputDir ../build/site-hugo"
+"build:hugoSite:examples": "tsx src/scripts/build-hugo-site.ts --TMDirectory tests/exampleThreatModels --outputDir ./build/site-hugo"
 ```
 
 ### 7. Add VS Code task

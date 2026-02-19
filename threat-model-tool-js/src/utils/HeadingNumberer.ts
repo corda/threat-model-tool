@@ -25,23 +25,29 @@ export class HeadingNumberer {
     }
 
     /**
-     * Get the number for the given heading level
-     * Returns empty string if disabled or level > limit
+     * Get the number for the given heading level.
+     *
+     * topLevel controls which markdown heading depth is treated as numbering level 1.
+        * Markdown examples:
+        * - topLevel=1: `# Intro` -> 1, `## Scope` -> 1.1
+        * - topLevel=2: `## Executive Summary` -> 1, `### Threats Summary` -> 1.1
      */
-    getNumber(level: number): string {
+    getNumber(level: number, topLevel: number = 1): string {
         if (!HeadingNumberer._enabled) {
             return "";
         }
 
-        if (level > HeadingNumberer.hierarchicalCounterLimit) {
+        const normalizedLevel = Math.max(1, level - topLevel + 1);
+
+        if (normalizedLevel > HeadingNumberer.hierarchicalCounterLimit) {
             return "";
         }
 
-        // Adjust counters array to match level
-        while (this.counters.length < level) {
+        // Adjust counters array to match normalized level
+        while (this.counters.length < normalizedLevel) {
             this.counters.push(0);
         }
-        while (this.counters.length > level) {
+        while (this.counters.length > normalizedLevel) {
             this.counters.pop();
         }
 

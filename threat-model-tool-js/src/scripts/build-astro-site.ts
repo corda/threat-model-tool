@@ -8,7 +8,7 @@
  * CLI usage:
  *   tsx src/scripts/build-astro-site.ts \
  *     --TMDirectory ./threatModels \
- *     --outputDir   ../build/site  \
+ *     --outputDir   ./build/site   \
  *     [--template MKdocs]          \
  *     [--visibility full|public]   \
  *     [--siteName "Threat Models"] \
@@ -17,6 +17,8 @@
  *     [--no-headerNumbering]       \
  *     [--generatePDF]              \
  *     [--pdfHeaderNote "text"]
+ *
+ * Note: default outputs are under ./build/* to avoid polluting source folders.
  */
 
 import path from 'path';
@@ -322,7 +324,7 @@ export interface AstroSiteOptions extends BuildTMOptions {
 
 export function buildAstroSite(
     tmDirectory: string,
-    outputDir: string = '../build/site',
+    outputDir: string = './build/site',
     options: AstroSiteOptions = {}
 ): void {
     const {
@@ -536,15 +538,17 @@ if (parseFlag(cliArgs, 'help') || parseFlag(cliArgs, 'h')) {
     console.log(`
 Usage: build-astro-site.ts [options]
 
+Defaults: generated outputs are written under ./build/* unless overridden.
+
 Options:
   --TMDirectory <path>              Directory containing TM sub-folders (default: .)
-  --outputDir   <path>              Output directory for the site (default: ../build/site)
+    --outputDir   <path>              Output directory for the site (default: ./build/site)
   --template    <name>              Report template (default: MKdocs)
   --visibility  full|public         Content visibility (default: full)
   --siteName    <text>              Site title (default: "Threat Models")
   --base        <path>              Base URL path for deployment (default: /)
   --templateSiteFolderSRC <path>    Extra pages/CSS/assets to overlay
-  --no-headerNumbering              Disable auto heading numbers
+  --no-headerNumbering              Disable auto heading numbers (default: ON)
   --generatePDF                     Generate PDF per TM
   --pdfHeaderNote <text>            PDF page header text
   --help                            Print this help
@@ -553,7 +557,7 @@ Options:
 }
 
 const tmDirectory = parseOption(cliArgs, 'TMDirectory') ?? '.';
-const outputDir = parseOption(cliArgs, 'outputDir') ?? '../build/site';
+const outputDir = parseOption(cliArgs, 'outputDir') ?? './build/site';
 const template = parseOption(cliArgs, 'template') ?? 'MKdocs';
 const visibilityArg = parseOption(cliArgs, 'visibility');
 const visibility: 'full' | 'public' =

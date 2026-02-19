@@ -23,7 +23,7 @@ python -m r3threatmodeling.fullBuildSingleTM build/totest/CordaSolanaToolkit/Cor
 ### Step 3: Run TypeScript generation
 ```bash
 cd /workspaces/threat-model-tool/threat-model-tool-js
-npx tsx src/scripts/build-threat-model.ts ../build/totest/CordaSolanaToolkit/CordaSolanaToolkit.yaml ../build/totest/output_ts
+npx tsx src/scripts/build-threat-model.ts ./build/totest/CordaSolanaToolkit/CordaSolanaToolkit.yaml ./build/totest/output_ts
 ```
 
 ### Step 4: Compare outputs
