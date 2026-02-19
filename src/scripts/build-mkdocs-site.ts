@@ -111,10 +111,12 @@ function writeMkdocsConfig(
     tmList: TMEntry[],
     mkdocsDir: string,
     siteName: string,
-    docsDirSetting: string
+    docsDirSetting: string,
+    siteUrl?: string
 ): void {
     const lines: string[] = [
         `site_name: ${yamlQuote(siteName)}`,
+        ...(siteUrl ? [`site_url: ${yamlQuote(siteUrl)}`] : []),
         `docs_dir: ${docsDirSetting}`,
         'use_directory_urls: false',
         'nav:',
@@ -184,18 +186,6 @@ function resolveBuiltMarkdown(tmStagingDir: string, tm: TMEntry): string | null 
     return firstMd ? path.join(tmStagingDir, firstMd) : null;
 }
 
-function rewriteTmLocalAssetRefs(content: string, tmId: string): string {
-    const tmAssetPrefix = `/${tmId}/`;
-
-    return content
-        .replace(/\b(src|data)\s*=\s*"(?:\.\/)?img\//g, `$1="${tmAssetPrefix}img/`)
-        .replace(/\b(src|data)\s*=\s*'(?:\.\/)?img\//g, `$1='${tmAssetPrefix}img/`)
-        .replace(/\((?:\.\/)?img\//g, `(${tmAssetPrefix}img/`)
-        .replace(/\b(src|data)\s*=\s*"(?:\.\/)?assets\//g, `$1="${tmAssetPrefix}assets/`)
-        .replace(/\b(src|data)\s*=\s*'(?:\.\/)?assets\//g, `$1='${tmAssetPrefix}assets/`)
-        .replace(/\((?:\.\/)?assets\//g, `(${tmAssetPrefix}assets/`);
-}
-
 function stageTM(
     tmStagingDir: string,
     tm: TMEntry,
@@ -212,14 +202,12 @@ function stageTM(
     fs.mkdirSync(tmDocsDir, { recursive: true });
 
     const mdContent = fs.readFileSync(mdSource, 'utf-8');
-    const rewrittenMdContent = rewriteTmLocalAssetRefs(mdContent, tm.id);
-    fs.writeFileSync(path.join(tmDocsDir, 'index.md'), rewrittenMdContent, 'utf-8');
+    fs.writeFileSync(path.join(tmDocsDir, 'index.md'), mdContent, 'utf-8');
 
     const htmlSource = path.join(tmStagingDir, `${tm.id}.html`);
     if (fs.existsSync(htmlSource)) {
         const htmlContent = fs.readFileSync(htmlSource, 'utf-8');
-        const rewrittenHtmlContent = rewriteTmLocalAssetRefs(htmlContent, tm.id);
-        fs.writeFileSync(path.join(tmDocsDir, `${tm.id}.html`), rewrittenHtmlContent, 'utf-8');
+        fs.writeFileSync(path.join(tmDocsDir, `${tm.id}.html`), htmlContent, 'utf-8');
     }
 
     let hasPdf = false;
@@ -256,6 +244,7 @@ function hasMkdocsOnPath(): boolean {
 
 export interface MkdocsSiteOptions extends BuildTMOptions {
     siteName?: string;
+    siteUrl?: string;
     MKDocsDir?: string;
     MKDocsSiteDir?: string;
     templateSiteFolderSRC?: string;
@@ -269,6 +258,7 @@ export function buildMkdocsSite(
 ): void {
     const {
         siteName = 'Threat Models',
+        siteUrl,
         MKDocsDir = './build/mkdocs',
         MKDocsSiteDir = './build/site-mkdocs',
         templateSiteFolderSRC,
@@ -359,7 +349,7 @@ export function buildMkdocsSite(
     }
 
     const docsDirSetting = path.relative(absMkdocsDir, absDocsDir).replace(/\\/g, '/');
-    writeMkdocsConfig(staged, absMkdocsDir, siteName, docsDirSetting || 'docs');
+    writeMkdocsConfig(staged, absMkdocsDir, siteName, docsDirSetting || 'docs', siteUrl);
     writeIndexMarkdown(staged, absDocsDir, pdfArtifactLink);
 
     if (!hasMkdocsOnPath()) {
@@ -397,6 +387,7 @@ Options:
   --template <name>                 Report template (default: MKdocs)
   --visibility full|public          Content visibility (default: full)
   --siteName <text>                 Site title in mkdocs.yml (default: Threat Models)
+    --siteUrl <url>                   Optional canonical site URL in mkdocs.yml
   --templateSiteFolderSRC <path>    Extra site overlay source folder
   --templateSiteFolderDST <path>    Overlay destination (default: <MKDocsDir>)
   --headerNumbering                 Enable auto heading numbers (default: OFF for MkDocs)
@@ -417,6 +408,7 @@ const template = parseOption(cliArgs, 'template') ?? 'MKdocs';
 const visibilityArg = parseOption(cliArgs, 'visibility');
 const visibility: 'full' | 'public' = visibilityArg === 'public' ? 'public' : 'full';
 const siteName = parseOption(cliArgs, 'siteName') ?? 'Threat Models';
+const siteUrl = parseOption(cliArgs, 'siteUrl');
 const templateSiteFolderSRC = parseOption(cliArgs, 'templateSiteFolderSRC');
 const templateSiteFolderDST = parseOption(cliArgs, 'templateSiteFolderDST');
 // MkDocs default: no heading numbering (site TOC/navigation already provides structure).
@@ -431,6 +423,7 @@ buildMkdocsSite(tmDirectory, outputDir, {
     template,
     visibility,
     siteName,
+    siteUrl,
     templateSiteFolderSRC,
     templateSiteFolderDST,
     headerNumbering,

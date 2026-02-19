@@ -57,6 +57,7 @@ jobs:
           --MKDocsDir build/mkdocs
           --MKDocsSiteDir build/site-mkdocs
           --outputDir build/mkdocs/docs
+          --siteUrl https://corda.github.io/threat-model-tool/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
