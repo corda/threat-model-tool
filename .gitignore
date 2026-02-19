@@ -10,3 +10,4 @@ hugo-site/.staging/
 output/
 tmp/
 node_modules/
+dist/
