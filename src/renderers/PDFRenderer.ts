@@ -19,7 +19,7 @@ export class PDFRenderer {
      * Renders threat model to PDF using pandoc (if available)
      * Requires pandoc to be installed: https://pandoc.org/
      */
-    async renderToPDF(outputPath: string): Promise<void> {
+    async renderToPDF(outputPath: string, _options?: { headerNote?: string }): Promise<void> {
         // Generate markdown
         const markdown = this.markdownRenderer.renderFullReport();
         

@@ -40,6 +40,7 @@
   "dependencies": {
     "cheerio": "^1.2.0",
     "cvss": "^1.0.5",
+    "html-escaper": "^3.0.3",
     "js-yaml": "^4.1.0",
     "marked": "^17.0.2"
   },

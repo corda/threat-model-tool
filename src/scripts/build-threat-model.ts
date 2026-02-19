@@ -14,7 +14,7 @@ function renderMarkdownWithMdInHtml(mdSource: string): string {
     let html = render(mdSource);
 
     for (let pass = 0; pass < 8; pass++) {
-        const $ = load(`<root>${html}</root>`, { decodeEntities: false });
+        const $ = load(`<root>${html}</root>`);
         const nodes = $('*[markdown="1"], *[markdown="block"]');
         if (nodes.length === 0) {
             return $('root').html() || html;

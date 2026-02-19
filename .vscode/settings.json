@@ -1,0 +1,22 @@
+{
+    "python.interpreter.path": "/Users/david.cervigni/workspace/Corda5ThreatModels/.venv/bin/python",
+    "python.analysis.extraPaths": [
+        "/Users/david.cervigni/workspace/threat-model-tool/tree-node/src"
+    ],
+    "python.autoComplete.extraPaths": [
+        "/Users/david.cervigni/workspace/threat-model-tool/tree-node/src"
+    ],
+    "python.analysis.autoSearchPaths": true,
+    "python.analysis.include": [
+        "/Users/david.cervigni/workspace/threat-model-tool/tree-node/src"
+    ],
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./tests",
+        "-p",
+        "test_*.py"
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": true
+}

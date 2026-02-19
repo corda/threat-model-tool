@@ -9,3 +9,4 @@ hugo-site/.staging/
 # Optional local output folder used by ad-hoc runs
 output/
 tmp/
+node_modules/

@@ -18,7 +18,6 @@ import {
     renderTestingGuide
 } from './renderers/lib_py.js';
 import { AttackTreeGenerator } from './puml/AttackTreeGenerator.js';
-import { fileURLToPath } from 'url';
 import { HeadingNumberer, resetHeadingNumbers, disableHeadingNumbering, enableHeadingNumbering, isHeadingNumberingEnabled } from './utils/HeadingNumberer.js';
 import { makeMarkdownLinkedHeader, createTitleAnchorHash, PAGEBREAK } from './utils/TemplateUtils.js';
 
