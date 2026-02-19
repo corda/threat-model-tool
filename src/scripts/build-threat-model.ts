@@ -94,15 +94,6 @@ function toShellSingleQuoted(value: string): string {
     return `'${value.replace(/'/g, `'"'"'`)}'`;
 }
 
-function hasLocalPlantUml(): boolean {
-    try {
-        execSync('plantuml -version', { stdio: 'ignore' });
-        return true;
-    } catch {
-        return false;
-    }
-}
-
 function copyDirectoryContents(sourceDir: string, destinationDir: string): void {
     if (!fs.existsSync(sourceDir) || !fs.statSync(sourceDir).isDirectory()) {
         console.warn(`Asset folder not found or not a directory, skipping: ${sourceDir}`);
@@ -218,7 +209,6 @@ export function buildSingleTM(yamlFile: string, outputDir: string, options: Buil
         }
     }
 
-    // Run PlantUML via Docker
     const imgDir = path.join(absOutputDir, 'img');
     console.log('Generating PlantUML diagrams...');
 
@@ -227,28 +217,18 @@ export function buildSingleTM(yamlFile: string, outputDir: string, options: Buil
 
         const pumlFiles = collectPumlFiles(imgDir);
         if (pumlFiles.length > 0) {
-            const localQuoted = pumlFiles.map(toShellSingleQuoted).join(' ');
             const dockerRelativeQuoted = pumlFiles
                 .map(filePath => path.relative(imgDir, filePath).replace(/\\/g, '/'))
                 .map(toShellSingleQuoted)
                 .join(' ');
 
-            if (hasLocalPlantUml()) {
-                try {
-                    execSync(`plantuml -tsvg ${localQuoted}`, { stdio: 'inherit' });
-                    return;
-                } catch {
-                    console.log('Local plantuml failed, trying docker...');
-                }
-            } else {
-                console.log('Local plantuml not found, using docker...');
-            }
-
             const uid = typeof process.getuid === 'function' ? process.getuid() : 1000;
             const gid = typeof process.getgid === 'function' ? process.getgid() : 1000;
 
+            console.log(`Using Docker PlantUML to render ${pumlFiles.length} diagram(s) to SVG...`);
+
             execSync(
-                `docker run --rm --user ${uid}:${gid} -v "${imgDir}:/data" -w /data plantuml/plantuml:sha-d2b2bcf -tsvg ${dockerRelativeQuoted}`,
+                `docker run --rm --user ${uid}:${gid} -v "${imgDir}:/data" -w /data plantuml/plantuml:sha-d2b2bcf -verbose -tsvg ${dockerRelativeQuoted}`,
                 { stdio: 'inherit' }
             );
         }
