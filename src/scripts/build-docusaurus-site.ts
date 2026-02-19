@@ -115,7 +115,7 @@ function syncParentMkdocsCss(siteDir: string): void {
     const legacyCssDir = path.join(siteDir, 'src', 'css', 'legacy');
     fs.mkdirSync(legacyCssDir, { recursive: true });
 
-    const filesToSync = ['tm.css', 'github.min.css'];
+    const filesToSync = ['threatmodel.css', 'github.min.css'];
     for (const fileName of filesToSync) {
         const srcFile = path.join(parentCssDir, fileName);
         const destFile = path.join(legacyCssDir, fileName);

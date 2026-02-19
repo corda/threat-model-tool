@@ -1,6 +1,6 @@
 /* Docusaurus site styling for generated threat model docs */
 
-@import './legacy/tm.css';
+@import './legacy/threatmodel.css';
 @import './legacy/github.min.css';
 
 :root {
