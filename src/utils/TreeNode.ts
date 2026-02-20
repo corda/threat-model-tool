@@ -30,6 +30,9 @@ export default class TreeNode {
     }
 
     getDescendantById(id: string): TreeNode | null {
+        if (this.data.ID === id) {
+            return this;
+        }
         for (const child of this.children) {
             if (child.data.ID === id) {
                 return child;

@@ -10,6 +10,7 @@ export default class REFID extends BaseThreatModelObject {
             throw new Error(`REFID required in dictionary data for ${parent.id}`);
         }
         this.REFIDValue = dictData.REFID;
+        this._id = `REFID_${this.REFIDValue}`;
     }
 
     resolve(): BaseThreatModelObject | null {

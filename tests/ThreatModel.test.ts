@@ -35,16 +35,24 @@ test('Threat Model Parsing', async (t) => {
     for (const filePath of files) {
         const fileName = path.basename(filePath);
         await t.test(`should parse ${fileName}`, () => {
-            const tm = new ThreatModel(filePath);
-            
-            assert.ok(tm._id, `ID missing for ${fileName}`);
-            assert.ok(tm.threats.length >= 0);
-            
-            tm.threats.forEach(threat => {
-                assert.ok(threat.id, `Threat missing ID in ${fileName}`);
-                assert.ok(threat.attack !== undefined, `Threat missing attack in ${threat.id}`);
-                assert.ok(threat.threatType, `Threat missing threatType in ${threat.id}`);
-            });
+            // If it's a child model, we expect it to fail validation when parsed directly
+            // because it references objects in its parent.
+            if (fileName === 'Example1Child.yaml' || fileName === 'ApiGateway.yaml' || fileName === 'SubComponent.yaml') {
+                assert.throws(() => {
+                    new ThreatModel(filePath);
+                }, /REFID '.*' not found/);
+            } else {
+                const tm = new ThreatModel(filePath);
+                
+                assert.ok(tm._id, `ID missing for ${fileName}`);
+                assert.ok(tm.threats.length >= 0);
+                
+                tm.threats.forEach(threat => {
+                    assert.ok(threat.id, `Threat missing ID in ${fileName}`);
+                    assert.ok(threat.attack !== undefined, `Threat missing attack in ${threat.id}`);
+                    assert.ok(threat.threatType, `Threat missing threatType in ${threat.id}`);
+                });
+            }
         });
     }
 });

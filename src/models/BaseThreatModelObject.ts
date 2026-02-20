@@ -132,6 +132,6 @@ export default class BaseThreatModelObject extends TreeNode {
     getFileAndLineErrorMessage(): string {
         const threatModel = this.getThreatModel();
         const filename = threatModel ? threatModel.fileName : "unknown";
-        return ` (file: "${filename}")`;
+        return ` (file: "${filename}", ID: "${this.id}")`;
     }
 }

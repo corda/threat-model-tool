@@ -96,6 +96,19 @@ export default class ThreatModel extends BaseThreatModelObject {
                 }
             }
         }
+
+        if (this.isRoot()) {
+            this.validateReferences();
+        }
+    }
+
+    private validateReferences(): void {
+        const refids = this.getAllDown(REFID);
+        for (const ref of refids) {
+            if (!ref.resolve()) {
+                throw new Error(`REFID '${ref.REFIDValue}' not found in ${ref.parent?.id}${ref.getFileAndLineErrorMessage()}`);
+            }
+        }
     }
 
     private parseScope(scopeDict: Record<string, any>, publicFlag: boolean): void {
