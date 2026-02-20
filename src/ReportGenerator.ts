@@ -89,7 +89,9 @@ export class ReportGenerator {
         console.log(`Generated: ${mdOutFileName}`);
 
         // Generate PlantUML diagrams
-        this.generatePlantUML(tmo, outputDir);
+        if (!(context.skipDiagrams ?? false)) {
+            this.generatePlantUML(tmo, outputDir);
+        }
     }
 
     private static injectPrePostMarkdownSections(tmo: ThreatModel, mdReport: string, ctx: any): string {

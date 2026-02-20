@@ -36,8 +36,10 @@
     "serve:mkdocsSite": "mkdocs serve --config-file ./build/mkdocs/mkdocs.yml --dev-addr 127.0.0.1:4324"
   },
   "dependencies": {
+    "@types/debug": "^4.1.12",
     "cheerio": "^1.2.0",
     "cvss": "^1.0.5",
+    "debug": "^4.4.3",
     "html-escaper": "^3.0.3",
     "js-yaml": "^4.1.0",
     "marked": "^17.0.2"

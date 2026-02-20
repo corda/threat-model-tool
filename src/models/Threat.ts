@@ -2,6 +2,7 @@ import BaseThreatModelObject from './BaseThreatModelObject.js';
 import { TMCVSS } from './CVSS.js';
 import Countermeasure from './Countermeasure.js';
 import REFID from './REFID.js';
+import { debugThreat } from '../utils/logger.js';
 
 export default class Threat extends BaseThreatModelObject {
     countermeasures: (Countermeasure | REFID)[];
@@ -32,6 +33,8 @@ export default class Threat extends BaseThreatModelObject {
         this.assets = [];
         this.impactedSecObjs = [];
         this.attackers = [];
+
+        debugThreat(`Parsing Threat ID: ${this.id}`);
 
         if ('description' in dictData) {
             throw new Error(`description is not allowed in Threat ${this.id}, please use 'attack' instead`);

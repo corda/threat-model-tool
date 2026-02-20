@@ -161,6 +161,7 @@ export interface BuildTMOptions {
     pdfHeaderNote?: string;
     pdfArtifactLink?: string;
     assetFolders?: string[];
+    skipDiagrams?: boolean;
 }
 
 export function buildSingleTM(yamlFile: string, outputDir: string, options: BuildTMOptions = {}): void {
@@ -173,7 +174,8 @@ export function buildSingleTM(yamlFile: string, outputDir: string, options: Buil
         forceToc,
         fileName,
         pdfHeaderNote = 'Private and confidential',
-        assetFolders = [DEFAULT_ASSET_FOLDER]
+        assetFolders = [DEFAULT_ASSET_FOLDER],
+        skipDiagrams = false
     } = options;
 
     const fullPath = path.resolve(yamlFile);
@@ -193,38 +195,42 @@ export function buildSingleTM(yamlFile: string, outputDir: string, options: Buil
         process_toc: forceToc,
         // Keep alias for backward compatibility with existing callers.
         headerNumbering,
+        skipDiagrams,
     });
 
     copyAssetFolders(assetFolders, absOutputDir);
 
     const modelId = fileName || (tmo as any)._id || (tmo as any).id;
     const imgDir = path.join(absOutputDir, 'img');
-    console.log('Generating PlantUML diagrams...');
 
-    try {
-        sanitizePumlFilesForLegacyPlantUml(imgDir);
+    if (!skipDiagrams) {
+        console.log('Generating PlantUML diagrams...');
 
-        const pumlFiles = collectPumlFiles(imgDir);
-        if (pumlFiles.length > 0) {
-            const dockerRelativeQuoted = pumlFiles
-                .map(filePath => path.relative(imgDir, filePath).replace(/\\/g, '/'))
-                .map(toShellSingleQuoted)
-                .join(' ');
+        try {
+            sanitizePumlFilesForLegacyPlantUml(imgDir);
 
-            const uid = typeof process.getuid === 'function' ? process.getuid() : 1000;
-            const gid = typeof process.getgid === 'function' ? process.getgid() : 1000;
+            const pumlFiles = collectPumlFiles(imgDir);
+            if (pumlFiles.length > 0) {
+                const dockerRelativeQuoted = pumlFiles
+                    .map(filePath => path.relative(imgDir, filePath).replace(/\\/g, '/'))
+                    .map(toShellSingleQuoted)
+                    .join(' ');
 
-            console.log(`Using Docker PlantUML to render ${pumlFiles.length} diagram(s) to SVG...`);
+                const uid = typeof process.getuid === 'function' ? process.getuid() : 1000;
+                const gid = typeof process.getgid === 'function' ? process.getgid() : 1000;
 
-            execSync(
-                `docker run --rm --user ${uid}:${gid} -v "${imgDir}:/data" -w /data plantuml/plantuml:sha-d2b2bcf -verbose -tsvg ${dockerRelativeQuoted}`,
-                { stdio: 'inherit' }
-            );
-        }
-    } catch (error) {
-        console.warn('PlantUML generation failed (Docker or local plantuml required)');
-        if (error instanceof Error && error.message) {
-            console.warn(error.message);
+                console.log(`Using Docker PlantUML to render ${pumlFiles.length} diagram(s) to SVG...`);
+
+                execSync(
+                    `docker run --rm --user ${uid}:${gid} -v "${imgDir}:/data" -w /data plantuml/plantuml:sha-d2b2bcf -verbose -tsvg ${dockerRelativeQuoted}`,
+                    { stdio: 'inherit' }
+                );
+            }
+        } catch (error) {
+            console.warn('PlantUML generation failed (Docker or local plantuml required)');
+            if (error instanceof Error && error.message) {
+                console.warn(error.message);
+            }
         }
     }
 
@@ -243,7 +249,8 @@ export function buildSingleTM(yamlFile: string, outputDir: string, options: Buil
     }
 }
 
-if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('build-threat-model.ts')) {
+if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('build-threat-model.ts') || process.argv[1]?.endsWith('threat-model-tool')) {
+    // console.log('DEBUG: process.argv[1]:', process.argv[1]);
     const args = process.argv.slice(2);
     let yamlFile = '';
     let outputDir = './build';
@@ -252,6 +259,7 @@ if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith
     let template = 'full';
     let visibility: 'full' | 'public' = 'full';
     let headerNumbering = true;
+    let skipDiagrams = false;
     let assetFolders: string[] | undefined;
 
     for (let i = 0; i < args.length; i++) {
@@ -260,6 +268,8 @@ if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith
             mainTitle = args[++i];
         } else if (arg === '--generatePDF') {
             generatePDF = true;
+        } else if (arg === '--skipDiagrams') {
+            skipDiagrams = true;
         } else if (arg === '--no-headerNumbering') {
             headerNumbering = false;
         } else if (arg === '--headerNumbering') {
@@ -282,7 +292,7 @@ if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith
     }
 
     if (!yamlFile) {
-        console.error('Usage: build-threat-model.ts <yaml-file> [output-dir (default: ./build)] [--mainTitle "Title"] [--generatePDF] [--template name] [--visibility full|public] [--no-headerNumbering] [--assetFolder <path>]');
+        console.error('Usage: build-threat-model.ts <yaml-file> [output-dir (default: ./build)] [--mainTitle "Title"] [--generatePDF] [--template name] [--visibility full|public] [--no-headerNumbering] [--assetFolder <path>] [--skipDiagrams]');
         console.error('Note: defaults keep generated artifacts under ./build/* to avoid polluting source folders.');
         process.exit(1);
     }
@@ -295,6 +305,7 @@ if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith
             visibility,
             headerNumbering,
             assetFolders,
+            skipDiagrams,
         });
         console.log('Done!');
     } catch (err: any) {

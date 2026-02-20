@@ -586,6 +586,24 @@ This project is configured as ESM (`"type": "module"` in package.json) with `"mo
 # Use:         npx tsx src/scripts/build-threat-model.ts ...
 ```
 
+### Enable parser debug logs
+
+This tool uses the `debug` library for parser-level logs.
+
+To see threat model and threat parsing messages:
+
+```bash
+# Linux/macOS
+DEBUG=tm:* npm run test:build -- <yaml-file> <output-dir>
+
+# PowerShell
+$env:DEBUG='tm:*'; npm run test:build -- <yaml-file> <output-dir>
+```
+
+Expected messages include:
+- `Parsing Threat Model ID: ...`
+- `Parsing Threat ID: ...`
+
 ## Next Steps / Future Work
 
 - Complete parity with Python's ISO27001 mapping.

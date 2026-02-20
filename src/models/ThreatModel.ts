@@ -10,6 +10,7 @@ import Attacker from './Attacker.js';
 import Assumption from './Assumption.js';
 import Scope from './Scope.js';
 import REFID from './REFID.js';
+import { debugThreatModel } from '../utils/logger.js';
 
 export default class ThreatModel extends BaseThreatModelObject {
     fileName: string;
@@ -42,6 +43,8 @@ export default class ThreatModel extends BaseThreatModelObject {
         this.originDict = tmDict;
         this._id = tmDict.ID;
         this.schemaVersion = tmDict.schemaVersion || 1;
+
+        debugThreatModel(`Parsing Threat Model ID: ${this._id}`);
 
         // Validate ID matches filename
         const expectedId = path.basename(fileIn, path.extname(fileIn));
