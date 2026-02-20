@@ -5,7 +5,7 @@ This project implements a threat modeling tool in JavaScript, designed to help u
 ## Project Structure
 
 ```
-threat-model-tool-js
+threat-model-tool
 ├── src
 │   ├── models
 │   │   ├── Asset.js
@@ -29,7 +29,7 @@ To get started with the Threat Model Tool, clone the repository and install the 
 
 ```bash
 git clone <repository-url>
-cd threat-model-tool-js
+cd threat-model-tool
 npm install
 ```
 

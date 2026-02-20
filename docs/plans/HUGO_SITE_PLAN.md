@@ -44,7 +44,7 @@ Add a **Hugo** static documentation site generation path, produced entirely from
 | Static site framework | **Hugo** | Fast static builds, flexible templating, mature docs ecosystem |
 | Theme approach | Hugo Book-style left sidebar (or equivalent custom layout) | Keeps all navigation links on the left |
 | Right TOC column | **Disabled globally** | Matches requirement: no right “On this page” column |
-| Hugo project location | `threat-model-tool-js/hugo-site/` | Isolated site dependencies and config |
+| Hugo project location | `threat-model-tool/hugo-site/` | Isolated site dependencies and config |
 | Image serving | `static/<TM>/img/` | Preserves existing relative `img/` references in generated MD |
 | URL style | Pretty URLs + trailing slash | Ensures `/<TM>/` + `img/foo.svg` resolves predictably |
 | TM template | `MKdocs` (existing) | Existing output format is already docs-friendly |
@@ -58,7 +58,7 @@ Add a **Hugo** static documentation site generation path, produced entirely from
 Create a minimal Hugo project:
 
 ```
-threat-model-tool-js/hugo-site/
+threat-model-tool/hugo-site/
 ├── hugo.toml                     # base config (updated at build time)
 ├── content/
 │   └── docs/
@@ -173,7 +173,7 @@ Main orchestrator script.
 
 ### 6. Add npm scripts
 
-In `threat-model-tool-js/package.json`:
+In `threat-model-tool/package.json`:
 
 ```json
 "build:hugoSite": "tsx src/scripts/build-hugo-site.ts",
@@ -190,7 +190,7 @@ In `.vscode/tasks.json`:
   "type": "shell",
   "command": "npm",
   "args": ["run", "build:hugoSite:examples"],
-  "options": { "cwd": "${workspaceFolder}/threat-model-tool-js" }
+  "options": { "cwd": "${workspaceFolder}/threat-model-tool" }
 }
 ```
 
@@ -200,7 +200,7 @@ In root `Makefile`:
 
 ```makefile
 build-site-hugo-ts:
-	cd threat-model-tool-js && npm run build:hugoSite:examples
+	cd threat-model-tool && npm run build:hugoSite:examples
 ```
 
 ### 9. Update README

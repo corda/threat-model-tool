@@ -1,6 +1,6 @@
-# Threat Model Tool (TypeScript)
+# Threat Model Tool
 
-This is the TypeScript port of the original Python-based Threat Modeling Tool. It is designed to be more maintainable, type-safe, and easier to integrate into modern CI/CD pipelines.
+This is a port of the original Python-based Threat Modeling Tool. It is designed to be more maintainable, type-safe, and easier to integrate into modern CI/CD pipelines.
 
 ## Status
 
@@ -94,7 +94,7 @@ on:
     branches: [main]
     paths:
       - 'threatModels/**/*.yaml'
-      - 'threat-model-tool-js/**'
+      - 'threat-model-tool/**'
       - '.github/workflows/publish-mkdocs.yml'
 
 permissions:
@@ -114,7 +114,7 @@ jobs:
         with:
           node-version: '20'
           cache: npm
-          cache-dependency-path: threat-model-tool-js/package-lock.json
+          cache-dependency-path: threat-model-tool/package-lock.json
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -123,7 +123,7 @@ jobs:
 
       - name: Install Node dependencies
         run: npm ci
-        working-directory: threat-model-tool-js
+        working-directory: threat-model-tool
 
       - name: Install MkDocs
         run: pip install mkdocs mkdocs-material
@@ -140,7 +140,7 @@ jobs:
           --MKDocsDir ./build/mkdocs
           --MKDocsSiteDir ./build/site-mkdocs
           --outputDir ./build/mkdocs/docs
-        working-directory: threat-model-tool-js
+        working-directory: threat-model-tool
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

@@ -3,7 +3,7 @@
 ## Quick Test
 
 ```bash
-cd threat-model-tool-js
+cd threat-model-tool
 
 # Build the site from example TMs
 npm run build:astroSite:examples

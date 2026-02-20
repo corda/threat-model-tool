@@ -1,5 +1,5 @@
 {
-  "name": "threat-model-tool-js",
+  "name": "threat-model-tool",
   "version": "1.0.0",
   "type": "module",
   "description": "A TypeScript/JavaScript implementation of a threat modeling tool, inspired by a Python version.",

@@ -2,7 +2,7 @@
 	"version": "2.0.0",
 	"tasks": [
         {
-            "label": "TS: Generate all example threat models",
+            "label": "Generate all example threat models",
             "type": "shell",
             "command": "npm",
             "args": [
@@ -10,12 +10,12 @@
                 "generate:examples"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/threat-model-tool-js"
+                "cwd": "${workspaceFolder}"
             },
             "problemMatcher": []
         },
         {
-            "label": "TS: Generate selected example threat model",
+            "label": "Generate selected example threat model",
             "type": "shell",
             "command": "npm",
             "args": [
@@ -24,12 +24,12 @@
                 "--example=${input:tmExample}"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/threat-model-tool-js"
+                "cwd": "${workspaceFolder}"
             },
             "problemMatcher": []
         },
         {
-            "label": "TS: Debug selected example threat model",
+            "label": "Debug selected example threat model",
             "type": "shell",
             "command": "npm",
             "args": [
@@ -38,12 +38,12 @@
                 "--example=${input:tmExample}"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/threat-model-tool-js"
+                "cwd": "${workspaceFolder}"
             },
             "problemMatcher": []
         },
         {
-            "label": "TS: Build Astro docs site",
+            "label": "Build Astro docs site",
             "type": "shell",
             "command": "npm",
             "args": [
@@ -51,12 +51,12 @@
                 "build:astroSite:examples"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/threat-model-tool-js"
+                "cwd": "${workspaceFolder}"
             },
             "problemMatcher": []
         },
         {
-            "label": "TS: Serve Astro docs site",
+            "label": "Serve Astro docs site",
             "type": "shell",
             "command": "npm",
             "args": [
@@ -64,13 +64,13 @@
                 "serve:astroSite"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/threat-model-tool-js"
+                "cwd": "${workspaceFolder}"
             },
             "isBackground": true,
             "problemMatcher": []
         },
         {
-            "label": "TS: Build Docusaurus docs site",
+            "label": "Build Docusaurus docs site",
             "type": "shell",
             "command": "npm",
             "args": [
@@ -78,12 +78,12 @@
                 "build:docusaurusSite:examples"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/threat-model-tool-js"
+                "cwd": "${workspaceFolder}"
             },
             "problemMatcher": []
         },
         {
-            "label": "TS: Serve Docusaurus docs site",
+            "label": "Serve Docusaurus docs site",
             "type": "shell",
             "command": "npm",
             "args": [
@@ -91,13 +91,13 @@
                 "serve:docusaurusSite"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/threat-model-tool-js"
+                "cwd": "${workspaceFolder}"
             },
             "isBackground": true,
             "problemMatcher": []
         },
         {
-            "label": "TS: Build Hugo docs site",
+            "label": "Build Hugo docs site",
             "type": "shell",
             "command": "npm",
             "args": [
@@ -105,12 +105,12 @@
                 "build:hugoSite:examples"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/threat-model-tool-js"
+                "cwd": "${workspaceFolder}"
             },
             "problemMatcher": []
         },
         {
-            "label": "TS: Serve Hugo docs site",
+            "label": "Serve Hugo docs site",
             "type": "shell",
             "command": "npm",
             "args": [
@@ -118,13 +118,13 @@
                 "serve:hugoSite"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/threat-model-tool-js"
+                "cwd": "${workspaceFolder}"
             },
             "isBackground": true,
             "problemMatcher": []
         },
         {
-            "label": "TS: Build MkDocs docs site",
+            "label": "Build MkDocs docs site",
             "type": "shell",
             "command": "npm",
             "args": [
@@ -132,12 +132,12 @@
                 "build:mkdocsSite:examples"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/threat-model-tool-js"
+                "cwd": "${workspaceFolder}"
             },
             "problemMatcher": []
         },
         {
-            "label": "TS: Serve MkDocs docs site",
+            "label": "Serve MkDocs docs site",
             "type": "shell",
             "command": "npm",
             "args": [
@@ -145,11 +145,28 @@
                 "serve:mkdocsSite"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/threat-model-tool-js"
+                "cwd": "${workspaceFolder}"
             },
             "isBackground": true,
             "problemMatcher": []
-        }
+        },
+        {
+            "label": "Generate CordaSolanaToolkit HTML",
+            "type": "shell",
+            "command": "npm",
+            "args": [
+                "run",
+                "test:build",
+                "--",
+                "/workspaces/threat-modeling/threatModels/CordaSolanaToolkit/CordaSolanaToolkit.yaml",
+                "/workspaces/threat-modeling/build/CordaSolanaToolkit"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        
     ],
 	"inputs": [
 		{

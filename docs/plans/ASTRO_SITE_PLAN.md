@@ -37,7 +37,7 @@ Replace the Python MkDocs site-generation step with an **Astro Starlight** stati
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | Static site framework | **Astro Starlight** | Built-in sidebar, search (Pagefind), dark mode, responsive |
-| Astro project location | `threat-model-tool-js/astro-site/` | Isolated deps; users who don't need site generation don't pay the cost |
+| Astro project location | `threat-model-tool/astro-site/` | Isolated deps; users who don't need site generation don't pay the cost |
 | Image serving | `public/<TM>/img/` | Preserves existing relative `img/` paths in MD — no rewriting needed |
 | Trailing slash | `trailingSlash: 'always'` | Ensures `/<TM>/` + `img/foo.svg` = `/<TM>/img/foo.svg` |
 | TM template | `MKdocs` (existing) | TOC-less variant — Starlight handles TOC natively |
@@ -51,7 +51,7 @@ Replace the Python MkDocs site-generation step with an **Astro Starlight** stati
 Create a minimal Astro Starlight project:
 
 ```
-threat-model-tool-js/astro-site/
+threat-model-tool/astro-site/
 ├── package.json              # astro + @astrojs/starlight deps
 ├── astro.config.mjs          # Base config (overwritten at build time)
 ├── tsconfig.json              # Extends astro/tsconfigs/strict
@@ -130,7 +130,7 @@ Main orchestrator script:
 
 ### 5. Add npm scripts
 
-In `threat-model-tool-js/package.json`:
+In `threat-model-tool/package.json`:
 
 ```json
 "build:astroSite": "tsx src/scripts/build-astro-site.ts",
@@ -147,7 +147,7 @@ In `.vscode/tasks.json`:
     "type": "shell",
     "command": "npm",
     "args": ["run", "build:astroSite:examples"],
-    "options": { "cwd": "${workspaceFolder}/threat-model-tool-js" }
+    "options": { "cwd": "${workspaceFolder}/threat-model-tool" }
 }
 ```
 
@@ -157,7 +157,7 @@ In root `Makefile`:
 
 ```makefile
 build-site-ts:
-	cd threat-model-tool-js && npm run build:astroSite:examples
+	cd threat-model-tool && npm run build:astroSite:examples
 ```
 
 ### 8. Update README

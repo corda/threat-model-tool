@@ -280,7 +280,7 @@ Test Suite:
 ## File Structure (New)
 
 ```
-threat-model-tool-js/
+threat-model-tool/
 ├── src/
 │   ├── core/                    # Data models
 │   │   ├── BaseThreatModelObject.ts

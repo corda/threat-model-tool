@@ -14,7 +14,7 @@ The Python tool uses the `markdown` library with specific extensions (`toc`, `at
   - `markdown-it-toc-done-right`: For TOC generation.
   - `markdown-it-attrs`: To support `{.tocLink}` and other attribute markers used in Python.
 - **Diff Testing**:
-  1. Generate Markdown using both Python and TS tools.
+  1. Generate Markdown using both Python and the new tool.
   2. Use a standard renderer (like `pandoc`) to convert both to HTML.
   3. Compare the HTML structures using a structural diff tool (e.g., `html-differ`).
 - **Handle Python-Specific Artifacts**: Python's `markdown` library sometimes handles nested lists and blockquotes differently. We may need custom `markdown-it` rules to match the Python behavior.
@@ -25,7 +25,7 @@ The Python tool uses the `markdown` library with specific extensions (`toc`, `at
 MkDocs is a Python ecosystem. Currently, the threat modeling project relies on `mkdocs build` to turn MD files into the final security site.
 
 ### Strategy (The "VitePress Transition")
-Instead of maintaining a Python MkDocs dependency, we will explore a transition to a TS-native static site generator.
+Instead of maintaining a Python MkDocs dependency, we will explore a transition to a native static site generator.
 - **Target**: **VitePress** or **Docusaurus**.
 - **Actions**:
   - Create a `SiteConfigGenerator.ts` that outputs a `vitepress.config.ts` or similar based on the threat model's `Index.md`.
@@ -35,19 +35,19 @@ Instead of maintaining a Python MkDocs dependency, we will explore a transition 
 ## 3. Cross-Project Test Suite (Real Data Validation)
 
 ### Objective
-Ensure the TS tool can handle the complexity of "live" threat models from the `threat-modeling` repository.
+Ensure the tool can handle the complexity of "live" threat models from the `threat-modeling` repository.
 
 ### Execution Plan
 1. **Model Porting**:
    - Establish a sync process (or script) to copy `.yaml` files from `/workspaces/threat-modeling/threatModels/` to `/workspaces/threat-model-tool/tests/exampleThreatModels/`.
    - Focus on `CBUAE_PHASE2`, `C5`, and `Corda` models which use the most advanced features.
 2. **Automated Run Comparison**:
-   - Implement a CI script that runs both `r3threatmodeling` (Python) and `r3threatmodeling-ts` (TypeScript) on the same input.
+   - Implement a CI script that runs both `r3threatmodeling` (Python) and `threat-model-tool` (Node) on the same input.
    - Output both to a `test-results/` directory.
    - Fail the build if the number of threats, assets, or cross-references differs.
 3. **Reference Output "Golden Files"**:
    - Store the Python-generated `FullFeature.md` as a "Golden Master".
-   - Any change in the TS tool must justify deviations from this reference.
+   - Any change in the tool must justify deviations from this reference.
 
 ## 4. Template & Renderer Completion
 
