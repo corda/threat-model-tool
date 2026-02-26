@@ -20,6 +20,10 @@ export default class Countermeasure extends BaseThreatModelObject {
                 throw new Error(`Countermeasure needs a '${key}' attribute${this.getFileAndLineErrorMessage()}`);
             }
         }
+        
+        // Explicitly set inPlace and public properties to ensure they're properly assigned
+        this.inPlace = dictData.inPlace;
+        this.public = dictData.public;
     }
 
     printAsText(): string {

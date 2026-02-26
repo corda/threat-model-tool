@@ -13,6 +13,17 @@ export default class SecurityObjective extends BaseThreatModelObject {
         super(dictData, parent);
         this.scope = parent;
         this.group = dictData.group || "General";
+        
+        // Explicitly set properties to ensure they're properly assigned
+        if (dictData.priority !== undefined) {
+            this.priority = dictData.priority;
+        }
+        if (dictData.inScope !== undefined) {
+            this.inScope = dictData.inScope;
+        }
+        if (dictData.treeImage !== undefined) {
+            this.treeImage = dictData.treeImage;  // Uses setter
+        }
 
         // Handle contributesTo references
         if (dictData.contributesTo) {

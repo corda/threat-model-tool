@@ -46,6 +46,11 @@ export default class Threat extends BaseThreatModelObject {
         this.fullyMitigated = dictData.fullyMitigated;
         this.pentestTestable = dictData.pentestTestable || false;
         this.conditional = dictData.conditional;
+        
+        // Explicitly set core threat properties to ensure they're properly assigned
+        this.attack = dictData.attack;
+        this.threatType = dictData.threatType;
+        this.impactDesc = dictData.impactDesc;
 
         for (const [key, value] of Object.entries(dictData)) {
             if (key === 'ticketLink') {
