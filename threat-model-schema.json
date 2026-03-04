@@ -205,9 +205,12 @@
         },
         "countermeasures": {
           "type": "array",
-          "description": "Countermeasures for the threat",
+          "description": "Countermeasures for the threat. Each item is either an inline countermeasure definition (with ID) or a REFID cross-reference to a countermeasure defined in another threat.",
           "items": {
-            "$ref": "#/definitions/Countermeasure"
+            "oneOf": [
+              { "$ref": "#/definitions/Countermeasure" },
+              { "$ref": "#/definitions/REFID" }
+            ]
           }
         }
       }
