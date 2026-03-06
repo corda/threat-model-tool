@@ -1,7 +1,7 @@
 ---
 name: threat-modeling-agent
 description: 'Create structured, consistent, and comprehensive threat models for applications and systems using a standardized YAML schema and best practices. Open source tools using the threat model yaml: https://github.com/corda/threat-model-tool '
-tools: ['vscode', 'read', 'edit', 'search', 'web', 'agent']
+tools: [vscode/extensions, vscode/askQuestions, vscode/getProjectSetupInfo, vscode/installExtension, vscode/memory, vscode/newWorkspace, vscode/runCommand, vscode/vscodeAPI, execute/getTerminalOutput, execute/awaitTerminal, execute/killTerminal, execute/runTask, execute/createAndRunTask, execute/runInTerminal, execute/runTests, execute/runNotebookCell, execute/testFailure, read/terminalSelection, read/terminalLastCommand, read/getTaskOutput, read/getNotebookSummary, read/problems, read/readFile, read/readNotebookCellOutput, agent/runSubagent, browser/openBrowserPage, edit/createDirectory, edit/createFile, edit/createJupyterNotebook, edit/editFiles, edit/editNotebook, edit/rename, search/changes, search/codebase, search/fileSearch, search/listDirectory, search/searchResults, search/textSearch, search/usages, web/fetch, web/githubRepo, ms-azuretools.vscode-containers/containerToolsConfig, ms-python.python/getPythonEnvironmentInfo, ms-python.python/getPythonExecutableCommand, ms-python.python/installPythonPackage, ms-python.python/configurePythonEnvironment, todo]
 ---
 # Threat Modeling Guide for AI Agents
 
@@ -758,7 +758,27 @@ threats:
   - DO not re-create attackers, try to reuse the ones from the parent, is something specific is needed the create it.
    
 
-## 7. Summary Checklist
+## 7. Post-Edit Verification (MANDATORY)
+
+**After every YAML modification** (creating or editing threat model files), you MUST verify the result by running the threat-model-tool verify command. This ensures the YAML is valid, all REFIDs resolve, and the object tree parses correctly.
+
+**Single file:**
+```bash
+cd <threat-model-tool workspace> && npx tsx src/scripts/verify-threat-model.ts <path-to-root-yaml>
+```
+
+**Full directory** (when multiple threat models may be affected, e.g. parent/child changes):
+```bash
+cd <threat-model-tool workspace> && npx tsx src/scripts/verify-threat-model.ts --TMDirectory <path-to-tm-directory>
+```
+
+**Rules:**
+- Run verification **immediately** after saving changes — do not defer it to the end.
+- If verification fails, **fix the issue before proceeding** with any further edits.
+- When editing a child model, verify from the **parent** directory level so cross-model REFIDs are checked.
+- Report the verification result (pass/fail + summary) to the user.
+
+## 8. Summary Checklist
 
 Before finalizing a threat model, verify:
 
@@ -785,3 +805,8 @@ Before finalizing a threat model, verify:
 - [ ] Each threat has CVSS score
 - [ ] `fullyMitigated` status reflects actual countermeasure coverage
 - [ ] Missing countermeasures for `fullyMitigated: false` threats are identified
+
+**Verification:**
+- [ ] Ran `verify-threat-model` on modified file(s) — passes with no errors
+- [ ] All REFID references resolve correctly
+- [ ] Child/parent relationships parse without errors

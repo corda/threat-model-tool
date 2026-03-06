@@ -141,9 +141,9 @@ function renderCountermeasure(cm: Countermeasure): string {
     if (cm.isReference) {
         // Python uses countermeasure.id for references (full hierarchical ID)
         const fullId = cm.getHierarchicalId ? cm.getHierarchicalId() : cm.id;
-        lines.push(`<strong>Reference to <code>${fullId}</code> ${cm.title}</strong><br/>`);
+        lines.push(`<dt>Reference to <code>${fullId}</code> ${cm.title}</dt>`);
     } else {
-        lines.push(`<strong> <code>${(cm as any)._id || cm.id}</code> ${cm.title}</strong><br/>`);
+        lines.push(`<dt><code>${(cm as any)._id || cm.id}</code> ${cm.title}</dt>`);
     }
     
     if ((cm as any).appliesToVersions) {

@@ -8,12 +8,15 @@
   "bin": {
     "threat-model-tool": "src/scripts/build-threat-model.ts",
     "threat-model-directory": "src/scripts/build-threat-model-directory.ts",
-    "threat-model-mkdocs": "src/scripts/build-mkdocs-site.ts"
+    "threat-model-mkdocs": "src/scripts/build-mkdocs-site.ts",
+    "threat-model-verify": "src/scripts/verify-threat-model.ts"
   },
   "scripts": {
     "clean:build": "node -e \"require('fs').rmSync('build', { recursive: true, force: true })\"",
     "build": "tsc",
     "serve:html": "python3 -m http.server 4325 --directory ./build",
+    "verify": "tsx src/scripts/verify-threat-model.ts",
+    "verify:examples": "tsx src/scripts/verify-threat-model.ts --TMDirectory tests/exampleThreatModels",
     "test": "tsx --test $(find tests -name '*.test.ts')",
     "test:unit": "tsx --test $(find tests -name '*.test.ts')",
     "test:build": "tsx src/scripts/build-threat-model.ts",

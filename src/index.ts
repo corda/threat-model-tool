@@ -22,3 +22,4 @@ export * from './types.js';
 
 export { buildSingleTM, type BuildTMOptions } from './scripts/build-threat-model.js';
 export { buildFullDirectory, type DirectoryBuildOptions } from './scripts/build-threat-model-directory.js';
+export { verifyThreatModel, verifyDirectory } from './scripts/verify-threat-model.js';
