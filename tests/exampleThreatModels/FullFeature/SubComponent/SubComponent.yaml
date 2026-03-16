@@ -81,4 +81,4 @@ threats:
         inPlace: true
         public: true
         operational: true
-        operator: Security Operations Team
+        operator: Platform Operations and Security team

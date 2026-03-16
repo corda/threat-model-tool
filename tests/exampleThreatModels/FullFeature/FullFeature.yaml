@@ -175,7 +175,7 @@ threats:
     fullyMitigated: true
     public: true
     countermeasures:
-      - ID: CM_PREPARED_STATEMENTS
+      - ID: PREPARED_STATEMENTS
         title: Use Prepared Statements
         description: Ensure all DB queries use parameterized inputs.
         inPlace: true
@@ -203,7 +203,7 @@ threats:
     fullyMitigated: false
     public: true
     countermeasures:
-      - ID: CM_LOG_MASKING
+      - ID: LOG_MASKING
         title: Log Masking
         description: Mask PII in logs.
         inPlace: false
@@ -233,16 +233,16 @@ threats:
     public: true
     countermeasures:
       # Operational countermeasure - tests operator field and yellow status
-      - ID: CM_KEY_ROTATION
+      - ID: KEY_ROTATION
         title: Regular Key Rotation
         description: |
           Rotate API keys every 30 days or immediately upon suspected compromise.
           Keys should be stored in a secure vault with audit logging.
         inPlace: true
         operational: true
-        operator: Security Operations Team
+        operator: Platform Operations and Security team
         public: true
-      - ID: CM_KEY_VAULT
+      - ID: KEY_VAULT
         title: Secure Key Storage
         description: Store keys in HashiCorp Vault with audit logging.
         inPlace: true
@@ -271,7 +271,7 @@ threats:
     fullyMitigated: false
     public: true
     countermeasures:
-      - ID: CM_INPUT_VALIDATION
+      - ID: INPUT_VALIDATION
         title: Strict Input Validation
         description: Validate and sanitize all deserialized input.
         inPlace: false
@@ -294,7 +294,7 @@ threats:
     fullyMitigated: true
     public: true
     countermeasures:
-      - ID: CM_HEADER_REMOVAL
+      - ID: HEADER_REMOVAL
         title: Remove Version Headers
         description: Configure server to not expose version information.
         inPlace: true
