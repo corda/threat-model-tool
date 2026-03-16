@@ -246,6 +246,28 @@ Within each threat, attributes MUST appear in this **exact order**:
 
 **Never place `fullyMitigated` or other fields after `countermeasures`.**
 
+### threatType Values (STRIDE Taxonomy)
+`threatType` MUST use values from the **STRIDE** threat classification taxonomy.
+Multiple categories can be combined with comma separation when a threat spans multiple STRIDE classes.
+
+**Valid STRIDE values:**
+-   `Spoofing` — Impersonating something or someone else
+-   `Tampering` — Modifying data or code without authorization
+-   `Repudiation` — Claiming to not have performed an action; lack of audit trail
+-   `Information Disclosure` — Exposing information to unauthorized parties
+-   `Denial of Service` — Denying or degrading service availability
+-   `Elevation of Privilege` — Gaining capabilities beyond authorized level
+
+**Examples:**
+```yaml
+threatType: Elevation of Privilege
+threatType: Tampering, Information Disclosure
+threatType: Elevation of Privilege, Denial of Service, Repudiation
+```
+
+Do NOT use values outside STRIDE (e.g., ❌ "Insecure Design", ❌ "Misconfiguration", ❌ "Supply Chain").
+Map non-STRIDE concepts to the closest STRIDE category based on the primary impact.
+
 ### ID Conventions
 -   MUST be UPPERCASE with underscores (e.g., `WEAK_CRYPTO`, `SQL_INJECTION_ATTACK`)
 -   Must be unique within the threat model
@@ -752,11 +774,40 @@ threats:
 - External assets usually are out of scope, thre may be datafloes to that asset (e.g. DF_INETNALASSET_TO_EXTERNALASSET) that are in scope, but the external asset itself is not.
 
 
-### When creating a childen model:
+### When creating a child model:
 
-  - Do not re-create securityObjectives, try to reuse the ones from the parent, is something specific is needed the create it.
-  - DO not re-create attackers, try to reuse the ones from the parent, is something specific is needed the create it.
-   
+**CRITICAL — Reuse parent definitions. Do NOT duplicate or create local equivalents.**
+
+Before writing any child model YAML, **read the parent threat model** and inventory its security objectives and attackers. Then apply these rules strictly:
+
+#### Security Objectives
+
+1. **First choice: reuse parent objectives directly** via `REFID`. Map each child threat's impact to the most semantically appropriate parent objective.
+2. **If no parent objective fits:** Do NOT create a local substitute with a different name (e.g., `INFRA_CONFIDENTIALITY` when the parent has no confidentiality objective). Instead, **propose adding a new objective to the parent** that serves both the parent and child models. Ask the user before adding it.
+3. **Check semantic fit, not just keyword match.** A parent objective like `PROGRAM_INTEGRITY` (specific to on-chain programs) should NOT be used for generic infrastructure integrity. If the parent objective is too narrow, propose a broader parent objective (e.g., `INTEGRITY`) and make the existing narrow one `contributesTo` it.
+4. **Only create child-specific objectives** (with `contributesTo` linking to a parent objective) when the child genuinely needs a specialised sub-objective that has no place in the parent's scope.
+
+**Decision flowchart:**
+```
+For each impact in the child model:
+  1. Does a parent objective match semantically? → Use REFID to parent
+  2. Is the closest parent objective too narrow/specific? → Propose broadening
+     the parent (add a general objective, make the specific one contributesTo it)
+  3. No parent objective covers this domain at all? → Propose adding one to the parent
+  4. Only the child needs this specialisation? → Create child-local objective
+     with contributesTo linking to closest parent objective
+```
+
+#### Attackers
+
+1. **First choice: reuse parent attackers** via `REFID`. A parent `EXTERNAL_ATTACKER` covers external adversaries in all child models — do NOT create `INFRA_EXTERNAL_ATTACKER`, `UI_EXTERNAL_ATTACKER`, etc.
+2. **Only create child-specific attackers** when the child introduces a genuinely distinct threat agent not represented in the parent (e.g., `COMPROMISED_WORKLOAD` for an infrastructure model where the parent has no equivalent).
+3. **If an attacker is out of scope for this child but relevant to the parent:** Note it in the child's scope description and suggest adding it to the parent. Do NOT define it locally as `inScope: false` if it already belongs in the parent.
+
+#### Before generating YAML, confirm with the user:
+- *"The parent defines these security objectives: [list]. I plan to reuse X, Y, Z. I also think the parent needs a new [OBJECTIVE] — shall I add it?"*
+- *"The parent defines these attackers: [list]. I'll reuse A, B. I need to add [NEW_ATTACKER] as child-specific because [reason]."*
+
 
 ## 7. Post-Edit Verification (MANDATORY)
 

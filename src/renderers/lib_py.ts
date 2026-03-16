@@ -590,43 +590,53 @@ export function renderThreats(tmo: ThreatModel, headerLevel: number = 1, ctx: an
  */
 export function renderOperationalHardening(tmo: ThreatModel, headerLevel: number = 1, ctx: any = {}): string {
     const guideData = tmo.getOperationalGuideData();
-    let cms: Countermeasure[] = [];
-    Object.keys(guideData).sort().forEach(op => {
-        cms.push(...guideData[op]);
-    });
-    // Python sorts the final combined list by ID
-    cms = cms.sort((a: any, b: any) => (a._id || a.id || '').localeCompare(b._id || b.id || ''));
+    const operators = Object.keys(guideData).sort();
+    const isHierarchical = tmo.children.size > 0;
 
     const lines: string[] = [];
     const title = 'Operational Security Hardening Guide';
     lines.push(makeMarkdownLinkedHeader(headerLevel, title, ctx));
-    
-    lines.push('<table markdown="block" style="print-color-adjust: exact; -webkit-print-color-adjust: exact;">');
-    lines.push('  <thead><tr><th>Seq</th><th>Countermeasure Details</th></tr></thead>');
-    lines.push('  <tbody markdown="block">');
-    
-    cms.forEach((cm, i) => {
-        const parent = cm.parent;
-        const parentAnchor = (parent as any)?.anchor || '';
-        const parentTitle = (parent as any)?.title || '';
-        const parentId = (parent as any)?._id || (parent as any)?.id || '';
-        const cond = (parent as any)?.conditional || '';
-        
-        let opLine = '';
-        if (cm.operator && cm.operator !== 'UNDEFINED') {
-            opLine = `**Operated by:** ${cm.operator}`;
-        }
-        
-        const condLine = cond ? `**Valid when:** ${cond}` : '';
-        
-        lines.push(
-            `<tr markdown="block"><td>${i + 1}</td><td markdown="block">**Title (ID):** ${cm.title} (\`${cm.id}\`)<br/>\n` +
-            `**Mitigates:** <a href="#${parentAnchor}">${parentTitle}</a> (\`${parentId}\`)<br/>\n` +
-            `**Description:**\n${condLine}\n<br/>${cm.description}\n<br/>${opLine}</td></tr>`
-        );
-    });
-    
-    lines.push('</tbody></table>');
+
+    for (const op of operators) {
+        const cms = guideData[op].sort((a: any, b: any) =>
+            (a._id || a.id || '').localeCompare(b._id || b.id || ''));
+
+        const opLabel = op && op !== 'UNDEFINED' ? op : 'Unassigned';
+        lines.push(makeMarkdownLinkedHeader(headerLevel + 1, `Operated by: ${opLabel}`, ctx));
+
+        lines.push('<table markdown="block" style="print-color-adjust: exact; -webkit-print-color-adjust: exact;">');
+        lines.push('  <thead><tr><th>Seq</th><th>Countermeasure Details</th></tr></thead>');
+        lines.push('  <tbody markdown="block">');
+
+        cms.forEach((cm, i) => {
+            const threat = cm.parent;
+            const threatAnchor = (threat as any)?.anchor || '';
+            const threatTitle = (threat as any)?.title || '';
+            const threatId = (threat as any)?._id || (threat as any)?.id || '';
+            const cond = (threat as any)?.conditional || '';
+
+            const condLine = cond ? `**Valid when:** ${cond}` : '';
+
+            let sectionLine = '';
+            if (isHierarchical) {
+                const owningTm = threat?.parent;
+                const sectionTitle = (owningTm as any)?.title || '';
+                if (sectionTitle) {
+                    sectionLine = `**Section:** ${sectionTitle}<br/>\n`;
+                }
+            }
+
+            lines.push(
+                `<tr markdown="block"><td>${i + 1}</td><td markdown="block">**Title (ID):** ${cm.title} (\`${cm.id}\`)<br/>\n` +
+                `${sectionLine}` +
+                `**Mitigates:** <a href="#${threatAnchor}">${threatTitle}</a> (\`${threatId}\`)<br/>\n` +
+                `**Description:**\n${condLine}\n<br/>${cm.description}</td></tr>`
+            );
+        });
+
+        lines.push('</tbody></table>');
+    }
+
     return lines.join('\n');
 }
 
