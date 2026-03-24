@@ -804,6 +804,32 @@ For each impact in the child model:
 2. **Only create child-specific attackers** when the child introduces a genuinely distinct threat agent not represented in the parent (e.g., `COMPROMISED_WORKLOAD` for an infrastructure model where the parent has no equivalent).
 3. **If an attacker is out of scope for this child but relevant to the parent:** Note it in the child's scope description and suggest adding it to the parent. Do NOT define it locally as `inScope: false` if it already belongs in the parent.
 
+#### Assets (scope-level)
+
+The `scope.assets` list in a child model must only contain **child-specific** assets (with full `ID`, `type`, `title`, etc.). Do NOT add bare `REFID` entries to `scope.assets` — the schema requires every item to have an `ID` and `type`.
+
+1. **Shared/common assets belong in the parent.** PDAs, mints, token accounts, programs, and other on-chain accounts used across multiple children should be defined once in the parent's `scope.assets`.
+2. **Child `scope.assets` contains only child-local assets** — e.g., dataflows or components unique to that child's flow. Do NOT re-declare parent assets locally.
+3. **Referencing parent assets in threats:** Inside a threat's `assets:` field, use `REFID` to point to any asset defined in the parent or in the child's own `scope.assets`. This is the correct way to link threats to shared assets without duplicating definitions.
+
+**Example — correct child pattern:**
+```yaml
+# Child scope.assets: only child-specific items
+scope:
+  assets:
+    - ID: DF_MY_DATAFLOW
+      type: dataflow
+      title: My Child-Specific Dataflow
+      inScope: true
+
+# Threats reference parent assets via REFID
+threats:
+  - ID: MY_THREAT
+    assets:
+      - REFID: VAULT_PDA          # defined in parent
+      - REFID: DF_MY_DATAFLOW     # defined in this child
+```
+
 #### Before generating YAML, confirm with the user:
 - *"The parent defines these security objectives: [list]. I plan to reuse X, Y, Z. I also think the parent needs a new [OBJECTIVE] — shall I add it?"*
 - *"The parent defines these attackers: [list]. I'll reuse A, B. I need to add [NEW_ATTACKER] as child-specific because [reason]."*
@@ -813,20 +839,17 @@ For each impact in the child model:
 
 **After every YAML modification** (creating or editing threat model files), you MUST verify the result by running the threat-model-tool verify command. This ensures the YAML is valid, all REFIDs resolve, and the object tree parses correctly.
 
-**Single file:**
+**Usage:**
 ```bash
 cd <threat-model-tool workspace> && npx tsx src/scripts/verify-threat-model.ts <path-to-root-yaml>
 ```
 
-**Full directory** (when multiple threat models may be affected, e.g. parent/child changes):
-```bash
-cd <threat-model-tool workspace> && npx tsx src/scripts/verify-threat-model.ts --TMDirectory <path-to-tm-directory>
-```
+Always pass the **root YAML file** as the argument. The tool will automatically resolve and verify all child models referenced from the root. Do NOT use `--TMDirectory` or pass a directory path.
 
 **Rules:**
 - Run verification **immediately** after saving changes — do not defer it to the end.
 - If verification fails, **fix the issue before proceeding** with any further edits.
-- When editing a child model, verify from the **parent** directory level so cross-model REFIDs are checked.
+- When editing a child model, verify by passing the **root parent YAML file** so cross-model REFIDs are checked.
 - Report the verification result (pass/fail + summary) to the user.
 
 ## 8. Summary Checklist
