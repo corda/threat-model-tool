@@ -301,6 +301,37 @@ impactDesc: |
   This leads to compromise.  # ❌ Missing blank line after
 ```
 
+### No Markdown Headers in YAML Strings
+**CRITICAL:** NEVER use `#`, `##`, `###` headers inside multiline YAML string fields
+(`description`, `analysis`, `attack`, `impactDesc`, etc.). Headers break heading
+hierarchy when the threat model is rendered into documentation sites (Astro, Docusaurus,
+Hugo, MkDocs).
+
+Instead of headers, use **bold text** for section labels:
+
+**Correct:**
+```yaml
+analysis: |
+  **Glossary**
+
+  - **NAV** — Net Asset Value...
+
+  **Key Attack Surface**
+
+  - Item one
+  - Item two
+```
+
+**Invalid:**
+```yaml
+analysis: |
+  ## Glossary          # ❌ Breaks heading nesting in site generation
+
+  - **NAV** — ...
+
+  ## Key Attack Surface  # ❌ Use **bold** instead
+```
+
 ### CVSS Format
 **CRITICAL:** Use `vector` attribute only (NEVER use `base:`):
 
