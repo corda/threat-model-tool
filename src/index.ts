@@ -23,3 +23,26 @@ export * from './types.js';
 export { buildSingleTM, type BuildTMOptions } from './scripts/build-threat-model.js';
 export { buildFullDirectory, type DirectoryBuildOptions } from './scripts/build-threat-model-directory.js';
 export { verifyThreatModel, verifyDirectory } from './scripts/verify-threat-model.js';
+
+// Jira integration
+export {
+    JiraClient,
+    JiraProjectIssueType,
+    JiraFields,
+    buildReviewUrl,
+    buildRiskReviewUrl,
+    createJiraForThreat,
+    threatDescription,
+    riskDescription,
+    treatmentPlan,
+    threatDescriptionWiki,
+    riskDescriptionWiki,
+    threatDescriptionMarkdown,
+    riskDescriptionMarkdown,
+    threatDescriptionFormatted,
+    riskDescriptionFormatted,
+    mapCvssToImpact,
+    riskRating,
+    treatmentPlanDate,
+    formatJiraDate,
+} from './jira/index.js';

@@ -321,7 +321,10 @@ export class ReportGenerator {
         }
 
         // Title
-        let title = tmo.title + ' Threat Model';
+        let title = tmo.title; 
+        if (tmo.isRoot()) {
+            title = tmo.title + ' Threat Model'; 
+        }
         if (!tmo.isRoot()) {
             title = title + ' Section';
         }

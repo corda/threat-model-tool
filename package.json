@@ -9,7 +9,8 @@
     "threat-model-tool": "src/scripts/build-threat-model.ts",
     "threat-model-directory": "src/scripts/build-threat-model-directory.ts",
     "threat-model-mkdocs": "src/scripts/build-mkdocs-site.ts",
-    "threat-model-verify": "src/scripts/verify-threat-model.ts"
+    "threat-model-verify": "src/scripts/verify-threat-model.ts",
+    "threat-model-jira": "src/scripts/create-jira-tickets.ts"
   },
   "scripts": {
     "clean:build": "node -e \"require('fs').rmSync('build', { recursive: true, force: true })\"",
@@ -36,7 +37,8 @@
     "build:mkdocsSite": "tsx src/scripts/build-mkdocs-site.ts",
     "build:mkdocsSite:withPDF": "tsx src/scripts/build-mkdocs-site.ts --generatePDF --pdfHeaderNote \"Private and confidential\"",
     "build:mkdocsSite:examples": "tsx src/scripts/build-mkdocs-site.ts --TMDirectory tests/exampleThreatModels --MKDocsDir ./build/mkdocs --MKDocsSiteDir ./build/site-mkdocs --outputDir ./build/mkdocs/docs --templateSiteFolderSRC ../tests/siteTemplate/mkdocs --templateSiteFolderDST ./build/mkdocs",
-    "serve:mkdocsSite": "mkdocs serve --config-file ./build/mkdocs/mkdocs.yml --dev-addr 127.0.0.1:4324"
+    "serve:mkdocsSite": "mkdocs serve --config-file ./build/mkdocs/mkdocs.yml --dev-addr 127.0.0.1:4324",
+    "jira:tickets": "tsx src/scripts/create-jira-tickets.ts"
   },
   "dependencies": {
     "@types/debug": "^4.1.12",
