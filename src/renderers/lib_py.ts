@@ -456,7 +456,7 @@ export function renderAssumptions(tmo: ThreatModel, headerLevel: number = 2, ctx
     if (tmo.assumptions.length > 0) {
         lines.push(makeMarkdownLinkedHeader(headerLevel, 'Assumptions', ctx));
         for (const a of tmo.assumptions) {
-            lines.push(`<dl markdown="block"><dt>${(a as any)._id || a.id}</dt><dd>${a.description} </dd></dl>`);
+            lines.push(`<dl markdown="block"><dt>${(a as any)._id || a.id}</dt>\n<dd markdown="block">\n\n${a.description}\n\n</dd></dl>\n`);
         }
     }
     return lines.join('\n');

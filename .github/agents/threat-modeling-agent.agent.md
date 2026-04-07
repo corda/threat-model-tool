@@ -355,7 +355,7 @@ CVSS:
 -   `inPlace`: Boolean, already implemented?
 -   `public`: Boolean, publicly documented?
 -   `operational`: Boolean, procedural vs. technical control
--   `operator`: Who operates this control (e.g., SECURITY_TEAM_OPERATOR)
+-   `operator`: Who operates this control (e.g., Security Operations Team). IMPORTANT: should be always valued when `operational: true`
 
 **Invalid attribute:**
 ```yaml
@@ -479,7 +479,7 @@ countermeasures:
     inPlace: true        # Already implemented
     public: true         # Publicly documented
     operational: true    # Operational/procedural control (vs technical)
-    operator: SECURITY_OPERATIONS_TEAM  # Who operates this control
+    operator: Security Operations Team  # Who operates this control
 ```
 
 ### Threat Testing Attributes
@@ -670,7 +670,7 @@ threats:
         inPlace: true
         public: true
         operational: true
-        operator: PLATFORM_SECURITY_TEAM
+        operator: Platform Security Team
 
   - ID: REQUEST_INJECTION
     title: Malicious Request Injection via MITM
@@ -795,7 +795,7 @@ threats:
         inPlace: false
         public: true
         operational: true
-        operator: INFRASTRUCTURE_TEAM
+        operator: Infrastructure Team
 ```
 
 ## 6. Other guidelines
