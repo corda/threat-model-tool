@@ -67,7 +67,14 @@ export function makeMarkdownLinkedHeader(
     const hashes = '#'.repeat(level);
     const skipTOCHtml = skipTOC ? "  <span class='skipTOC'></span>" : "";
     const header = `${hashes} ${number}${title.trimEnd()}`;
-    const code = `\n\n${header}${skipTOCHtml ? ' ' + skipTOCHtml : ''} <a id='${anchor}'></a>\n`;
+
+    // When attr_list extension is available (MkDocs), use {#anchor} syntax so that
+    // the TOC / left-menu links use the short ID instead of a slugified heading.
+    const anchorHtml = ctx.useMarkDown_attr_list_ext
+        ? `{#${anchor}}`
+        : `<a id='${anchor}'></a>`;
+
+    const code = `\n\n${header}${skipTOCHtml ? ' ' + skipTOCHtml : ''} ${anchorHtml}\n`;
     return `\n${code}\n`;
 }
 
