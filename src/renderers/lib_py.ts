@@ -503,9 +503,7 @@ function renderAssetDetail(asset: any, headerLevel: number = 1, ctx: any = {}, t
     if (asset.proposal) {
         lines.push(`From proposal: ${asset.proposal}`);
     }
-    // Python uses asset.id (full hierarchical ID) for the anchor tag
-    const hierarchicalId = asset.getHierarchicalId ? asset.getHierarchicalId() : asset.id;
-    lines.push(`<a id="${hierarchicalId}"></a>`);
+    lines.push(`<a id="${asset._id || asset.id}"></a>`);
     lines.push(`**${title}**\n`);
     lines.push('<dl markdown="block">');
     
@@ -710,10 +708,8 @@ function renderKeyTable(assets: any[]): string {
     
     for (const a of assets) {
         const typeVal = a.properties?.type || a.type || '';
-        // Python uses a.id which is the full hierarchical ID
-        const fullId = a.getHierarchicalId ? a.getHierarchicalId() : a.id;
         lines.push(
-            `  <tr><td><strong><a href="#${fullId}">${a.title}</a></strong></td>` +
+            `  <tr><td><strong><a href="#${a._id || a.id}">${a.title}</a></strong></td>` +
             `<td><b>${typeVal}</b><br/>${a.description}</td><td>${a.propertiesHTML()}</td></tr>`
         );
     }

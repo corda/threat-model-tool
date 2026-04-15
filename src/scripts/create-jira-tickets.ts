@@ -36,7 +36,9 @@ import {
     buildRiskReviewUrl,
     riskDescription,
     riskDescriptionFormatted,
+    csvDescriptionMarkdown,
     mapCvssToImpact,
+    mapCvssToPriority,
     riskRating,
     treatmentPlanDate,
     formatJiraDate,
@@ -59,6 +61,7 @@ interface CliArgs {
     dest: string;
     issueType: string;
     tmUri: string;
+    linkPrefix?: string;
     extraFields: Record<string, string>;
 }
 
@@ -72,7 +75,8 @@ function parseArgs(argv: string[]): CliArgs {
 
     const isDryRun = parseFlag(argv, 'dryRun');
     const csvOut = parseOption(argv, 'csv');
-    const isOffline = isDryRun || !!csvOut;
+    const isList = parseFlag(argv, 'list');
+    const isOffline = isDryRun || !!csvOut || isList;
 
     const jira = parseOption(argv, 'jira') ?? process.env.ATLASSIAN_URI ?? (isOffline ? 'https://dry-run.atlassian.net' : '');
     if (!jira) { console.error('Please specify --jira or ATLASSIAN_URI environment'); process.exit(1); }
@@ -96,17 +100,18 @@ function parseArgs(argv: string[]): CliArgs {
     return {
         rootTMYaml,
         tmId:       parseOption(argv, 'TMID'),
-        list:       parseFlag(argv, 'list'),
+        list:       isList,
         dryRun:     isDryRun,
         csvOut,
         format:     (parseOption(argv, 'format') as DescriptionFormat) ?? (csvOut ? 'markdown' : 'wiki'),
-        epic:       parseOption(argv, 'epic'),
+        epic:       parseOption(argv, 'epic') ?? 'PROT-303',
         jira,
         username,
         password,
         dest,
         issueType:  parseOption(argv, 'type') ?? 'Security Bug',
         tmUri:      parseOption(argv, 'tmUri') ?? process.env.R3TM_HOME ?? 'https://example.com',
+        linkPrefix: parseOption(argv, 'linkPrefix'),
         extraFields,
     };
 }
@@ -164,23 +169,26 @@ function exportCsv(
 ): string {
     // Standard Jira CSV-import columns
     const headers = [
+        'Create Ticket',
+        'Section',
         'Summary',
         'Issue Type',
+        'Priority',
         'Project Key',
         'Description',
         'Labels',
-        ...(args.epic ? ['Epic Link'] : []),
+        'Epic Link',
         'CVSS Score',
         'CVSS Vector',
         'Severity',
         'Impact',
-        'Impact Description',
+        ...(args.linkPrefix ? [] : ['Impact Description']),
         'Risk Type',
         'Likelihood',
         'Risk Rating',
-        'Target Date for Closure',
-        'Threat Model',
+        'Due Date',
         'Threat ID',
+        'Ticket Link',
         ...Object.keys(args.extraFields),
     ];
 
@@ -188,7 +196,8 @@ function exportCsv(
 
     for (const threat of threats) {
         if (args.tmId && (threat.threatModel as any)._id !== args.tmId) continue;
-        if (threat.ticketLink) continue; // already linked
+
+        const hasTicket = !!threat.ticketLink;
 
         const cvss   = threat.cvssObject;
         const severity = cvss ? cvss.getSmartScoreSeverity() : 'N/A';
@@ -196,25 +205,33 @@ function exportCsv(
         const vector = cvss ? cvss.clean_vector() : '';
         const rr     = riskRating(threat.getSmartScoreDesc(), 3);
         const tmId   = (threat.threatModel as any)._id ?? '';
+        const section = (threat.threatModel as any).getHierarchicalId?.() ?? tmId;
+
+        const labels = tmId || '';
 
         const cells = [
-            `[R3TM] ${threat.title}`,
+            hasTicket ? 'No' : 'Yes',
+            section,
+            `Remediation for: ${threat.title}`,  // threat ID: ${threat.id}
             args.issueType,
+            mapCvssToPriority(severity),
             args.dest,
-            riskDescriptionFormatted(threat, args.format, args.tmUri),
-            'Design-Issue',
-            ...(args.epic ? [args.epic] : []),
+            args.linkPrefix
+                ? csvDescriptionMarkdown(threat, args.linkPrefix)
+                : riskDescriptionFormatted(threat, args.format, args.tmUri),
+            labels,
+            args.epic ?? '',
             String(score),
             vector,
             severity,
             mapCvssToImpact(severity),
-            threat.impact_desc,
+            ...(args.linkPrefix ? [] : [threat.impact_desc]),
             'Security Risk',
             '3 - Possible',
             String(rr),
             formatJiraDate(treatmentPlanDate(rr)),
-            tmId,
             threat.id,
+            threat.ticketLink ?? '',
             ...Object.values(args.extraFields),
         ];
 
@@ -230,14 +247,14 @@ async function main() {
     const args = parseArgs(process.argv.slice(2));
 
     const rootTM = new ThreatModel(path.resolve(args.rootTMYaml));
-    const unmitigated = rootTM.getThreatsByFullyMitigatedAndOperational(false, false);
-
+    // const unmitigated = rootTM.getThreatsByFullyMitigatedAndOperational(false, false);
+    const unmitigated = rootTM.getThreatsByFullyMitigated(false);
     // ── CSV export mode ─────────────────────────────────────────────────────
     if (args.csvOut) {
         const csv = exportCsv(unmitigated, args);
         const outPath = path.resolve(args.csvOut);
         fs.mkdirSync(path.dirname(outPath), { recursive: true });
-        fs.writeFileSync(outPath, csv, 'utf8');
+        fs.writeFileSync(outPath, '\uFEFF' + csv, 'utf8');
         console.log(`CSV written to ${outPath} (${unmitigated.length} threats)`);
         return;
     }
@@ -282,7 +299,7 @@ async function main() {
             const rr = riskRating(threat.getSmartScoreDesc(), 3);
             console.log(`  Project:     ${args.dest}`);
             console.log(`  Issue Type:  ${args.issueType}`);
-            console.log(`  Summary:     [R3TM] ${threat.title}`);
+            console.log(`  Summary:     Remediation for: ${threat.title}  // ${threat.id}`);
             console.log(`  CVSS Score:  ${score} (${severity})`);
             console.log(`  Impact:      ${mapCvssToImpact(severity)}`);
             console.log(`  Risk Rating: ${rr}`);

@@ -44,22 +44,16 @@ export default class BaseThreatModelObject extends TreeNode {
     }
 
     /**
-     * Get the anchor part of the ID (excluding root hierarchy).
-     * Matches Python tree_node: strips everything up to and including the first dot
-     * from the hierarchical ID.
+     * Get the anchor part of the ID for use in HTML anchor targets/links.
+     * Returns just the local _id, stripping all hierarchy prefixes.
      * 
      * Examples:
      *   FullFeature.THREAT_SQL_INJECTION → THREAT_SQL_INJECTION
-     *   FullFeature.SubComponent.SUB_THREAT → SubComponent.SUB_THREAT
+     *   FullFeature.SubComponent.SUB_THREAT → SUB_THREAT
      *   FullFeature (root, no dot) → FullFeature
      */
     get anchor(): string {
-        const fullId = this.getHierarchicalId();
-        const dotIndex = fullId.indexOf('.');
-        if (dotIndex >= 0) {
-            return fullId.substring(dotIndex + 1);
-        }
-        return fullId;
+        return this._id;
     }
 
     get description(): string {

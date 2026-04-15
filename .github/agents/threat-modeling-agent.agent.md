@@ -800,6 +800,10 @@ threats:
 
 ## 6. Other guidelines
 
+### PlantUML Diagrams
+
+When generating `.puml` diagrams inside `assets/img/` folders, **always reference them as `.svg`** in YAML fields and Markdown content (e.g., `img/MyDiagram.svg`). A separate build process converts `.puml` files to `.svg` — never link directly to the `.puml` source file.
+
 ### Assets 
 
 - External assets usually are out of scope, thre may be datafloes to that asset (e.g. DF_INETNALASSET_TO_EXTERNALASSET) that are in scope, but the external asset itself is not.
