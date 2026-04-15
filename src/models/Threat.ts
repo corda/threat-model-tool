@@ -128,15 +128,19 @@ export default class Threat extends BaseThreatModelObject {
             ret += this.impactDesc + "<br/> ";
         }
         if (this.impactedSecObjs) {
+            const secObjLinks: string[] = [];
             for (const secObj of this.impactedSecObjs) {
                 try {
                     const resolved = secObj.resolve() as any;
                     if (resolved && resolved.linkedImpactMDText) {
-                        ret += resolved.linkedImpactMDText() + "<br/> ";
+                        secObjLinks.push(resolved.linkedImpactMDText());
                     }
                 } catch {
                     throw new Error(`Problem in impactedSecObj definition reference in ${secObj.id}`);
                 }
+            }
+            if (secObjLinks.length > 0) {
+                ret += "**Impacted Security Objectives:** " + secObjLinks.join(', ');
             }
         }
         return ret;

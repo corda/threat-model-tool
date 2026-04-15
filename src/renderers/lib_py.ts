@@ -212,25 +212,27 @@ function renderThreat(threat: Threat, headerLevel: number = 1, ctx: any = {}): s
     // Assets
     const assetRefs = (threat as any).assets || [];
     if (assetRefs.length > 0) {
-        lines.push('<dt>Assets (IDs) involved in this threat:</dt>');
+        const assetItems: string[] = [];
         for (const assetRef of assetRefs) {
             const asset = assetRef.resolve ? assetRef.resolve() : assetRef;
             if (asset) {
-                lines.push(`<dd markdown="block"> - <code><a href="#${asset.anchor}">${asset._id || asset.id}</a></code> - ${asset.title}</dd>`);
+                assetItems.push(`<code><a href="#${asset.anchor}">${asset._id || asset.id}</a></code>`);
             }
         }
+        lines.push(`<dt>Assets (IDs) involved in this threat:</dt><dd>${assetItems.join(', ')}</dd>`);
     }
     
     // Attackers
     const attackerRefs = (threat as any).attackers || [];
     if (attackerRefs.length > 0) {
-        lines.push('<dt>Threat actors:</dt>');
+        const attackerItems: string[] = [];
         for (const attackerRef of attackerRefs) {
             const attacker = attackerRef.resolve ? attackerRef.resolve() : attackerRef;
             if (attacker) {
-                lines.push(`<dd markdown="block"> - <code><a href="#${attacker.anchor}">${attacker._id || attacker.id}</a></code></dd>`);
+                attackerItems.push(`<code><a href="#${attacker.anchor}">${attacker._id || attacker.id}</a></code>`);
             }
         }
+        lines.push(`<dt>Threat actors:</dt><dd>${attackerItems.join(', ')}</dd>`);
     }
     
     // Status
