@@ -10,6 +10,8 @@
  *     --dest PROJECT_KEY \
  *     [--type "Risk"]          # Jira issue type (default: "Security Bug")
  *     [--TMID SubModelId]      # process only a specific child TM
+ *     [--threatId THREAT_ID]   # process only one threat ID
+ *     [--force]                # include threats that already have ticketLink
  *     [--list]                 # list-only mode
  *     [--dryRun]               # show ticket details without calling Jira
  *     [--csv path/out.csv]     # export Jira-importable CSV file
@@ -17,9 +19,9 @@
  *     [--epic EPIC-123]        # parent Epic key for all created issues
  *     [--tmUri https://…]      # base URL for threat-model links
  *     [--field KEY=VALUE …]    # additional Jira fields
- *     [--jira URL]             # or ATLASSIAN_URI env
- *     [--username USER]        # or ATLASSIAN_USERNAME env
- *     [--password TOKEN]       # or ATLASSIAN_PASSWORD env
+ *     [--jira URL]             # or JIRA_BASE_URL / ATLASSIAN_URI env
+ *     [--username USER]        # or JIRA_EMAIL / ATLASSIAN_USERNAME env
+ *     [--password TOKEN]       # or JIRA_API_TOKEN / ATLASSIAN_PASSWORD env
  */
 
 import { createInterface } from 'readline';
@@ -33,6 +35,8 @@ import type Threat from '../models/Threat.js';
 import { parseFlag, parseOption, parseMultiOption } from './cli-options.js';
 import {
     JiraClient,
+    JiraFields,
+    JiraProjectIssueType,
     buildRiskReviewUrl,
     riskDescription,
     riskDescriptionFormatted,
@@ -50,14 +54,17 @@ import {
 interface CliArgs {
     rootTMYaml: string;
     tmId?: string;
+    threatId?: string;
+    force: boolean;
+    create: boolean;
     list: boolean;
     dryRun: boolean;
     csvOut?: string;
     format: DescriptionFormat;
     epic?: string;
-    jira: string;
-    username: string;
-    password: string;
+    jira?: string;
+    username?: string;
+    password?: string;
     dest: string;
     issueType: string;
     tmUri: string;
@@ -78,14 +85,15 @@ function parseArgs(argv: string[]): CliArgs {
     const isList = parseFlag(argv, 'list');
     const isOffline = isDryRun || !!csvOut || isList;
 
-    const jira = parseOption(argv, 'jira') ?? process.env.ATLASSIAN_URI ?? (isOffline ? 'https://dry-run.atlassian.net' : '');
-    if (!jira) { console.error('Please specify --jira or ATLASSIAN_URI environment'); process.exit(1); }
+    const jira = parseOption(argv, 'jira') ?? process.env.JIRA_BASE_URL ?? process.env.ATLASSIAN_URI;
+    const username = parseOption(argv, 'username') ?? process.env.JIRA_EMAIL ?? process.env.ATLASSIAN_USERNAME;
+    const password = parseOption(argv, 'password') ?? process.env.JIRA_API_TOKEN ?? process.env.ATLASSIAN_PASSWORD;
 
-    const username = parseOption(argv, 'username') ?? process.env.ATLASSIAN_USERNAME ?? (isOffline ? 'dry-run' : '');
-    if (!username) { console.error('Please specify --username or ATLASSIAN_USERNAME environment'); process.exit(1); }
-
-    const password = parseOption(argv, 'password') ?? process.env.ATLASSIAN_PASSWORD ?? (isOffline ? 'dry-run' : '');
-    if (!password) { console.error('Please specify --password or ATLASSIAN_PASSWORD environment'); process.exit(1); }
+    if (!isOffline) {
+        if (!jira) { console.error('Please specify --jira or JIRA_BASE_URL / ATLASSIAN_URI environment'); process.exit(1); }
+        if (!username) { console.error('Please specify --username or JIRA_EMAIL / ATLASSIAN_USERNAME environment'); process.exit(1); }
+        if (!password) { console.error('Please specify --password or JIRA_API_TOKEN / ATLASSIAN_PASSWORD environment'); process.exit(1); }
+    }
 
     // Parse --field KEY=VALUE pairs
     const rawFields = parseMultiOption(argv, 'field');
@@ -100,11 +108,14 @@ function parseArgs(argv: string[]): CliArgs {
     return {
         rootTMYaml,
         tmId:       parseOption(argv, 'TMID'),
+        threatId:   parseOption(argv, 'threatId'),
+        force:      parseFlag(argv, 'force'),
+        create:     parseFlag(argv, 'create'),
         list:       isList,
         dryRun:     isDryRun,
         csvOut,
         format:     (parseOption(argv, 'format') as DescriptionFormat) ?? (csvOut ? 'markdown' : 'wiki'),
-        epic:       parseOption(argv, 'epic') ?? 'PROT-303',
+        epic:       parseOption(argv, 'epic'),
         jira,
         username,
         password,
@@ -196,6 +207,7 @@ function exportCsv(
 
     for (const threat of threats) {
         if (args.tmId && (threat.threatModel as any)._id !== args.tmId) continue;
+        if (args.threatId && threat.id !== args.threatId) continue;
 
         const hasTicket = !!threat.ticketLink;
 
@@ -248,7 +260,14 @@ async function main() {
 
     const rootTM = new ThreatModel(path.resolve(args.rootTMYaml));
     // const unmitigated = rootTM.getThreatsByFullyMitigatedAndOperational(false, false);
-    const unmitigated = rootTM.getThreatsByFullyMitigated(false);
+    let unmitigated = rootTM.getThreatsByFullyMitigated(false);
+    if (args.threatId) {
+        unmitigated = unmitigated.filter(t => t.id === args.threatId);
+        if (unmitigated.length === 0) {
+            console.error(`No unmitigated threat found with --threatId=${args.threatId}`);
+            process.exit(1);
+        }
+    }
     // ── CSV export mode ─────────────────────────────────────────────────────
     if (args.csvOut) {
         const csv = exportCsv(unmitigated, args);
@@ -259,11 +278,13 @@ async function main() {
         return;
     }
 
-    const client = new JiraClient({
-        baseUrl: args.jira,
-        username: args.username,
-        token: args.password,
-    });
+    const client = (!args.list && !args.dryRun)
+        ? new JiraClient({
+            baseUrl: args.jira!,
+            username: args.username!,
+            token: args.password!,
+        })
+        : null;
 
     for (let idx = 0; idx < unmitigated.length; idx++) {
         const threat = unmitigated[idx];
@@ -282,7 +303,7 @@ async function main() {
         let ref = '   not linked  ';
         if (existingLink) {
             ref = existingLink.split('/').pop() ?? existingLink;
-            if (!args.list) {
+            if (!args.list && !args.force) {
                 console.log('   (Skipping – already linked)');
                 continue;
             }
@@ -297,9 +318,13 @@ async function main() {
             const severity = cvss ? cvss.getSmartScoreSeverity() : 'N/A';
             const score = threat.getSmartScoreVal();
             const rr = riskRating(threat.getSmartScoreDesc(), 3);
+            const summary = `Remediation for: ${threat.title}`;
+            const description = args.linkPrefix
+                ? csvDescriptionMarkdown(threat, args.linkPrefix)
+                : riskDescriptionFormatted(threat, args.format, args.tmUri);
             console.log(`  Project:     ${args.dest}`);
             console.log(`  Issue Type:  ${args.issueType}`);
-            console.log(`  Summary:     Remediation for: ${threat.title}  // ${threat.id}`);
+            console.log(`  Summary:     ${summary}  // ${threat.id}`);
             console.log(`  CVSS Score:  ${score} (${severity})`);
             console.log(`  Impact:      ${mapCvssToImpact(severity)}`);
             console.log(`  Risk Rating: ${rr}`);
@@ -311,9 +336,74 @@ async function main() {
             if (Object.keys(args.extraFields).length) {
                 console.log(`  Extra Fields: ${JSON.stringify(args.extraFields)}`);
             }
-            console.log(`  Description (first 200 chars):`);
-            console.log(`    ${riskDescriptionFormatted(threat, args.format, args.tmUri).slice(0, 200)}...`);
+            console.log('  Ticket Preview Fields:');
+            console.log(`    Create Ticket: ${existingLink && !args.force ? 'No' : 'Yes'}`);
+            console.log(`    Section: ${(threat.threatModel as any).getHierarchicalId?.() ?? (tm as any)._id}`);
+            console.log(`    Priority: ${mapCvssToPriority(severity)}`);
+            console.log(`    Project Key: ${args.dest}`);
+            console.log(`    Epic Link: ${args.epic ?? ''}`);
+            console.log(`    Threat ID: ${threat.id}`);
+            console.log(`    Ticket Link: ${args.force ? '' : (threat.ticketLink ?? '')}`);
+            console.log('  Description Preview (first 20 lines):');
+            description
+                .split('\n')
+                .slice(0, 20)
+                .forEach((line, i) => console.log(`    ${String(i + 1).padStart(2, '0')}: ${line}`));
             console.log();
+            continue;
+        }
+
+        if (args.create) {
+            if (!client) {
+                throw new Error('Jira client is required for --create');
+            }
+
+            const cvss = threat.cvssObject;
+            const severity = cvss ? cvss.getSmartScoreSeverity() : 'N/A';
+            const score = threat.getSmartScoreVal();
+            const rr = riskRating(threat.getSmartScoreDesc(), 3);
+            const description = args.linkPrefix
+                ? csvDescriptionMarkdown(threat, args.linkPrefix)
+                : riskDescriptionFormatted(threat, args.format, args.tmUri);
+            const summary = `Remediation for: ${threat.title}`;
+
+            const project = await JiraProjectIssueType.fetch(client, args.dest, args.issueType);
+            const fmap = project.fieldMap;
+            const fields: Record<string, unknown> = {
+                project: { key: args.dest },
+                issuetype: { name: args.issueType },
+                summary,
+                description,
+            };
+
+            if (cvss) {
+                if (fmap['CVSS Score']) {
+                    fields[fmap['CVSS Score']] = Number(score);
+                }
+                if (fmap['CVSS Vector']) {
+                    fields[fmap['CVSS Vector']] = cvss.clean_vector();
+                }
+                if (fmap['Severity']) {
+                    const severityId = project.idForFieldValue('Severity', severity);
+                    fields[fmap['Severity']] = severityId ? { id: severityId } : { value: severity };
+                }
+            }
+
+            for (const [k, v] of Object.entries(args.extraFields)) {
+                const key = fmap[k];
+                if (key) {
+                    fields[key] = v;
+                }
+            }
+
+            if (args.epic) {
+                fields.parent = { key: args.epic };
+            }
+
+            const created = await client.createIssue(fields);
+            const ticketRef = `${args.jira!}/browse/${created.key}`;
+            console.log(`CREATED: ${created.key}`);
+            updateThreatWithRef(threat, ticketRef);
             continue;
         }
 
@@ -322,7 +412,7 @@ async function main() {
             const extra = { ...args.extraFields };
             if (args.epic) extra['Epic Link'] = args.epic;
             const url = await buildRiskReviewUrl(
-                client,
+                client!,
                 args.dest,
                 args.issueType,
                 threat,
@@ -335,7 +425,7 @@ async function main() {
 
         const key = (await ask('Enter [JIRA KEY] to link ticket into threat model, or press [ENTER] to continue: ')).toUpperCase();
         if (key) {
-            const ticketRef = `${args.jira}/browse/${key}`;
+            const ticketRef = `${args.jira!}/browse/${key}`;
             updateThreatWithRef(threat, ticketRef);
         }
     }

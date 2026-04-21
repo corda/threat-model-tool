@@ -288,8 +288,11 @@ export function csvDescriptionMarkdown(threat: Threat, linkPrefix?: string): str
 
     const sections: string[] = [];
 
-    // Description (attack field)
-    sections.push(`**Description**\n\n${(threat.attack ?? '').trim()}`);
+    // Start with threat narrative directly (Jira UI already labels this field as Description).
+    const attackText = (threat.attack ?? '').trim();
+    if (attackText) {
+        sections.push(attackText);
+    }
 
     // Impact (raw impactDesc without HTML/secObj appendages)
     const rawImpact = (threat as any).impactDesc as string | undefined;

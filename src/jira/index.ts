@@ -22,6 +22,11 @@ import type Threat from '../models/Threat.js';
 export { JiraClient, type JiraConfig } from './jiraClient.js';
 export { JiraProjectIssueType, JiraFields } from './jiraProject.js';
 export * from './jiraFormatters.js';
+export * from './syncTypes.js';
+export * from './syncAdf.js';
+export * from './syncCsv.js';
+export * from './syncMapping.js';
+export * from './syncPlanner.js';
 
 /**
  * Build a URL that opens the Jira "create issue" form, pre-populated with

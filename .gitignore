@@ -94,3 +94,7 @@ ENV/
 
 .obsidian
 node_modules/
+astro-site/
+py_jira_utils/
+astro-site/*
+
