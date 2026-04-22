@@ -15,6 +15,7 @@
   "scripts": {
     "clean:build": "node -e \"require('fs').rmSync('build', { recursive: true, force: true })\"",
     "build": "tsc && cp src/scripts/pdfScript.js dist/scripts/pdfScript.mjs",
+    "prepare": "npm run build",
     "serve:html": "python3 -m http.server 4325 --directory ./build",
     "verify": "tsx src/scripts/verify-threat-model.ts",
     "verify:examples": "tsx src/scripts/verify-threat-model.ts --TMDirectory tests/exampleThreatModels",
