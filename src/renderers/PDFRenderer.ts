@@ -68,10 +68,8 @@ export class PDFRenderer {
         try {
             execSync(dockerCommand, { stdio: 'inherit', timeout: 300000 });
             console.log(`PDF generated successfully: ${outputPath}`);
-            return;
-        } catch (dockerError) {
-            // Docker failed, try local Node execution as fallback
-            console.warn(`Docker PDF generation failed, falling back to local Node: ${(dockerError as Error).message}`);
+        } catch (error) {
+            throw new Error(`Docker PDF generation failed: ${(error as Error).message}`);
         } finally {
             // Cleanup temporary script
             try {
@@ -79,19 +77,6 @@ export class PDFRenderer {
             } catch (e) {
                 // Ignore cleanup errors
             }
-        }
-
-        // Fallback: run locally with Node (for Apple Silicon dev or when Docker unavailable)
-        const nodeCommand = `node "${scriptSource}" ` +
-            `"file://${absHtmlPath}" ` +
-            `"${absOutputPath}" ` +
-            `"${headerNote.replace(/"/g, '\\"')}"`;
-
-        try {
-            execSync(nodeCommand, { stdio: 'inherit', timeout: 300000 });
-            console.log(`PDF generated successfully (local): ${outputPath}`);
-        } catch (error) {
-            throw new Error(`PDF generation failed (both Docker and local): ${(error as Error).message}`);
         }
     }
 
