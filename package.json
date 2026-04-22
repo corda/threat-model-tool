@@ -6,15 +6,15 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "threat-model-tool": "src/scripts/build-threat-model.ts",
-    "threat-model-directory": "src/scripts/build-threat-model-directory.ts",
-    "threat-model-mkdocs": "src/scripts/build-mkdocs-site.ts",
-    "threat-model-verify": "src/scripts/verify-threat-model.ts",
-    "threat-model-jira": "src/scripts/create-jira-tickets.ts"
+    "threat-model-tool": "dist/scripts/build-threat-model.js",
+    "threat-model-directory": "dist/scripts/build-threat-model-directory.js",
+    "threat-model-mkdocs": "dist/scripts/build-mkdocs-site.js",
+    "threat-model-verify": "dist/scripts/verify-threat-model.js",
+    "threat-model-jira": "dist/scripts/create-jira-tickets.js"
   },
   "scripts": {
     "clean:build": "node -e \"require('fs').rmSync('build', { recursive: true, force: true })\"",
-    "build": "tsc",
+    "build": "tsc && cp src/scripts/pdfScript.js dist/scripts/pdfScript.mjs",
     "serve:html": "python3 -m http.server 4325 --directory ./build",
     "verify": "tsx src/scripts/verify-threat-model.ts",
     "verify:examples": "tsx src/scripts/verify-threat-model.ts --TMDirectory tests/exampleThreatModels",
@@ -47,7 +47,8 @@
     "debug": "^4.4.3",
     "html-escaper": "^3.0.3",
     "js-yaml": "^4.1.0",
-    "marked": "^17.0.2"
+    "marked": "^17.0.2",
+    "puppeteer": "^21.11.0"
   },
   "devDependencies": {
     "@types/cvss": "^1.0.3",

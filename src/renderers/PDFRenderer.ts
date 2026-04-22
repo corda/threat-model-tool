@@ -17,7 +17,7 @@ export class PDFRenderer {
     }
 
     /**
-     * Renders threat model to PDF using Puppeteer via Docker
+     * Renders threat model to PDF using Puppeteer via Docker (with local fallback)
      */
     renderToPDF(outputPath: string, options?: { headerNote?: string }): void {
         const headerNote = options?.headerNote ?? 'Private and confidential';
@@ -28,57 +28,70 @@ export class PDFRenderer {
         const absHtmlPath = path.join(outputDir, htmlFileName);
 
         if (!fs.existsSync(absHtmlPath)) {
-            // Fallback: if HTML doesn't exist yet, we might be calling this from a context 
-            // where only Markdown is expected. But the Docker approach REQUIRES HTML.
             console.warn(`HTML file not found at ${absHtmlPath}. PDF generation requires HTML when using Puppeteer.`);
             return;
         }
 
         const userDir = "/home/pptruser";
         
-        // Find pdfScript.js. It should be in src/scripts/pdfScript.js
-        const scriptSource = path.join(__dirname, '..', 'scripts', 'pdfScript.js');
+        // Find pdfScript.mjs (ESM module). It should be in dist/scripts/pdfScript.mjs
+        const scriptSource = path.join(__dirname, '..', 'scripts', 'pdfScript.mjs');
         
         if (!fs.existsSync(scriptSource)) {
             throw new Error(`Puppeteer script not found at ${scriptSource}`);
         }
 
-        // We'll copy it to a temporary location in the output directory to make mounting easier
+        // Copy script to temp directory for Docker mounting
         const tempScriptsDir = path.join(outputDir, '.scripts');
         fs.mkdirSync(tempScriptsDir, { recursive: true });
-        const scriptDest = path.join(tempScriptsDir, 'pdfScript.js');
+        const scriptDest = path.join(tempScriptsDir, 'pdfScript.mjs');
         fs.copyFileSync(scriptSource, scriptDest);
 
-        // Pre-create the PDF file with open permissions so the Docker user (pptruser) can write to it.
-        // This avoids EACCES errors when the host directory is owned by a different user than the container user.
+        // Pre-create PDF file with open permissions for Docker user
         try {
             fs.writeFileSync(absOutputPath, '');
             fs.chmodSync(absOutputPath, 0o666);
         } catch (e) {
-            console.warn(`Warning: Could not pre-create or chmod PDF file: ${e}`);
+            console.warn(`Warning: Could not pre-create PDF file: ${e}`);
         }
 
-        const dockerCommand = `docker run --init --platform linux/amd64 ` +
+        // Try Docker first (for CI environments like GitHub Actions)
+        const dockerCommand = `docker run --init --cap-add=SYS_ADMIN ` +
             `-v "${path.resolve(tempScriptsDir)}:${userDir}/scripts" ` +
             `-v "${path.resolve(outputDir)}:${userDir}/output" ` +
             `--rm ghcr.io/puppeteer/puppeteer:latest ` +
-            `node scripts/pdfScript.js ` +
+            `node scripts/pdfScript.mjs ` +
             `"file://${userDir}/output/${htmlFileName}" ` +
-            `"output/${fileName}" ` +
+            `"${userDir}/output/${fileName}" ` +
             `"${headerNote.replace(/"/g, '\\"')}"`;
 
         try {
-            execSync(dockerCommand, { stdio: 'inherit' });
+            execSync(dockerCommand, { stdio: 'inherit', timeout: 300000 });
             console.log(`PDF generated successfully: ${outputPath}`);
-        } catch (error) {
-            throw new Error(`Docker PDF generation failed: ${(error as Error).message}`);
+            return;
+        } catch (dockerError) {
+            // Docker failed, try local Node execution as fallback
+            console.warn(`Docker PDF generation failed, falling back to local Node: ${(dockerError as Error).message}`);
         } finally {
-            // Cleanup the temporary script
+            // Cleanup temporary script
             try {
                 fs.rmSync(tempScriptsDir, { recursive: true, force: true });
             } catch (e) {
                 // Ignore cleanup errors
             }
+        }
+
+        // Fallback: run locally with Node (for Apple Silicon dev or when Docker unavailable)
+        const nodeCommand = `node "${scriptSource}" ` +
+            `"file://${absHtmlPath}" ` +
+            `"${absOutputPath}" ` +
+            `"${headerNote.replace(/"/g, '\\"')}"`;
+
+        try {
+            execSync(nodeCommand, { stdio: 'inherit', timeout: 300000 });
+            console.log(`PDF generated successfully (local): ${outputPath}`);
+        } catch (error) {
+            throw new Error(`PDF generation failed (both Docker and local): ${(error as Error).message}`);
         }
     }
 

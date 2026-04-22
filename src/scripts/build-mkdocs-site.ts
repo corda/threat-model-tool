@@ -44,8 +44,13 @@ interface StagedTMEntry extends TMEntry {
 }
 
 function getParentMkdocsInitDir(): string {
-    // Assets are located in src/assets_MKDOCS_init
-    return path.resolve(__dirname, '..', 'assets_MKDOCS_init');
+    // Primary: same level as this file (src/assets_MKDOCS_init when running via tsx,
+    // or dist/assets_MKDOCS_init when running compiled — but assets aren't compiled).
+    // Fallback: src/assets_MKDOCS_init relative to package root (for compiled dist/ runs).
+    const primary = path.resolve(__dirname, '..', 'assets_MKDOCS_init');
+    if (fs.existsSync(primary)) return primary;
+    const packageRoot = path.resolve(__dirname, '..', '..');
+    return path.join(packageRoot, 'src', 'assets_MKDOCS_init');
 }
 
 function copyDirRecursive(src: string, dest: string): void {
@@ -210,8 +215,13 @@ function stageTM(
 
     fs.writeFileSync(path.join(tmDocsDir, 'index.md'), mdContent, 'utf-8');
 
-    const htmlSource = path.join(tmStagingDir, `${tm.id}.html`);
-    if (fs.existsSync(htmlSource)) {
+    const htmlSourceCandidates = [
+        path.join(tmStagingDir, `${tm.id}.html`),
+        path.join(tmStagingDir, `${tm.name}.html`),
+        path.join(tmStagingDir, 'index.html'),
+    ];
+    const htmlSource = htmlSourceCandidates.find(candidate => fs.existsSync(candidate));
+    if (htmlSource) {
         const htmlContent = fs.readFileSync(htmlSource, 'utf-8');
         fs.writeFileSync(path.join(tmDocsDir, `${tm.id}.html`), htmlContent, 'utf-8');
     }
@@ -220,6 +230,7 @@ function stageTM(
     const pdfSourceCandidates = [
         path.join(tmStagingDir, `${tm.id}.pdf`),
         path.join(tmStagingDir, `${tm.name}.pdf`),
+        path.join(tmStagingDir, 'index.pdf'),
     ];
     const pdfSource = pdfSourceCandidates.find(candidate => fs.existsSync(candidate));
     if (pdfSource) {
@@ -336,6 +347,7 @@ export function buildMkdocsSite(
             buildSingleTM(tm.yamlPath, tmStagingDir, {
                 ...tmOptions,
                 template,
+                fileName: 'index',
                 headerNumbering: false,
                 forceToc: false,
                 generatePDF: false,
@@ -352,6 +364,7 @@ export function buildMkdocsSite(
             buildSingleTM(tm.yamlPath, tmStagingDir, {
                 ...tmOptions,
                 template,
+                fileName: 'index',
                 headerNumbering,
                 forceToc: true,
                 generatePDF: Boolean(tmOptions.generatePDF),

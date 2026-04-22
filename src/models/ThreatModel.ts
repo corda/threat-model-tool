@@ -106,7 +106,7 @@ export default class ThreatModel extends BaseThreatModelObject {
         const refids = this.getAllDown(REFID);
         for (const ref of refids) {
             if (!ref.resolve()) {
-                throw new Error(`REFID '${ref.REFIDValue}' not found in ${ref.parent?.id}${ref.getFileAndLineErrorMessage()}`);
+                throw new Error(`REFID '${ref.REFIDValue}' not found in ${ref.parent?.data?.ID}${ref.getFileAndLineErrorMessage()}`);
             }
         }
     }

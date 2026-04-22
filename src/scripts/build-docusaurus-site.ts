@@ -473,7 +473,7 @@ export function buildDocusaurusSite(
         fs.mkdirSync(tmStagingDir, { recursive: true });
 
         try {
-            buildSingleTM(tm.yamlPath, tmStagingDir, { ...tmOptions, template });
+            buildSingleTM(tm.yamlPath, tmStagingDir, { ...tmOptions, template, fileName: 'index' });
         } catch (err) {
             console.error(`ERROR building ${tm.name}: ${err}`);
             continue;
