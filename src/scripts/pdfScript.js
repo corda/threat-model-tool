@@ -69,13 +69,14 @@ async function printPDF(aurl, outputPath, headerNote) {
       </div>
     `,
     format: 'A4',
-    preferCSSPageSize: true,
+    preferCSSPageSize: false,
     printBackground: true,
+    scale: 0.65,
     path: outputPath,
     timeout: TIMEOUT_MS,
     margin: {
-      top: '60px',
-      bottom: '60px',
+      top: '40px',
+      bottom: '40px',
       left: '40px',
       right: '40px'
     }

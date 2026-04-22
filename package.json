@@ -14,7 +14,7 @@
   },
   "scripts": {
     "clean:build": "node -e \"require('fs').rmSync('build', { recursive: true, force: true })\"",
-    "build": "tsc && cp src/scripts/pdfScript.js dist/scripts/pdfScript.mjs",
+    "build": "tsc && cp src/scripts/pdfScript.js dist/scripts/pdfScript.mjs && rm -rf dist/assets_MD_HTML dist/assets_MKDOCS_init && mkdir -p dist/assets_MD_HTML dist/assets_MKDOCS_init && cp -R src/assets_MD_HTML/. dist/assets_MD_HTML && cp -R src/assets_MKDOCS_init/. dist/assets_MKDOCS_init",
     "prepare": "npm run build",
     "serve:html": "python3 -m http.server 4325 --directory ./build",
     "verify": "tsx src/scripts/verify-threat-model.ts",
