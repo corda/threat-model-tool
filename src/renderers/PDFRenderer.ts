@@ -32,8 +32,6 @@ export class PDFRenderer {
             return;
         }
 
-        const userDir = "/home/pptruser";
-        
         // Find pdfScript.mjs (ESM module). It should be in dist/scripts/pdfScript.mjs
         const scriptSource = path.join(__dirname, '..', 'scripts', 'pdfScript.mjs');
         
@@ -55,14 +53,22 @@ export class PDFRenderer {
             console.warn(`Warning: Could not pre-create PDF file: ${e}`);
         }
 
-        // Try Docker first (for CI environments like GitHub Actions)
+        // Select Docker image based on host architecture.
+        // ghcr.io/puppeteer/puppeteer is amd64-only; zenika/alpine-chrome is multi-arch.
+        const isArm64 = process.arch === 'arm64';
+        const image = isArm64
+            ? 'zenika/alpine-chrome:with-puppeteer'
+            : 'ghcr.io/puppeteer/puppeteer:latest';
+        const containerUser = isArm64 ? '/usr/src/app' : '/home/pptruser';
+
         const dockerCommand = `docker run --init --cap-add=SYS_ADMIN ` +
-            `-v "${path.resolve(tempScriptsDir)}:${userDir}/scripts" ` +
-            `-v "${path.resolve(outputDir)}:${userDir}/output" ` +
-            `--rm ghcr.io/puppeteer/puppeteer:latest ` +
+            `-v "${path.resolve(tempScriptsDir)}:${containerUser}/scripts" ` +
+            `-v "${path.resolve(outputDir)}:${containerUser}/output" ` +
+            `-w "${containerUser}" ` +
+            `--rm ${image} ` +
             `node scripts/pdfScript.mjs ` +
-            `"file://${userDir}/output/${htmlFileName}" ` +
-            `"${userDir}/output/${fileName}" ` +
+            `"file://${containerUser}/output/${htmlFileName}" ` +
+            `"${containerUser}/output/${fileName}" ` +
             `"${headerNote.replace(/"/g, '\\"')}"`;
 
         try {
