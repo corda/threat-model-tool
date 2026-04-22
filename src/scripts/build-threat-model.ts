@@ -256,6 +256,7 @@ if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith
     let outputDir = './build';
     let mainTitle = '';
     let generatePDF = false;
+    let pdfHeaderNote = 'Private and confidential';
     let template = 'full';
     let visibility: 'full' | 'public' = 'full';
     let headerNumbering = true;
@@ -268,6 +269,10 @@ if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith
             mainTitle = args[++i];
         } else if (arg === '--generatePDF') {
             generatePDF = true;
+        } else if (arg.startsWith('--pdfHeaderNote=')) {
+            pdfHeaderNote = arg.slice('--pdfHeaderNote='.length);
+        } else if (arg === '--pdfHeaderNote' && i + 1 < args.length) {
+            pdfHeaderNote = args[++i];
         } else if (arg === '--skipDiagrams') {
             skipDiagrams = true;
         } else if (arg === '--no-headerNumbering') {
@@ -292,7 +297,7 @@ if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith
     }
 
     if (!yamlFile) {
-        console.error('Usage: build-threat-model.ts <yaml-file> [output-dir (default: ./build)] [--mainTitle "Title"] [--generatePDF] [--template name] [--visibility full|public] [--no-headerNumbering] [--assetFolder <path>] [--skipDiagrams]');
+        console.error('Usage: build-threat-model.ts <yaml-file> [output-dir (default: ./build)] [--mainTitle "Title"] [--generatePDF] [--pdfHeaderNote "text"] [--template name] [--visibility full|public] [--no-headerNumbering] [--assetFolder <path>] [--skipDiagrams]');
         console.error('Note: defaults keep generated artifacts under ./build/* to avoid polluting source folders.');
         process.exit(1);
     }
@@ -301,6 +306,7 @@ if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith
         buildSingleTM(yamlFile, outputDir, {
             mainTitle,
             generatePDF,
+            pdfHeaderNote,
             template,
             visibility,
             headerNumbering,
