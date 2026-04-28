@@ -222,7 +222,7 @@ export function buildSingleTM(yamlFile: string, outputDir: string, options: Buil
                 console.log(`Using Docker PlantUML to render ${pumlFiles.length} diagram(s) to SVG...`);
 
                 execSync(
-                    `docker run --rm --user ${uid}:${gid} -v "${imgDir}:/data" -w /data plantuml/plantuml:sha-d2b2bcf -verbose -tsvg ${dockerRelativeQuoted}`,
+                    `docker run --rm --user ${uid}:${gid} -v "${imgDir}:/data" -w /data plantuml/plantuml:sha-d2b2bcf -tsvg ${dockerRelativeQuoted}`,
                     { stdio: 'inherit' }
                 );
             }

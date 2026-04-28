@@ -268,6 +268,12 @@ threatType: Elevation of Privilege, Denial of Service, Repudiation
 Do NOT use values outside STRIDE (e.g., ❌ "Insecure Design", ❌ "Misconfiguration", ❌ "Supply Chain").
 Map non-STRIDE concepts to the closest STRIDE category based on the primary impact.
 
+### Threat Title Style
+-   Threat `title` values should be human-readable, not automatically all caps.
+-   Use normal sentence case or conventional title case, whichever reads most naturally for the phrase.
+-   Keep acronyms and established initialisms capitalized where appropriate (for example, `JWT`, `TLS`, `DoS`, `SQL`).
+-   Do not mirror the `ID` formatting in the `title` field.
+
 ### ID Conventions
 -   MUST be UPPERCASE with underscores (e.g., `WEAK_CRYPTO`, `SQL_INJECTION_ATTACK`)
 -   Must be unique within the threat model
@@ -607,7 +613,7 @@ analysis: |
 
 threats:
   - ID: JWT_SECRET_COMPROMISE
-    title: JWT Signing Secret Compromise
+    title: JWT Signing secret compromise
     attack: |
       Attacker gains access to the gateway server's configuration files or environment
       variables and exfiltrates the JWT signing secret stored in plaintext format. This
@@ -673,7 +679,7 @@ threats:
         operator: Platform Security Team
 
   - ID: REQUEST_INJECTION
-    title: Malicious Request Injection via MITM
+    title: Malicious request injection via MITM
     attack: |
       Attacker performs man-in-the-middle (MITM) attack on client connection to inject
       or modify HTTP requests. This could be achieved through:
