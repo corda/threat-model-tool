@@ -394,7 +394,7 @@ export function buildAstroSite(
             buildSingleTM(tm.yamlPath, tmStagingDir, { ...tmOptions, template, fileName: 'index' });
         } catch (err) {
             console.error(`ERROR building ${tm.name}: ${err}`);
-            continue;
+            process.exit(1);
         }
 
         // Copy MD to docs/<TM>/index.md with frontmatter

@@ -83,14 +83,24 @@ export default class ThreatModel extends BaseThreatModelObject {
             for (const childRef of tmDict.children) {
                 if (childRef.REFID) {
                     // Load child threat model
-                    const childPath = path.join(path.dirname(fileIn), childRef.REFID, `${childRef.REFID}.yaml`);
+                    const parentDir = path.dirname(fileIn);
+                    const childDir = path.join(parentDir, childRef.REFID);
+                    const childPath = path.join(childDir, `${childRef.REFID}.yaml`);
                     if (fs.existsSync(childPath)) {
+                        ThreatModel.assertCaseSensitivePath(parentDir, childRef.REFID, `${childRef.REFID}.yaml`);
                         new ThreatModel(childPath, this, publicFlag, versionsFilterStr);
                     } else {
                         // Try same directory
-                        const childPathSameDir = path.join(path.dirname(fileIn), `${childRef.REFID}.yaml`);
+                        const childPathSameDir = path.join(parentDir, `${childRef.REFID}.yaml`);
                         if (fs.existsSync(childPathSameDir)) {
+                            ThreatModel.assertCaseSensitiveFile(parentDir, `${childRef.REFID}.yaml`);
                             new ThreatModel(childPathSameDir, this, publicFlag, versionsFilterStr);
+                        } else {
+                            throw new Error(
+                                `Child threat model '${childRef.REFID}' referenced in ${this._id} not found. ` +
+                                `Searched:\n  ${childPath}\n  ${childPathSameDir}\n` +
+                                `Check that folder name, YAML filename, and ID all match the REFID exactly (case-sensitive).`
+                            );
                         }
                     }
                 }
@@ -107,6 +117,40 @@ export default class ThreatModel extends BaseThreatModelObject {
         for (const ref of refids) {
             if (!ref.resolve()) {
                 throw new Error(`REFID '${ref.REFIDValue}' not found in ${ref.parent?.data?.ID}${ref.getFileAndLineErrorMessage()}`);
+            }
+        }
+    }
+
+    /**
+     * Verify that a directory entry and a file inside it match the expected names
+     * exactly (case-sensitive). macOS HFS+/APFS is case-insensitive by default,
+     * so fs.existsSync('ui_indexer') succeeds even if the real name is 'UI_Indexer'.
+     * This check prevents silent CI failures on Linux.
+     */
+    private static assertCaseSensitivePath(parentDir: string, expectedDir: string, expectedFile: string): void {
+        ThreatModel.assertCaseSensitiveEntry(parentDir, expectedDir);
+        ThreatModel.assertCaseSensitiveEntry(path.join(parentDir, expectedDir), expectedFile);
+    }
+
+    private static assertCaseSensitiveFile(dir: string, expectedFile: string): void {
+        ThreatModel.assertCaseSensitiveEntry(dir, expectedFile);
+    }
+
+    private static assertCaseSensitiveEntry(dir: string, expected: string): void {
+        let entries: string[];
+        try {
+            entries = fs.readdirSync(dir);
+        } catch {
+            return; // directory unreadable — let downstream code handle the error
+        }
+        if (!entries.includes(expected)) {
+            const actual = entries.find(e => e.toLowerCase() === expected.toLowerCase());
+            if (actual) {
+                throw new Error(
+                    `Case mismatch: expected '${expected}' but found '${actual}' in ${dir}. ` +
+                    `Rename the ${fs.statSync(path.join(dir, actual)).isDirectory() ? 'folder' : 'file'} ` +
+                    `to match the REFID exactly. macOS is case-insensitive but Linux CI is not.`
+                );
             }
         }
     }

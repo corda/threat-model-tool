@@ -373,6 +373,7 @@ export function buildMkdocsSite(
             built.push({ tm, tmStagingDir });
         } catch (err) {
             console.error(`ERROR building ${tm.name}: ${err}`);
+            process.exit(1);
         }
     }
 

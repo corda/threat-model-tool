@@ -318,7 +318,7 @@ export function buildHugoSite(
             buildSingleTM(tm.yamlPath, tmStagingDir, { ...tmOptions, template, fileName: 'index' });
         } catch (err) {
             console.error(`ERROR building ${tm.name}: ${err}`);
-            continue;
+            process.exit(1);
         }
 
         const mdFile = path.join(tmStagingDir, `${tm.id}.md`);

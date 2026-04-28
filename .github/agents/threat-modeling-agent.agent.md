@@ -921,6 +921,10 @@ Before finalizing a threat model, verify:
 - [ ] `fullyMitigated` status reflects actual countermeasure coverage
 - [ ] Missing countermeasures for `fullyMitigated: false` threats are identified
 
+**File & Folder Naming (Case-Sensitivity):**
+- [ ] For every `children: - REFID: Foo` entry, the folder name, YAML filename, and `ID:` inside the YAML all use **exactly** the same casing (e.g., `Foo/Foo.yaml` with `ID: Foo`)
+- [ ] macOS is case-insensitive so mismatches are invisible locally — CI runs on Linux which is **case-sensitive** and will silently skip mismatched children
+
 **Verification:**
 - [ ] Ran `verify-threat-model` on modified file(s) — passes with no errors
 - [ ] All REFID references resolve correctly
