@@ -1,5 +1,8 @@
 export function parseFlag(args: string[], flag: string): boolean {
-    return args.includes(`--${flag}`);
+    if (args.includes(`--${flag}`)) return true;
+    // Allow single-dash short form (e.g. `-h`) for single-character flags only,
+    // so long flags like `--help` aren't accidentally matched as `-help`.
+    return flag.length === 1 && args.includes(`-${flag}`);
 }
 
 export function parseOption(args: string[], flag: string): string | undefined {
