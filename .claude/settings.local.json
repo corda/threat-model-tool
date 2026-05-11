@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "*",
+      "Bash(npm run *)",
+      "Bash(mkdir -p /tmp/tm-init-test)",
+      "Bash(rm -rf /tmp/tm-init-test/MyService)",
+      "Bash(npx tsx *)",
+      "Bash(rm -rf /tmp/tm-init-build-test)",
+      "Bash(mkdir -p /tmp/tm-init-build-test)",
+      "Bash(node /Users/david.cervigni/workspace/threat-model-tool/dist/scripts/init-threat-model.js --name BuiltViaJs --outputDir /tmp/tm-init-build-test)",
+      "Read(//tmp/tm-init-build-test/**)",
+      "Bash(node /Users/david.cervigni/workspace/threat-model-tool/dist/scripts/init-threat-model.js --help)",
+      "Bash(node /Users/david.cervigni/workspace/threat-model-tool/dist/scripts/init-threat-model.js)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(node ./node_modules/threat-model-tool/dist/scripts/init-threat-model.js --name ExampleTM --outputDir ./threatModels)",
+      "Bash(rm -rf threatModels)",
+      "Bash(./node_modules/.bin/threat-model-init --name ExampleTM --outputDir ./threatModels)",
+      "Bash(npx threat-model-init *)"
+    ]
+  }
+}

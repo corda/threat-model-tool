@@ -1,0 +1,36 @@
+{
+  "log": {
+    "entries": [
+      {
+        "startedDateTime": "2026-05-10T10:00:00.000Z",
+        "request": {
+          "method": "GET",
+          "url": "https://api.example.com/v1/health"
+        },
+        "response": {
+          "status": 200
+        }
+      },
+      {
+        "startedDateTime": "2026-05-10T10:00:01.000Z",
+        "request": {
+          "method": "POST",
+          "url": "https://api.example.com/v1/login"
+        },
+        "response": {
+          "status": 401
+        }
+      },
+      {
+        "startedDateTime": "2026-05-10T10:00:02.000Z",
+        "request": {
+          "method": "GET",
+          "url": "https://cdn.example.com/assets/app.js"
+        },
+        "response": {
+          "status": 200
+        }
+      }
+    ]
+  }
+}

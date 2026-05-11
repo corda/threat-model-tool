@@ -1,0 +1,21 @@
+messagePrefixes:
+  GET: "REQ "
+  POST: "REQ "
+trustBoundaries:
+  - ID: THIRD_PARTY
+    title: Third Party Boundary
+    color: "#F5F5F5"
+participants:
+  - ID: EXAMPLE_EDGE_CDN
+    title: Example Edge/CDN
+    domains:
+      - "*.example.com"
+    trustBoundary: THIRD_PARTY
+    inScope: true
+    properties:
+      authentication: none
+      authorization: public
+      dataSensitivity: low
+      notes:
+        - static content
+        - shared edge delivery

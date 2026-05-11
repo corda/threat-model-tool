@@ -224,7 +224,7 @@ function exportCsv(
         const cells = [
             hasTicket ? 'No' : 'Yes',
             section,
-            `Remediation for: ${threat.title}`,  // threat ID: ${threat.id}
+            tmId ? `${tmId} TM - Remediation for: ${threat.title}` : `Remediation for: ${threat.title}`,  // threat ID: ${threat.id}
             args.issueType,
             mapCvssToPriority(severity),
             args.dest,
@@ -318,7 +318,9 @@ async function main() {
             const severity = cvss ? cvss.getSmartScoreSeverity() : 'N/A';
             const score = threat.getSmartScoreVal();
             const rr = riskRating(threat.getSmartScoreDesc(), 3);
-            const summary = `Remediation for: ${threat.title}`;
+            const summary = (tm as any)._id
+                ? `${(tm as any)._id} TM - Remediation for: ${threat.title}`
+                : `Remediation for: ${threat.title}`;
             const description = args.linkPrefix
                 ? csvDescriptionMarkdown(threat, args.linkPrefix)
                 : riskDescriptionFormatted(threat, args.format, args.tmUri);
@@ -365,7 +367,9 @@ async function main() {
             const description = args.linkPrefix
                 ? csvDescriptionMarkdown(threat, args.linkPrefix)
                 : riskDescriptionFormatted(threat, args.format, args.tmUri);
-            const summary = `Remediation for: ${threat.title}`;
+            const summary = (tm as any)._id
+                ? `${(tm as any)._id} TM - Remediation for: ${threat.title}`
+                : `Remediation for: ${threat.title}`;
 
             const project = await JiraProjectIssueType.fetch(client, args.dest, args.issueType);
             const fmap = project.fieldMap;

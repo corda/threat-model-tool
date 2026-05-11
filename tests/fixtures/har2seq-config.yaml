@@ -1,0 +1,21 @@
+browserParticipant: Browser
+excludePaths:
+  - api.example.com/v1/health
+messagePrefixes:
+  GET: "REQ: "
+  POST: "AUTH: "
+rendering:
+  includeSourceHostInLabel: false
+  singleCallPerSourceHost: false
+  singleCallPerParticipant: false
+trustBoundaries:
+  - ID: FIRST_PARTY
+    title: First Party Boundary
+    color: "#D7F3E3"
+participants:
+  - ID: API_EXAMPLE_COM
+    title: api.example.com
+    domains:
+      - api.example.com
+    trustBoundary: FIRST_PARTY
+    inScope: true

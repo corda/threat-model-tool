@@ -1,0 +1,20 @@
+trustBoundaries:
+  - ID: FIRST_PARTY
+    title: First Party Boundary
+    color: "#D7F3E3"
+  - ID: THIRD_PARTY
+    title: Third Party Boundary
+    color: "#F5F5F5"
+participants:
+  - ID: API_EXAMPLE_COM
+    title: api.example.com
+    domains:
+      - api.example.com
+    trustBoundary: FIRST_PARTY
+    inScope: true
+  - ID: CDN_EXAMPLE_COM
+    title: cdn.example.com
+    domains:
+      - cdn.example.com
+    trustBoundary: THIRD_PARTY
+    inScope: true

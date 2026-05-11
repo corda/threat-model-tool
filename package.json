@@ -10,14 +10,20 @@
     "threat-model-directory": "dist/scripts/build-threat-model-directory.js",
     "threat-model-mkdocs": "dist/scripts/build-mkdocs-site.js",
     "threat-model-verify": "dist/scripts/verify-threat-model.js",
-    "threat-model-jira": "dist/scripts/create-jira-tickets.js"
+    "threat-model-init": "dist/scripts/init-threat-model.js",
+    "threat-model-jira": "dist/scripts/create-jira-tickets.js",
+    "threat-model-har2seq": "dist/scripts/har2seq.js",
+    "threat-model-har-config": "dist/scripts/init-har-config.js"
   },
   "scripts": {
     "clean:build": "node -e \"require('fs').rmSync('build', { recursive: true, force: true })\"",
     "build": "tsc && cp src/scripts/pdfScript.js dist/scripts/pdfScript.mjs && rm -rf dist/assets_MD_HTML dist/assets_MKDOCS_init && mkdir -p dist/assets_MD_HTML dist/assets_MKDOCS_init && cp -R src/assets_MD_HTML/. dist/assets_MD_HTML && cp -R src/assets_MKDOCS_init/. dist/assets_MKDOCS_init",
     "prepare": "npm run build",
     "serve:html": "python3 -m http.server 4325 --directory ./build",
+    "init": "tsx src/scripts/init-threat-model.ts",
     "verify": "tsx src/scripts/verify-threat-model.ts",
+    "har2seq": "tsx src/scripts/har2seq.ts",
+    "har:init-config": "tsx src/scripts/init-har-config.ts",
     "verify:examples": "tsx src/scripts/verify-threat-model.ts --TMDirectory tests/exampleThreatModels",
     "test": "tsx --test $(find tests -name '*.test.ts')",
     "test:unit": "tsx --test $(find tests -name '*.test.ts')",

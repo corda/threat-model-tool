@@ -12,6 +12,34 @@ export { default as BaseThreatModelObject } from './models/BaseThreatModelObject
 
 export { default as CVSSHelper } from './utils/CVSSHelper.js';
 export { default as TreeNode } from './utils/TreeNode.js';
+export {
+    loadHarFile,
+    loadHar2SeqConfig,
+    generate_puml_sequence,
+    generate_indexHAR,
+    create_indexHAR_file,
+    generate_starter_HAR_config_yaml,
+    create_starter_HAR_config_file,
+    load_indexHAR_file,
+    generateSequenceFromHar,
+    generateMermaidFromHar,
+    generatePlantUmlFromHar,
+    buildSequenceFromHarFile,
+    buildMermaidFromHarFile,
+    buildPlantUmlFromHarFile,
+    type Har2SeqConfig,
+    type Har2SeqOptions,
+    type SequenceFormat,
+    type TrustBoundaryConfig,
+    type CollapseParticipantConfig,
+    type ParticipantPropertyConfig,
+    type ParticipantPropertyValue,
+    type HarFile,
+    type HarIndexFile,
+    type HarIndexEntry,
+    type HarIndexLineRefs,
+    type StarterConfigOptions,
+} from './utils/HAR_2_TM_tool.js';
 
 export { loadThreatModel, parseThreatModel } from './parser.js';
 

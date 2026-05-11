@@ -43,11 +43,23 @@ threatModels/
     MySystem.yaml
 ```
 
-You can copy one of these as a starting point:
+**Easiest:** scaffold a schema-valid skeleton with the built-in `init` script:
+
+```bash
+# from this repo
+npm run init -- --name MySystem --outputDir ./threatModels --author "Your Name"
+
+# or, if you installed threat-model-tool as a dependency in another project
+npx threat-model-init --name MySystem --outputDir ./threatModels --author "Your Name"
+```
+
+This creates `./threatModels/MySystem/MySystem.yaml` with a minimal but valid skeleton (security objectives, an asset, an attacker, one threat, one countermeasure — all marked `TODO`). Run `npm run verify -- ./threatModels/MySystem/MySystem.yaml` to confirm.
+
+Alternatively, copy one of the existing examples as a starting point:
 - `tests/exampleThreatModels/Example1/Example1.yaml`
 - `tests/exampleThreatModels/FullFeature/FullFeature.yaml`
 
-After copying, update the YAML `ID` to match your file/folder name (for example `MySystem`) to avoid filename/ID mismatch warnings.
+If you copy an example, update the YAML `ID` to match your file/folder name (for example `MySystem`) to avoid filename/ID mismatch warnings.
 
 ### 2) Add simple scripts to `package.json`
 
@@ -569,11 +581,13 @@ The Hugo project scaffold lives in `hugo-site/` and is managed by `build-hugo-si
 - `src/models/`: Core data models (Threat, Asset, Countermeasure, etc.).
 - `src/renderers/`: Logic for converting models into Markdown, PlantUML, or Table of Contents.
 - `src/utils/`: Shared utilities like `CVSSHelper` and `HeadingNumberer`.
-- `src/scripts/`: CLI entry points (`build-threat-model.ts`, `build-astro-site.ts`, `build-docusaurus-site.ts`, `build-hugo-site.ts`, `build-mkdocs-site.ts`).
+- `src/scripts/`: CLI entry points (`build-threat-model.ts`, `build-astro-site.ts`, `build-docusaurus-site.ts`, `build-hugo-site.ts`, `build-mkdocs-site.ts`, `har2seq.ts`).
 - `astro-site/`: Starlight project scaffold (managed by `build-astro-site.ts`).
 - `docusaurus-site/`: Docusaurus project scaffold (managed by `build-docusaurus-site.ts`).
 - `hugo-site/`: Hugo project scaffold (managed by `build-hugo-site.ts`).
 - `tests/`: Test suites using `node:test` + `node:assert`.
+
+For HAR to threat-modeling sequence workflows, starter config generation, and the HAR -> index -> LLM -> config -> diagram -> threat model flow, see `docs/HAR_2_TM_tool.md` and `docs/HAR_2_TM_tool_config_workflow.md`.
 
 ## Troubleshooting
 
