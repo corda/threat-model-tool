@@ -35,7 +35,8 @@ test('har2seq CLI supports explicit HighLevelDFD flags', () => {
         ], repoRoot);
 
         const output = fs.readFileSync(outFile, 'utf8');
-        assert.ok(output.includes('note right of S1 #E0E0E0'));
+        assert.ok(output.includes('note over S1 #E0E0E0'));
+        assert.ok(output.includes('<b>Example Edge/CDN hosts:</b>'));
         assert.ok(output.includes('BROWSER -> S1: Browser flows'));
         assert.ok(!output.includes('S1 --> BROWSER'));
     } finally {
@@ -57,6 +58,27 @@ test('har2seq CLI emits the default PlantUML bundle when --out is omitted', () =
         assert.ok(fs.existsSync(path.join(outDir, 'build', 'har', 'sample.har.sequence.puml')));
         assert.ok(fs.existsSync(path.join(outDir, 'build', 'har', 'sample.har.sourceHostSummary.puml')));
         assert.ok(fs.existsSync(path.join(outDir, 'build', 'har', 'sample.har.HighLevelDFD.puml')));
+    } finally {
+        fs.rmSync(outDir, { recursive: true, force: true });
+    }
+});
+
+test('har2seq CLI uses per-bucket default labels for HighLevelDFD when no override is passed', () => {
+    const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'har-cli-default-highlevel-'));
+    const outFile = path.join(outDir, 'view.puml');
+
+    try {
+        runHar2Seq([
+            '--har', harFixture,
+            '--config', configFixture,
+            '--out', outFile,
+            '--view', 'HighLevelDFD',
+            '--single-call-per-participant',
+        ], repoRoot);
+
+        const output = fs.readFileSync(outFile, 'utf8');
+        assert.ok(output.includes('BROWSER -> S1: Call to example edge/cdn'));
+        assert.ok(!output.includes('BROWSER -> S1: Browser interactions'));
     } finally {
         fs.rmSync(outDir, { recursive: true, force: true });
     }

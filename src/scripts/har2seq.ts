@@ -29,7 +29,7 @@ function defaultPlantUmlVariantOutputPath(harPath: string, suffix: string): stri
 
 function defaultPlantUmlVariants(baseOptions: Har2SeqOptions): PlantUmlVariant[] {
     const includeSourceHostInLabel = baseOptions.includeSourceHostInLabel ?? true;
-    const genericCallDescription = baseOptions.genericCallDescription ?? 'Browser interactions';
+    const genericCallDescription = baseOptions.genericCallDescription;
 
     return [
         {
@@ -86,7 +86,7 @@ Options:
     --single-call-per-participant  Emit one call per visible participant
     --single-call-per-source-host  Emit one call per source host while still respecting collapsed participants
     --include-source-host-in-label Keep the original source host inside collapsed request labels
-    --generic-call-description <label>  Generic label to use for HighLevelDFD calls (default: Browser interactions)
+    --generic-call-description <label>  Override the default HighLevelDFD 'Call to <bucket>' label
   --no-activate        Do not emit activate/deactivate lines
         --index-out <path>   Write HAR line-reference index file. Defaults to build/har/<name>.indexHAR.yaml when needed
     --only-index         Generate only the index file (skip sequence output)

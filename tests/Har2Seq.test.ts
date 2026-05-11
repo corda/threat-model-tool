@@ -28,6 +28,8 @@ test('buildSequenceFromHarFile defaults to PlantUML output', () => {
     assert.ok(output.startsWith('@startuml'));
     assert.ok(output.includes('box "External Boundary" #EAEAEA'));
     assert.ok(output.includes('BROWSER -> S1: GET /v1/health'));
+    assert.ok(!output.includes('--> BROWSER'));
+    assert.ok(!output.includes('activate S1'));
     assert.ok(output.includes('@enduml'));
 });
 
@@ -96,6 +98,7 @@ test('generatePlantUmlFromHar supports disabling activation lines', () => {
 
     assert.ok(output.includes('actor "Client" as BROWSER'));
     assert.ok(output.includes('BROWSER -> S1: GET /items'));
+    assert.ok(!output.includes('S1 --> BROWSER'));
     assert.ok(!output.includes('activate S1'));
     assert.ok(!output.includes('deactivate S1'));
 });
@@ -155,6 +158,9 @@ test('generatePlantUmlFromHar includes source host in labels for collapsed parti
     assert.ok(output.includes('participant "3rd Party" as S1'));
     assert.ok(output.includes('BROWSER -> S1: GET vendor-a.example.net /sdk.js?cache=123'));
     assert.ok(output.includes('BROWSER -> S1: POST vendor-b.example.net /collect'));
+    assert.ok(!output.includes('S1 --> BROWSER'));
+    assert.ok(!output.includes('activate S1'));
+    assert.ok(!output.includes('deactivate S1'));
 });
 
 test('generatePlantUmlFromHar can emit one call per source host while keeping a collapsed participant', () => {
@@ -259,6 +265,16 @@ test('generatePlantUmlFromHar supports HighLevelDFD bucket view with generic lab
                     response: { status: 204 },
                     startedDateTime: '2026-05-11T00:00:01.000Z',
                 },
+                {
+                    request: { method: 'GET', url: 'https://vendor-c.example.net/pixel' },
+                    response: { status: 200 },
+                    startedDateTime: '2026-05-11T00:00:02.000Z',
+                },
+                {
+                    request: { method: 'GET', url: 'https://vendor-d.example.net/beacon' },
+                    response: { status: 200 },
+                    startedDateTime: '2026-05-11T00:00:03.000Z',
+                },
             ],
         },
     };
@@ -285,12 +301,42 @@ test('generatePlantUmlFromHar supports HighLevelDFD bucket view with generic lab
     });
 
     assert.ok(output.includes('participant "3rd Party" as S1'));
-    assert.ok(output.includes('note right of S1 #E0E0E0'));
-    assert.ok(output.includes('  3rd Party hosts: vendor-a.example.net, vendor-b.example.net'));
+    assert.ok(output.includes('note over S1 #E0E0E0'));
+    assert.ok(output.includes('  <b>3rd Party hosts:</b> vendor-a.example.net, vendor-b.example.net,'));
+    assert.ok(output.includes('  vendor-c.example.net, vendor-d.example.net'));
     assert.ok(output.includes('BROWSER -> S1: Generic browser interaction'));
     assert.ok(!output.includes('BROWSER -> S1: GET'));
     assert.ok(!output.includes('S1 --> BROWSER'));
     assert.ok(!output.includes('activate S1'));
     assert.ok(!output.includes('deactivate S1'));
     assert.ok(!output.includes('owner: third-party'));
+});
+
+test('generatePlantUmlFromHar uses per-bucket default labels in HighLevelDFD', () => {
+    const har: HarFile = {
+        log: {
+            entries: [
+                {
+                    request: { method: 'GET', url: 'https://vendor-a.example.net/sdk.js' },
+                    response: { status: 200 },
+                    startedDateTime: '2026-05-11T00:00:00.000Z',
+                },
+            ],
+        },
+    };
+
+    const output = generatePlantUmlFromHar(har, {
+        collapseParticipants: [
+            {
+                name: 'Telemetry',
+                participants: ['*'],
+            },
+        ],
+    }, {
+        view: 'HighLevelDFD',
+        singleCallPerParticipant: true,
+    });
+
+    assert.ok(output.includes('BROWSER -> S1: Call to telemetry'));
+    assert.ok(!output.includes('BROWSER -> S1: Browser interactions'));
 });

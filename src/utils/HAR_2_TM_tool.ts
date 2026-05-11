@@ -316,10 +316,43 @@ function formatPropertyValue(value: ParticipantPropertyValue): string {
     return String(value);
 }
 
+function wrapPlantUmlNoteLine(line: string, maxLength = 80): string[] {
+    if (line.length <= maxLength) {
+        return [line];
+    }
+
+    const indent = line.match(/^\s*/)?.[0] ?? '';
+    const content = line.slice(indent.length).trim();
+    if (!content) {
+        return [line];
+    }
+
+    const words = content.split(/\s+/);
+    const wrapped: string[] = [];
+    let current = indent;
+
+    for (const word of words) {
+        const next = current.trim().length === 0 ? `${indent}${word}` : `${current} ${word}`;
+        if (current.length > indent.length && next.length > maxLength) {
+            wrapped.push(current);
+            current = `${indent}${word}`;
+            continue;
+        }
+
+        current = next;
+    }
+
+    if (current.length > 0) {
+        wrapped.push(current);
+    }
+
+    return wrapped;
+}
+
 function renderPlantUmlParticipantNote(
     alias: string,
     properties: Record<string, ParticipantPropertyValue>,
-    options: { backgroundColor?: string; hiddenHosts?: string[]; hiddenHostsLabel?: string } = {}
+    options: { backgroundColor?: string; hiddenHosts?: string[]; hiddenHostsLabel?: string; overParticipant?: boolean } = {}
 ): string[] {
     const entries = Object.entries(properties);
     const hiddenHosts = options.hiddenHosts ?? [];
@@ -327,18 +360,19 @@ function renderPlantUmlParticipantNote(
         return [];
     }
 
+    const noteAnchor = options.overParticipant ? 'note over' : 'note right of';
     const noteHeader = options.backgroundColor
-        ? `note right of ${alias} ${options.backgroundColor}`
-        : `note right of ${alias}`;
+        ? `${noteAnchor} ${alias} ${options.backgroundColor}`
+        : `${noteAnchor} ${alias}`;
     const lines = [noteHeader];
 
     if (hiddenHosts.length > 0) {
         if (options.hiddenHostsLabel) {
-            lines.push(`  ${options.hiddenHostsLabel}: ${hiddenHosts.join(', ')}`);
+            lines.push(...wrapPlantUmlNoteLine(`  <b>${options.hiddenHostsLabel}:</b> ${hiddenHosts.join(', ')}`));
         } else {
             lines.push('  Hosts');
             for (const host of hiddenHosts) {
-                lines.push(`  - ${host}`);
+                lines.push(...wrapPlantUmlNoteLine(`  - ${host}`));
             }
         }
     }
@@ -347,7 +381,9 @@ function renderPlantUmlParticipantNote(
         if (hiddenHosts.length > 0) {
             lines.push('  ');
         }
-        lines.push(...entries.map(([key, value]) => `  ${key}: ${formatPropertyValue(value)}`));
+        for (const [key, value] of entries) {
+            lines.push(...wrapPlantUmlNoteLine(`  ${key}: ${formatPropertyValue(value)}`));
+        }
     }
 
     lines.push('end note');
@@ -481,6 +517,14 @@ function buildRequestLabel(
     const showSourceHost = includeSourceHostInLabel && sourceHost && sourceHost !== displayHost;
     const target = showSourceHost ? `${sourceHost} ${truncatedPath}` : truncatedPath;
     return `${prefix}${method} ${target}`;
+}
+
+function buildHighLevelCallLabel(displayHost: string, genericCallDescription?: string): string {
+    if (genericCallDescription) {
+        return genericCallDescription;
+    }
+
+    return `Call to ${displayHost.toLowerCase()}`;
 }
 
 function findNextLineContaining(lines: string[], needle: string, fromLine1Based: number): number | undefined {
@@ -1084,11 +1128,7 @@ export function generatePlantUmlFromHar(
 ): string {
     const renderingConfig = resolveRenderingConfig(options);
     const highLevelDfd = renderingConfig.view === 'HighLevelDFD';
-    const summarizedView = highLevelDfd
-        || Boolean(renderingConfig.singleCallPerSourceHost)
-        || Boolean(renderingConfig.singleCallPerParticipant);
     const browserParticipant = options.browserParticipant ?? config.browserParticipant ?? 'Browser';
-    const includeActivation = summarizedView ? false : (options.includeActivation ?? true);
     const messagePrefixes = config.messagePrefixes ?? {};
     const trustBoundaries = config.trustBoundaries ?? [];
     const propertyRules = config.participantProperties ?? [];
@@ -1150,6 +1190,7 @@ export function generatePlantUmlFromHar(
                     backgroundColor: highLevelDfd ? '#E0E0E0' : undefined,
                     hiddenHosts: highLevelDfd ? (hostInventory.get(host) || []) : undefined,
                     hiddenHostsLabel: highLevelDfd ? `${host} hosts` : undefined,
+                    overParticipant: highLevelDfd,
                 }
             ));
         }
@@ -1163,18 +1204,9 @@ export function generatePlantUmlFromHar(
 
         const prefix = messagePrefixes[event.method] ?? '';
         const requestLabel = highLevelDfd
-            ? (renderingConfig.genericCallDescription ?? 'Browser interactions')
+            ? buildHighLevelCallLabel(event.host, renderingConfig.genericCallDescription)
             : buildRequestLabel(prefix, event.method, event.path, event.host, event.boundaryHost, includeSourceHostInLabel);
         lines.push(`BROWSER -> ${alias}: ${requestLabel}`);
-        if (includeActivation) {
-            lines.push(`activate ${alias}`);
-        }
-        if (!summarizedView) {
-            lines.push(`${alias} --> BROWSER: ${event.status}`);
-        }
-        if (includeActivation) {
-            lines.push(`deactivate ${alias}`);
-        }
     }
 
     lines.push('@enduml');
