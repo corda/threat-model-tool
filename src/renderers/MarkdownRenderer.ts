@@ -173,15 +173,29 @@ export class MarkdownRenderer {
         md += `- **Fully Mitigated Threats:** ${mitigatedThreats}\n`;
         md += `- **Unmitigated Threats:** ${this.threatModel.threats.length - mitigatedThreats}\n\n`;
 
+        // Group by severity bucket only (Critical/High/Medium/Low/None/TODO CVSS),
+        // not by the full "<score> (<severity>)" description — otherwise every
+        // distinct numeric score becomes its own bucket and the breakdown is
+        // useless on any model with more than a handful of threats.
+        const severityOrder = ['Critical', 'High', 'Medium', 'Low', 'None', 'TODO CVSS'];
         const severityCounts: Record<string, number> = {};
         for (const threat of this.threatModel.threats) {
-            const severity = threat.getSmartScoreDesc();
+            const severity = threat.getSmartScoreSeverity();
             severityCounts[severity] = (severityCounts[severity] || 0) + 1;
         }
 
         md += `**Threat Severity Breakdown:**\n`;
+        const seen = new Set<string>();
+        for (const severity of severityOrder) {
+            if (severityCounts[severity]) {
+                md += `- ${severity}: ${severityCounts[severity]}\n`;
+                seen.add(severity);
+            }
+        }
         for (const [severity, count] of Object.entries(severityCounts)) {
-            md += `- ${severity}: ${count}\n`;
+            if (!seen.has(severity)) {
+                md += `- ${severity}: ${count}\n`;
+            }
         }
         md += `\n`;
 
