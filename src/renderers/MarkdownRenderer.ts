@@ -107,9 +107,9 @@ export class MarkdownRenderer {
         md += `**Type:** ${threat.threatType}\n\n`;
         
         if (threat.cvssObject) {
-            const scoreDesc = threat.getSmartScoreDesc();
-            const scoreVal = threat.getSmartScoreVal();
-            md += `**CVSS Score:** ${scoreVal.toFixed(1)} (${scoreDesc})\n\n`;
+            // getSmartScoreDesc() already returns "<score> (<severity>)" (e.g. "7.5 (High)")
+            // or "TODO CVSS" when unset, so render it directly without re-wrapping.
+            md += `**CVSS Score:** ${threat.getSmartScoreDesc()}\n\n`;
         }
 
         if (threat.attack) {
