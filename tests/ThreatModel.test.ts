@@ -93,10 +93,43 @@ test('PlantUML Rendering', async (t) => {
         const tm = new ThreatModel(path.join(examplesDir, 'Example2/Example2.yaml'));
         const renderer = new PlantUMLRenderer(tm);
         const puml = renderer.renderThreatDiagram();
-        
+
         assert.ok(puml.startsWith('@startuml'), 'PlantUML should start with @startuml');
         assert.ok(puml.endsWith('@enduml\n'), 'PlantUML should end with @enduml');
         assert.ok(puml.includes('rectangle'), 'PlantUML should have rectangles');
+    });
+
+    await t.test('threat rectangles use the severity bucket as stereotype, not the full score description', () => {
+        // Regression: renderThreatDiagram() previously used getSmartScoreDesc()
+        // for both the <<...>> stereotype and the CVSS line, producing
+        // `<<7.5 (High)>>` rectangles (which never match the
+        // skinparam keys "<<Critical>>" / "<<High>>" / ... so the colour
+        // heatmap silently disappeared) and a doubled `**CVSS:** 7.5 (7.5 (High))`
+        // line.
+        const tm = new ThreatModel(path.join(examplesDir, 'Example2/Example2.yaml'));
+        const puml = new PlantUMLRenderer(tm).renderThreatDiagram();
+
+        assert.ok(tm.threats.length > 0, 'fixture must contain at least one threat');
+
+        // No numeric-prefixed stereotype like `<<7.5 (High)>>`.
+        assert.ok(
+            !/<<\s*\d/.test(puml),
+            `stereotype must be the severity bucket only, got:\n${puml}`,
+        );
+
+        // At least one of the canonical severity stereotypes from the
+        // skinparam block must appear.
+        const canonical = ['<<Critical>>', '<<High>>', '<<Medium>>', '<<Low>>', '<<None>>'];
+        assert.ok(
+            canonical.some((s) => puml.includes(s)),
+            `expected at least one canonical severity stereotype, got:\n${puml}`,
+        );
+
+        // CVSS line must not duplicate the numeric score.
+        assert.ok(
+            !/\*\*CVSS:\*\*\s+\d+(?:\.\d+)?\s+\(\d/.test(puml),
+            `CVSS line should be "score (Severity)", not "score (score (Severity))":\n${puml}`,
+        );
     });
 
     await t.test('should render security objectives diagram', () => {
