@@ -1,0 +1,46 @@
+{
+  "ID": "json-format",
+  "schemaVersion": 2,
+  "title": "JSON Format Smoke Test",
+  "version": "1.0",
+  "scope": {
+    "description": "Minimal threat model written in JSON to verify ThreatModel honors the .json extension advertised by parser.ts.",
+    "securityObjectives": [
+      {
+        "ID": "JSON_CONFIDENTIALITY",
+        "title": "JSON Confidentiality",
+        "description": "Prevent unauthorized disclosure.",
+        "group": "Data Security"
+      }
+    ],
+    "attackers": [
+      {
+        "ID": "JSON_ATTACKER",
+        "description": "Unauthenticated external user.",
+        "inScope": true
+      }
+    ]
+  },
+  "threats": [
+    {
+      "ID": "JSON_THREAT",
+      "title": "JSON Threat",
+      "attack": "An attacker accesses sensitive data through a misconfigured access control.",
+      "threatType": "Information Disclosure",
+      "impactDesc": "Sensitive data is disclosed.",
+      "impactedSecObj": [{ "REFID": "JSON_CONFIDENTIALITY" }],
+      "attackers": [{ "REFID": "JSON_ATTACKER" }],
+      "CVSS": { "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N" },
+      "fullyMitigated": false,
+      "countermeasures": [
+        {
+          "ID": "JSON_ACCESS_CONTROL",
+          "title": "Enforce Access Control",
+          "description": "Require authentication and authorization checks on all data access paths.",
+          "inPlace": false,
+          "public": true
+        }
+      ]
+    }
+  ]
+}
