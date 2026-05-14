@@ -1,11 +1,41 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import ThreatModel from '../models/ThreatModel.js';
 import { MarkdownRenderer } from './MarkdownRenderer.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+/**
+ * Build the argv list for the puppeteer-in-docker call used by
+ * `PDFRenderer.renderToPDF`. Exported separately so the argv composition can
+ * be unit-tested without spawning docker: each substituted value (mount path,
+ * output paths, header note) is passed as a discrete argv entry to
+ * `execFileSync`, so shell metacharacters cannot escape the call.
+ */
+export function buildPuppeteerDockerArgs(params: {
+    tempScriptsDir: string;
+    outputDir: string;
+    containerUser: string;
+    image: string;
+    htmlFileName: string;
+    fileName: string;
+    headerNote: string;
+}): string[] {
+    const { tempScriptsDir, outputDir, containerUser, image, htmlFileName, fileName, headerNote } = params;
+    return [
+        'run', '--init', '--cap-add=SYS_ADMIN',
+        '-v', `${path.resolve(tempScriptsDir)}:${containerUser}/scripts`,
+        '-v', `${path.resolve(outputDir)}:${containerUser}/output`,
+        '-w', containerUser,
+        '--rm', image,
+        'node', 'scripts/pdfScript.mjs',
+        `file://${containerUser}/output/${htmlFileName}`,
+        `${containerUser}/output/${fileName}`,
+        headerNote,
+    ];
+}
 
 export class PDFRenderer {
     private threatModel: ThreatModel;
@@ -61,18 +91,26 @@ export class PDFRenderer {
             : 'ghcr.io/puppeteer/puppeteer:latest';
         const containerUser = isArm64 ? '/usr/src/app' : '/home/pptruser';
 
-        const dockerCommand = `docker run --init --cap-add=SYS_ADMIN ` +
-            `-v "${path.resolve(tempScriptsDir)}:${containerUser}/scripts" ` +
-            `-v "${path.resolve(outputDir)}:${containerUser}/output" ` +
-            `-w "${containerUser}" ` +
-            `--rm ${image} ` +
-            `node scripts/pdfScript.mjs ` +
-            `"file://${containerUser}/output/${htmlFileName}" ` +
-            `"${containerUser}/output/${fileName}" ` +
-            `"${headerNote.replace(/"/g, '\\"')}"`;
+        // Build the docker invocation as an explicit argv list and run it
+        // without a shell. Previously this was a single command string passed
+        // to execSync, with only `"` escaped on headerNote — `$(...)`,
+        // backticks, `;`, and `&&` in any of the substituted values would
+        // still execute against the host shell. Using execFileSync with a
+        // string array bypasses the shell entirely and removes the injection
+        // surface for callers that route untrusted strings through
+        // `options.headerNote` or the resolved paths.
+        const dockerArgs = buildPuppeteerDockerArgs({
+            tempScriptsDir,
+            outputDir,
+            containerUser,
+            image,
+            htmlFileName,
+            fileName,
+            headerNote,
+        });
 
         try {
-            execSync(dockerCommand, { stdio: 'inherit', timeout: 300000 });
+            execFileSync('docker', dockerArgs, { stdio: 'inherit', timeout: 300000 });
             console.log(`PDF generated successfully: ${outputPath}`);
         } catch (error) {
             throw new Error(`Docker PDF generation failed: ${(error as Error).message}`);
