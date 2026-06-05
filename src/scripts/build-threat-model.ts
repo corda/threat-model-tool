@@ -133,6 +133,13 @@ function generateHtmlFromMarkdown(outputDir: string, modelId: string): void {
 
     const mdReport = fs.readFileSync(mdPath, 'utf-8');
     const htmlBody = stripMarkdownAttributes(renderMarkdownWithMdInHtml(mdReport));
+    const logoCandidates = ['logo.png', 'logo.svg', 'logo.jpg', 'logo.jpeg', 'logo.webp'];
+    const logoFile = logoCandidates.find((candidate) =>
+        fs.existsSync(path.join(outputDir, 'img', candidate))
+    );
+    const logoTag = logoFile
+        ? `<img class="page-logo" src="img/${logoFile}" alt="" aria-hidden="true" />`
+        : '';
     const baseHtml = `<!DOCTYPE html>
 <html>
 <head>
@@ -142,7 +149,7 @@ function generateHtmlFromMarkdown(outputDir: string, modelId: string): void {
 <script src="js/highlight.min.js"></script>
 <script>hljs.highlightAll();</script>
 </head>
-<body>%BODY%</body>
+<body>${logoTag}%BODY%</body>
 </html>
 `;
 

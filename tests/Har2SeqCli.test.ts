@@ -11,7 +11,7 @@ const repoRoot = path.resolve(__dirname, '..');
 const harFixture = path.join(__dirname, 'fixtures', 'har2seq-sample.har.json');
 const configFixture = path.join(__dirname, 'fixtures', 'har2seq-collapse-properties.yaml');
 const tsxCli = path.join(repoRoot, 'node_modules', 'tsx', 'dist', 'cli.mjs');
-const har2seqScript = path.join(repoRoot, 'src', 'scripts', 'har2seq.ts');
+const har2seqScript = path.join(repoRoot, 'src', 'scripts', 'har-workflow', 'har2seq.ts');
 
 function runHar2Seq(args: string[], cwd: string): string {
     return execFileSync(process.execPath, [tsxCli, har2seqScript, ...args], {

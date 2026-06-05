@@ -413,13 +413,23 @@ pre code, pre tt {
 @page 
 { 
     size: A4 portrait;
-    margin-top: 1.2cm;
+    margin-top: 2.0cm;
     margin-right: 1.5cm;
     margin-bottom: 1.2cm;
     margin-left: 1.5cm;
 }
 
 @media print {
+  .page-logo {
+    position: fixed;
+    /* Place logo in the @page top margin so it does not cover content. */
+    top: -1.4cm;
+    left: 0;
+    width: 120px;
+    height: auto;
+    z-index: 1000;
+  }
+
   .pagebreak {
       clear: both;
       min-height: 1px;
@@ -428,6 +438,8 @@ pre code, pre tt {
 
 
 body {
+  margin: 0;
+  padding: 0;
   font-family: Helvetica, Arial, sans-serif;
     font-size: 12pt;
     line-height: 1.3;

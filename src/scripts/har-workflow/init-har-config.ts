@@ -3,8 +3,8 @@ import path from 'node:path';
 import {
     create_indexHAR_file,
     create_starter_HAR_config_file,
-} from '../utils/HAR_2_TM_tool.js';
-import { parseFlag, parseMultiOption, parseOption } from './cli-options.js';
+} from '../../utils/HAR_2_TM_tool.js';
+import { parseFlag, parseMultiOption, parseOption } from '../cli-options.js';
 
 function defaultHarOutputDir(): string {
     return path.resolve(process.cwd(), 'build', 'har');

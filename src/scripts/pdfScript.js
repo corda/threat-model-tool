@@ -75,7 +75,7 @@ async function printPDF(aurl, outputPath, headerNote) {
     path: outputPath,
     timeout: TIMEOUT_MS,
     margin: {
-      top: '40px',
+      top: '70px',
       bottom: '40px',
       left: '40px',
       right: '40px'

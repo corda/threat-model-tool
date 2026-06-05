@@ -12,8 +12,8 @@
     "threat-model-verify": "dist/scripts/verify-threat-model.js",
     "threat-model-init": "dist/scripts/init-threat-model.js",
     "threat-model-jira": "dist/scripts/create-jira-tickets.js",
-    "threat-model-har2seq": "dist/scripts/har2seq.js",
-    "threat-model-har-config": "dist/scripts/init-har-config.js"
+    "threat-model-har2seq": "dist/scripts/har-workflow/har2seq.js",
+    "threat-model-har-config": "dist/scripts/har-workflow/init-har-config.js"
   },
   "scripts": {
     "clean:build": "node -e \"require('fs').rmSync('build', { recursive: true, force: true })\"",
@@ -22,8 +22,8 @@
     "serve:html": "python3 -m http.server 4325 --directory ./build",
     "init": "tsx src/scripts/init-threat-model.ts",
     "verify": "tsx src/scripts/verify-threat-model.ts",
-    "har2seq": "tsx src/scripts/har2seq.ts",
-    "har:init-config": "tsx src/scripts/init-har-config.ts",
+    "har2seq": "tsx src/scripts/har-workflow/har2seq.ts",
+    "har:init-config": "tsx src/scripts/har-workflow/init-har-config.ts",
     "verify:examples": "tsx src/scripts/verify-threat-model.ts --TMDirectory tests/exampleThreatModels",
     "test": "tsx --test $(find tests -name '*.test.ts')",
     "test:unit": "tsx --test $(find tests -name '*.test.ts')",

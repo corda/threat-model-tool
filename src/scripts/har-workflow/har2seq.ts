@@ -6,8 +6,8 @@ import {
     create_indexHAR_file,
     type Har2SeqOptions,
     type SequenceFormat,
-} from '../utils/HAR_2_TM_tool.js';
-import { parseFlag, parseOption } from './cli-options.js';
+} from '../../utils/HAR_2_TM_tool.js';
+import { parseFlag, parseOption } from '../cli-options.js';
 
 interface PlantUmlVariant {
     suffix: string;
