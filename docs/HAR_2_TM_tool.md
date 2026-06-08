@@ -4,7 +4,7 @@ HAR_2_TM_tool is a lightweight utility to transform HAR captures into artifacts 
 
 - PlantUML sequence diagrams (default)
 - Mermaid sequence diagrams (optional)
-- `.indexHAR.yaml` line-reference files for LLM workflows on large HAR files
+- `.indexHAR.yaml` byte-offset index files for LLM workflows on large HAR files
 - starter YAML config files for iterative LLM and human refinement
 
 ## Why this exists
@@ -180,27 +180,109 @@ Why make `participants` the primary object model?
 
 ## .indexHAR format
 
-The generated `.indexHAR.yaml` file is YAML.
+The generated `.indexHAR.yaml` file is YAML, using a compact **columnar v2**
+layout: per-entry field names appear once in `columns`, and each entry is a
+single inline array row. This avoids repeating key names on every row and keeps
+token cost low for LLM workflows.
 
 ```yaml
-schemaVersion: indexHAR.v1
-harFile: /abs/path/to/file.har
-generatedAt: '2026-05-11T12:00:00.000Z'
+schemaVersion: indexHAR.v2
+harFile: file.har
+harBytes: 23550297
+harSha256: 4f0c...e91a
 totalRequests: 123
+columns: [method, url, status, offset, length]
 entries:
-  - requestId: 1
-    method: GET
-    url: https://example.com/path
-    status: 200
-    host: example.com
-    path: /path
-    startedDateTime: '...'
-    lineRefs:
-      methodLine: 42
-      urlLine: 43
-      statusLine: 57
-      startedDateTimeLine: 40
+  - [GET, https://example.com/path, 200, 1841, 5120]
+  - [POST, https://api.example.com/login, 200, 6961, 9210]
 ```
+
+Each row is positional, matching `columns`:
+
+| column   | meaning |
+|----------|---------|
+| `method` | HTTP method |
+| `url`    | full request URL (`host`/`path` are derivable from it) |
+| `status` | HTTP response status |
+| `offset` | byte offset of the entry's JSON in the source `.har` |
+| `length` | byte length of the entry's JSON |
+
+`requestId` is **implicit** — it is the row index + 1. Entries are in
+chronological order, so the Nth row is `requestId` N. `host`, `path`,
+`startedDateTime` and `generatedAt` are intentionally omitted (derivable or
+redundant), and `harFile` is stored as a basename since the index lives next to
+the HAR.
+
+`offset` / `length` are a **byte range into the source `.har`**. They let you
+fetch a single request's full, untouched JSON (headers, cookies, timing, body
+included) with an O(1) `seek` + bounded read — no sequential scan, no duplicated
+sidecar file. `harBytes` / `harSha256` pin the exact HAR the offsets refer to;
+if the HAR is re-captured the offsets are invalid and the index must be
+regenerated (a hash/size mismatch is the signal).
+
+`load_indexHAR_file()` expands the columnar rows back into rich entry objects
+(`{ requestId, method, url, status, entryOffset, entryLength }`), so consumers
+work with named fields and the loader tolerates column reordering.
+
+## Fetching a full entry by offset
+
+The index is the small, queryable layer (method / url / status per entry). When
+you need the complete detail of one request, read its `offset` / `length` off
+the row and seek directly into the immutable `.har` — no CLI, no sidecar.
+
+**Prefer `tail`+`head`**: it is portable across macOS and Linux and seeks
+instead of scanning. `tail -c +K` is **1-based**, so the start byte is
+`offset + 1`:
+
+```bash
+# Row 35 had offset 1841091, length 8519 in the index.
+# start = offset + 1 = 1841092, then read `length` bytes:
+tail -c +1841092 file.har | head -c 8519 | jq .
+
+# Project just the auth-relevant headers:
+tail -c +1841092 file.har | head -c 8519 \
+  | jq '[.request.headers[] | select(.name|ascii_downcase|test("auth|cookie|token"))]'
+```
+
+`dd` also seeks (real `lseek` on `skip` for a regular file), but on macOS only
+the `bs=1` form is portable — one syscall per byte, so reserve it for small
+slices:
+
+```bash
+dd if=file.har bs=1 skip=1841091 count=8519 2>/dev/null | jq .
+```
+
+GNU `dd` on Linux can use a big block with byte units
+(`dd if=file.har bs=1M iflag=skip_bytes,count_bytes skip=1841091 count=8519`),
+but that flag is absent on macOS — use `tail` for the portable fast path.
+
+**Drift check:** the offsets are only valid for the capture pinned by
+`harBytes` / `harSha256`. Before trusting offsets when in doubt, compare the
+size (`stat -f%z file.har` on macOS, `stat -c%s` on Linux) to `harBytes`; a
+mismatch means the offsets are stale and the index must be regenerated.
+
+From TypeScript, `read_har_entry` does the seek + parse for you:
+
+```ts
+import { generate_indexHAR, read_har_entry } from '../src/utils/HAR_2_TM_tool.js';
+
+const index = generate_indexHAR('/path/to/file.har');
+const e = index.entries.find(x => x.requestId === 35)!;
+const fullEntry = read_har_entry('/path/to/file.har', e.entryOffset, e.entryLength);
+```
+
+This stays fast regardless of HAR size: reading entry 1 and entry 5000 from a
+200 MB capture cost the same, because each is a direct seek to that entry's
+bytes rather than a scan from the start of the file. The original `.har` is the
+single source of truth and is never modified or duplicated.
+
+### Scaling to very large HARs
+
+`generate_indexHAR` builds the byte ranges with a single-pass brace scanner
+(`indexHarEntryByteRanges`) over the raw HAR buffer. It never parses the whole
+file into one object graph — it records each entry's `[offset, length)` and
+parses entry slices individually for the index metadata, so memory stays
+proportional to the number of entries, not the file size.
 
 ## TypeScript API
 
@@ -210,8 +292,13 @@ Use the utility from code:
 import {
   generate_puml_sequence,
   create_indexHAR_file,
+  read_har_entry,
 } from '../src/utils/HAR_2_TM_tool.js';
 
 const puml = generate_puml_sequence('/path/to/file.har', '/path/to/config.yaml');
-const indexPath = create_indexHAR_file('/path/to/file.har');
+const indexPath = create_indexHAR_file('/path/to/file.har'); // writes <name>.indexHAR.yaml
+
+// Read one full entry on demand using its byte range from the index.
+const entry = read_har_entry('/path/to/file.har', 1841091, 8519);
 ```
+

@@ -9,6 +9,8 @@ import {
     buildMermaidFromHarFile,
     buildPlantUmlFromHarFile,
     create_indexHAR_file,
+    read_har_entry,
+    indexHarEntryByteRanges,
     load_indexHAR_file,
     generateMermaidFromHar,
     generate_indexHAR,
@@ -206,15 +208,90 @@ test('generatePlantUmlFromHar can emit one call per source host while keeping a 
     assert.ok(!output.includes('deactivate S1'));
 });
 
-test('generate_indexHAR returns line references for each request', () => {
+test('generate_indexHAR returns byte offsets for each request', () => {
     const indexData = generate_indexHAR(harFixture);
 
-    assert.equal(indexData.schemaVersion, 'indexHAR.v1');
+    assert.equal(indexData.schemaVersion, 'indexHAR.v2');
     assert.equal(indexData.totalRequests, 3);
     assert.equal(indexData.entries.length, 3);
-    assert.ok(indexData.entries[0].lineRefs.methodLine);
-    assert.ok(indexData.entries[0].lineRefs.urlLine);
-    assert.ok(indexData.entries[0].lineRefs.statusLine);
+    assert.equal(typeof indexData.harBytes, 'number');
+    assert.equal(typeof indexData.harSha256, 'string');
+    assert.ok(indexData.entries[0].entryOffset >= 0);
+    assert.ok(indexData.entries[0].entryLength > 0);
+
+    // The byte range points at the entry's full JSON in the source HAR.
+    const buffer = fs.readFileSync(harFixture);
+    const e0 = indexData.entries[0];
+    const slice = buffer.toString('utf8', e0.entryOffset, e0.entryOffset + e0.entryLength);
+    const parsedSlice = JSON.parse(slice) as { request: { url: string } };
+    assert.equal(parsedSlice.request.url, e0.url);
+});
+
+test('read_har_entry seeks a single full entry by offset/length', () => {
+    const indexData = generate_indexHAR(harFixture);
+    const e1 = indexData.entries[1];
+    const entry = read_har_entry(harFixture, e1.entryOffset, e1.entryLength);
+    assert.equal(entry.request.url, e1.url);
+    assert.equal(Number(entry.response.status), e1.status);
+});
+
+test('indexHarEntryByteRanges aligns ranges with chronological requestId order', () => {
+    const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'har-offsets-'));
+    const harPath = path.join(outDir, 'unordered.har');
+
+    // Entries intentionally out of chronological order to prove requestId is by timestamp
+    // while byte ranges still resolve to the correct entry.
+    const har = {
+        log: {
+            entries: [
+                {
+                    startedDateTime: '2026-05-10T10:00:02.000Z',
+                    request: { method: 'GET', url: 'https://example.com/third', headers: [{ name: 'x-order', value: '3' }] },
+                    response: { status: 200, content: { mimeType: 'text/plain', text: 'ok' } },
+                },
+                {
+                    startedDateTime: '2026-05-10T10:00:00.000Z',
+                    request: { method: 'GET', url: 'https://example.com/first', headers: [{ name: 'x-order', value: '1' }] },
+                    response: { status: 200, content: { mimeType: 'text/plain', text: 'ok' } },
+                },
+                {
+                    startedDateTime: '2026-05-10T10:00:01.000Z',
+                    request: { method: 'GET', url: 'https://example.com/second', headers: [{ name: 'x-order', value: '2' }] },
+                    response: { status: 200, content: { mimeType: 'text/plain', text: 'ok' } },
+                },
+            ],
+        },
+    };
+
+    try {
+        fs.writeFileSync(harPath, JSON.stringify(har), 'utf8');
+
+        // Raw scanner returns ranges in file order (not chronological).
+        const buffer = fs.readFileSync(harPath);
+        const ranges = indexHarEntryByteRanges(buffer);
+        assert.equal(ranges.length, 3);
+        const fileOrderUrls = ranges.map(r => (JSON.parse(buffer.toString('utf8', r.offset, r.offset + r.length)) as { request: { url: string } }).request.url);
+        assert.deepEqual(fileOrderUrls, [
+            'https://example.com/third',
+            'https://example.com/first',
+            'https://example.com/second',
+        ]);
+
+        // The index re-sorts to chronological order and each offset still resolves correctly.
+        const indexData = generate_indexHAR(harPath);
+        assert.deepEqual(indexData.entries.map(e => e.requestId), [1, 2, 3]);
+        assert.deepEqual(indexData.entries.map(e => e.url), [
+            'https://example.com/first',
+            'https://example.com/second',
+            'https://example.com/third',
+        ]);
+        for (const entry of indexData.entries) {
+            const resolved = read_har_entry(harPath, entry.entryOffset, entry.entryLength);
+            assert.equal(resolved.request.url, entry.url);
+        }
+    } finally {
+        fs.rmSync(outDir, { recursive: true, force: true });
+    }
 });
 
 test('create_indexHAR_file writes .indexHAR output file', () => {
@@ -226,10 +303,27 @@ test('create_indexHAR_file writes .indexHAR output file', () => {
         assert.equal(writtenPath, outFile);
         assert.ok(fs.existsSync(outFile));
 
-        const parsed = load_indexHAR_file(outFile) as { totalRequests: number; entries: Array<{ url: string; lineRefs: { urlLine?: number } }> };
+        // On disk the format is columnar v2: a `columns` header + one inline array row per entry,
+        // with no repeated key names and no per-row requestId.
+        const rawText = fs.readFileSync(outFile, 'utf8');
+        assert.match(rawText, /schemaVersion: indexHAR\.v2/);
+        assert.match(rawText, /columns:/);
+        assert.match(rawText, /- \[GET, /);
+        assert.doesNotMatch(rawText, /requestId:/);
+        assert.doesNotMatch(rawText, /entryOffset:/);
+
+        const parsed = load_indexHAR_file(outFile) as { totalRequests: number; harSha256?: string; harFile: string; entries: Array<{ requestId: number; url: string; entryOffset: number; entryLength: number }> };
         assert.equal(parsed.totalRequests, 3);
+        assert.equal(parsed.harFile, 'har2seq-sample.har.json');
+        assert.equal(parsed.entries[0].requestId, 1);
         assert.equal(parsed.entries[0].url, 'https://api.example.com/v1/health');
-        assert.ok(parsed.entries[0].lineRefs.urlLine);
+        assert.ok(parsed.entries[0].entryLength > 0);
+        assert.equal(typeof parsed.harSha256, 'string');
+
+        // Offsets in the written index resolve to the full entry directly from the HAR.
+        const e0 = parsed.entries[0];
+        const resolved = read_har_entry(harFixture, e0.entryOffset, e0.entryLength);
+        assert.equal(resolved.request.url, 'https://api.example.com/v1/health');
     } finally {
         fs.rmSync(outDir, { recursive: true, force: true });
     }
@@ -241,9 +335,9 @@ test('collapseParticipants + singleCallPerParticipant builds compact dataflow ou
     });
 
     assert.ok(output.includes('participant "Example Edge/CDN" as S1'));
-    assert.ok(output.includes('authentication: none'));
-    assert.ok(output.includes('authorization: public'));
-    assert.ok(output.includes('dataSensitivity: low'));
+    assert.ok(output.includes('<b>authentication:</b> none'));
+    assert.ok(output.includes('<b>authorization:</b> public'));
+    assert.ok(output.includes('<b>dataSensitivity:</b> low'));
 
     const calls = output.match(/^BROWSER -> S1:/gm) ?? [];
     assert.equal(calls.length, 1);

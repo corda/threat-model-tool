@@ -43,16 +43,6 @@ function defaultPlantUmlVariants(baseOptions: Har2SeqOptions): PlantUmlVariant[]
             },
         },
         {
-            suffix: 'sourceHostSummary',
-            options: {
-                ...baseOptions,
-                view: 'sequence',
-                includeSourceHostInLabel,
-                singleCallPerSourceHost: true,
-                singleCallPerParticipant: false,
-            },
-        },
-        {
             suffix: 'HighLevelDFD',
             options: {
                 ...baseOptions,
@@ -77,7 +67,7 @@ Usage:
 Options:
   --har <path>         Path to HAR file (required)
     --config <path>      Optional YAML/JSON config (participants, excludePaths, messagePrefixes, trustBoundaries)
-        --out <path>         Optional single output file path. If omitted for PlantUML, a default bundle is written to build/har/<name>.sequence.puml, .sourceHostSummary.puml, and .HighLevelDFD.puml
+                --out <path>         Optional single output file path. If omitted for PlantUML, a default bundle is written to build/har/<name>.sequence.puml and .HighLevelDFD.puml
     --format <value>     Output format: plantuml or mermaid (default: plantuml)
     --mermaid            Shortcut for --format mermaid
     --plantuml           Shortcut for --format plantuml

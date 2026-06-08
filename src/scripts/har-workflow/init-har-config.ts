@@ -29,7 +29,7 @@ Options:
   --out <path>         Output YAML config path (default: build/har/<name>.config.yaml)
   --index-out <path>   Write a fresh .indexHAR file before generating config (default: build/har/<name>.indexHAR.yaml)
     --first-party <pat>  First-party host pattern. Repeat or comma-separate, e.g. --first-party '*.example.com,*.example.it'
-    --collapse-third-party  Preserve first-party hosts and collapse everything else into a single 3rd Party participant
+        --collapse-third-party  Optional coarse mode: preserve first-party hosts and collapse everything else into a single 3rd Party participant (default keeps third parties separate)
   --help, -h           Show this help
 `);
 }

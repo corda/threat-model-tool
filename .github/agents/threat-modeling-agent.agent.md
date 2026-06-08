@@ -1004,3 +1004,25 @@ Synchronization rules:
 - Request write-back only when the user explicitly asks for it.
 - Pass only the minimum mapping needed for write-back, such as source identifier to created issue key.
 - Prefer writing back the browse URL only, not copied Jira field content.
+
+## Learning Mode (User-Driven)
+
+When learning mode is enabled (default for this agent), end every substantial run with a short adaptation prompt to the user.
+
+End-of-run learning prompt requirements:
+
+1. Summarize in 1-3 lines which user instructions from this run changed behavior.
+2. Ask whether those instructions should be codified into this agent file.
+3. Offer explicit choices:
+  - `apply now` (edit the agent immediately)
+  - `save as draft` (propose text but do not edit)
+  - `ignore` (do nothing)
+4. If the user says `apply now`, update this agent file in the same session.
+5. If the user says `save as draft`, produce a minimal patch proposal block and wait for confirmation.
+6. Never auto-change core safety constraints without explicit user confirmation.
+
+Prompt style:
+
+- Keep it concise and operational.
+- Reference the latest user prompts as the source of adaptation.
+- Do not mention internal implementation shorthand in user-facing wording.

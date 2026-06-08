@@ -15,14 +15,15 @@ The end goal is to create a compact, iteratively improvable summary of a HAR fil
 ## Recommended workflow
 
 1. Generate a `.indexHAR.yaml` file from the HAR.
-2. Use the `.indexHAR.yaml` plus a compact sequence diagram as the primary context for an LLM.
-3. Ask the LLM to propose or refine a YAML config:
+2. Build a small Authentication Evidence Record (ERF) set from auth-relevant rows early.
+3. Use the `.indexHAR.yaml` plus ERFs and a compact sequence diagram as the primary context for an LLM.
+4. Ask the LLM to propose or refine a YAML config:
   - participant groupings and collapse targets
    - trust boundaries
    - participant properties
-4. Re-run the tool with the updated config.
-5. Iterate until the diagram and properties capture the architecture well enough for threat modeling.
-6. Use the resulting participant properties as structured input to your threat model.
+5. Re-run the tool with the updated config.
+6. Iterate until the diagram and properties capture the architecture well enough for threat modeling.
+7. Use the resulting participant properties as structured input to your threat model.
 
 If you want an interactive agent-led version of this loop, use the workspace custom agent `har-party-classifier`.
 It is intended for:
@@ -33,6 +34,20 @@ It is intended for:
 - proposing participant properties such as `authentication`, `authorization`, `dataSensitivity`, `owner`, and `notes`
 
 When the HAR-derived architecture view is stable, hand off to `threat-modeling-agent` for formal threat model YAML creation.
+
+### Bootstrap ERF commands
+
+Use index-first discovery, then build compact ERFs for a handful of representative auth rows:
+
+```bash
+# 1) Find auth-relevant rows in the index
+src/scripts/har-workflow/find_auth.sh build/har/capture.indexHAR.yaml
+
+# 2) For selected rows, build compact ERFs using their offset/length
+src/scripts/har-workflow/auth_erf.sh /absolute/path/to/capture.har <offset> <length> <requestId>
+```
+
+Capture ERFs for both first-party auth endpoints and key third-party vendors. ERFs should include cookie names and token hints (realm/claims when available) without exposing raw secrets.
 
 All generated artifacts should live in the `threat-model-tool` workspace, for example under `build/har/`.
 
@@ -79,6 +94,8 @@ This creates:
 
 - a lightweight `.indexHAR.yaml` file for LLM and human inspection
 - a starter YAML config with participant entries, trust-boundary catalog entries, and participant property placeholders
+
+Default behavior: third-party participants remain separate and are placed in the `THIRD_PARTY` trust boundary. They are not collapsed unless `--collapse-third-party` is explicitly passed.
 
 For a coarse first-party vs third-party starter config, use:
 

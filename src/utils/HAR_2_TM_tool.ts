@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import yaml from 'js-yaml';
 
 export type SequenceFormat = 'plantuml' | 'mermaid';
@@ -101,31 +102,49 @@ export interface Har2SeqOptions {
     singleCallPerParticipant?: boolean;
 }
 
-export interface HarIndexLineRefs {
-    methodLine?: number;
-    urlLine?: number;
-    statusLine?: number;
-    startedDateTimeLine?: number;
-}
-
 export interface HarIndexEntry {
     requestId: number;
     method: string;
     url: string;
     status: number;
-    host?: string;
-    path?: string;
-    startedDateTime?: string;
-    lineRefs: HarIndexLineRefs;
+    // host, path and startedDateTime are intentionally omitted from the index:
+    // - host and path are derivable from `url`
+    // - startedDateTime is redundant since entries are already in chronological order
+    // entryOffset/entryLength are a byte range into the source .har: seek(entryOffset) and read
+    // entryLength bytes to get this entry's full, untouched JSON (body included) in O(1), with no
+    // sequential scan and no duplicated sidecar. See read_har_entry().
+    entryOffset: number;
+    entryLength: number;
 }
 
 export interface HarIndexFile {
-    schemaVersion: 'indexHAR.v1';
+    schemaVersion: 'indexHAR.v2';
+    // Basename of the .har the byte offsets refer to (the index lives next to it).
     harFile: string;
-    generatedAt: string;
+    // Size and SHA-256 of the exact .har the byte offsets refer to. Use these to detect drift:
+    // if the HAR is re-captured, offsets are invalid and the index must be regenerated.
+    harBytes: number;
+    harSha256: string;
     totalRequests: number;
     entries: HarIndexEntry[];
 }
+
+// On-disk v2 layout: a columnar table. The per-entry key names (method/url/status/offset/length)
+// appear once in `columns` instead of being repeated on all N rows, and requestId is implicit
+// (row index + 1, entries are in chronological order). This is materially fewer tokens for LLM
+// workflows with no loss of information. load_indexHAR_file() expands it back to HarIndexEntry[].
+const INDEX_V2_COLUMNS = ['method', 'url', 'status', 'offset', 'length'] as const;
+type IndexV2Row = [string, string, number, number, number];
+interface IndexHARv2OnDisk {
+    schemaVersion: 'indexHAR.v2';
+    harFile: string;
+    harBytes: number;
+    harSha256: string;
+    totalRequests: number;
+    columns: readonly string[];
+    entries: IndexV2Row[];
+}
+
 
 export interface StarterConfigOptions {
     outputHarPath?: string;
@@ -228,7 +247,7 @@ function parseUrl(urlString: string): { host: string; path: string } | null {
     }
 }
 
-function normalizeEntries(entries: HarEntry[]): HarEntry[] {
+function sortEntriesByStartedDateTime<T extends { startedDateTime?: string }>(entries: T[]): T[] {
     return [...entries].sort((a, b) => {
         if (!a.startedDateTime && !b.startedDateTime) return 0;
         if (!a.startedDateTime) return 1;
@@ -243,6 +262,10 @@ function normalizeEntries(entries: HarEntry[]): HarEntry[] {
 
         return aTime - bTime;
     });
+}
+
+function normalizeEntries(entries: HarEntry[]): HarEntry[] {
+    return sortEntriesByStartedDateTime(entries);
 }
 
 function isParticipantAllowed(host: string, participants: string[]): boolean {
@@ -382,7 +405,7 @@ function renderPlantUmlParticipantNote(
             lines.push('  ');
         }
         for (const [key, value] of entries) {
-            lines.push(...wrapPlantUmlNoteLine(`  ${key}: ${formatPropertyValue(value)}`));
+            lines.push(...wrapPlantUmlNoteLine(`  <b>${key}:</b> ${formatPropertyValue(value)}`));
         }
     }
 
@@ -527,64 +550,6 @@ function buildHighLevelCallLabel(displayHost: string, genericCallDescription?: s
     return `Call to ${displayHost.toLowerCase()}`;
 }
 
-function findNextLineContaining(lines: string[], needle: string, fromLine1Based: number): number | undefined {
-    const from = Math.max(0, fromLine1Based - 1);
-
-    for (let i = from; i < lines.length; i++) {
-        if (lines[i].includes(needle)) {
-            return i + 1;
-        }
-    }
-
-    return undefined;
-}
-
-function buildIndexLineRefs(entries: HarEntry[], harLines: string[]): HarIndexLineRefs[] {
-    const refs: HarIndexLineRefs[] = [];
-    let cursorLine = 1;
-
-    for (const entry of entries) {
-        const method = (entry.request?.method || 'GET').toUpperCase();
-        const url = entry.request?.url || '';
-        const status = Number(entry.response?.status ?? 0);
-
-        const methodNeedle = `"method": ${JSON.stringify(method)}`;
-        const urlNeedle = `"url": ${JSON.stringify(url)}`;
-        const statusNeedle = `"status": ${status}`;
-        const startedNeedle = entry.startedDateTime
-            ? `"startedDateTime": ${JSON.stringify(entry.startedDateTime)}`
-            : undefined;
-
-        const startedDateTimeLine = startedNeedle
-            ? findNextLineContaining(harLines, startedNeedle, cursorLine)
-            : undefined;
-
-        const methodLine = findNextLineContaining(harLines, methodNeedle, startedDateTimeLine || cursorLine);
-        const urlLine = findNextLineContaining(harLines, urlNeedle, methodLine || startedDateTimeLine || cursorLine);
-        const statusLine = findNextLineContaining(harLines, statusNeedle, urlLine || methodLine || cursorLine);
-
-        const maxLine = Math.max(
-            startedDateTimeLine || 0,
-            methodLine || 0,
-            urlLine || 0,
-            statusLine || 0,
-        );
-
-        if (maxLine > 0) {
-            cursorLine = maxLine + 1;
-        }
-
-        refs.push({
-            methodLine,
-            urlLine,
-            statusLine,
-            startedDateTimeLine,
-        });
-    }
-
-    return refs;
-}
-
 export function loadHarFile(harPath: string): HarFile {
     const fullPath = path.resolve(harPath);
     if (!fs.existsSync(fullPath)) {
@@ -724,12 +689,32 @@ export function load_indexHAR_file(indexPath: string): HarIndexFile {
         throw new Error(`Invalid indexHAR format in ${fullPath}`);
     }
 
-    const indexFile = parsed as HarIndexFile;
-    if (indexFile.schemaVersion !== 'indexHAR.v1' || !Array.isArray(indexFile.entries)) {
+    const onDisk = parsed as IndexHARv2OnDisk;
+    if (onDisk.schemaVersion !== 'indexHAR.v2' || !Array.isArray(onDisk.entries)) {
         throw new Error(`Invalid indexHAR format in ${fullPath}`);
     }
 
-    return indexFile;
+    // Map column name -> position so the loader tolerates column reordering/extension.
+    const col = new Map(onDisk.columns.map((name, i) => [name, i]));
+    const get = <T>(row: IndexV2Row, name: string): T => row[col.get(name) as number] as T;
+
+    const entries: HarIndexEntry[] = onDisk.entries.map((row, index) => ({
+        requestId: index + 1, // implicit: chronological order
+        method: get<string>(row, 'method'),
+        url: get<string>(row, 'url'),
+        status: get<number>(row, 'status'),
+        entryOffset: get<number>(row, 'offset'),
+        entryLength: get<number>(row, 'length'),
+    }));
+
+    return {
+        schemaVersion: 'indexHAR.v2',
+        harFile: onDisk.harFile,
+        harBytes: onDisk.harBytes,
+        harSha256: onDisk.harSha256,
+        totalRequests: onDisk.totalRequests,
+        entries,
+    };
 }
 
 function getRegistrableDomain(host: string): string {
@@ -750,14 +735,19 @@ function toWildcardPattern(host: string): string {
     return `*.${getRegistrableDomain(host)}`;
 }
 
+function indexEntryHost(entry: HarIndexEntry): string | undefined {
+    return parseUrl(entry.url || '')?.host;
+}
+
 function summarizeHosts(indexData: HarIndexFile): HostCountSummary[] {
     const counts = new Map<string, number>();
 
     for (const entry of indexData.entries) {
-        if (!entry.host) {
+        const host = indexEntryHost(entry);
+        if (!host) {
             continue;
         }
-        counts.set(entry.host, (counts.get(entry.host) || 0) + 1);
+        counts.set(host, (counts.get(host) || 0) + 1);
     }
 
     return Array.from(counts.entries())
@@ -802,8 +792,11 @@ function toTitleFromId(value: string): string {
 }
 
 function buildStarterConfigObject(indexData: HarIndexFile, options: StarterConfigOptions = {}): StarterHar2SeqConfig {
-    const firstHost = indexData.entries.find(entry => entry.host)?.host;
-    const allHosts = Array.from(new Set(indexData.entries.map(entry => entry.host).filter((host): host is string => Boolean(host))));
+    const hostsInOrder = indexData.entries
+        .map(entry => indexEntryHost(entry))
+        .filter((host): host is string => Boolean(host));
+    const firstHost = hostsInOrder[0];
+    const allHosts = Array.from(new Set(hostsInOrder));
     const firstPartyPatterns = options.firstPartyPatterns && options.firstPartyPatterns.length > 0
         ? options.firstPartyPatterns
         : [firstHost ? toWildcardPattern(firstHost) : '*.example.com'];
@@ -1166,6 +1159,7 @@ export function generatePlantUmlFromHar(
         'hide footbox',
         `actor "${escapePlantUmlLabel(browserParticipant)}" as BROWSER`,
     ];
+    const participantNotesByAlias = new Map<string, string[]>();
 
     for (const boundaryName of boundaryNames) {
         const boundaryHosts = hostByBoundary.get(boundaryName) ?? [];
@@ -1181,25 +1175,33 @@ export function generatePlantUmlFromHar(
         lines.push('end box');
         for (const host of boundaryHosts) {
             const alias = aliasMap.get(host)!;
-            lines.push(...renderPlantUmlParticipantNote(
+            const noteLines = renderPlantUmlParticipantNote(
                 alias,
-                highLevelDfd
-                    ? {}
-                    : resolveParticipantProperties(host, sourceHostByDisplayHost.get(host) || host, propertyRules),
+                resolveParticipantProperties(host, sourceHostByDisplayHost.get(host) || host, propertyRules),
                 {
                     backgroundColor: highLevelDfd ? '#E0E0E0' : undefined,
                     hiddenHosts: highLevelDfd ? (hostInventory.get(host) || []) : undefined,
                     hiddenHostsLabel: highLevelDfd ? `${host} hosts` : undefined,
                     overParticipant: highLevelDfd,
                 }
-            ));
+            );
+
+            // Keep notes adjacent to calls instead of grouping all notes under participant
+            // declarations so each participant context appears right before first interaction.
+            participantNotesByAlias.set(alias, noteLines);
         }
     }
 
+    const notedAliases = new Set<string>();
     for (const event of events) {
         const alias = aliasMap.get(event.host);
         if (!alias) {
             continue;
+        }
+
+        if (!notedAliases.has(alias)) {
+            lines.push(...(participantNotesByAlias.get(alias) ?? []));
+            notedAliases.add(alias);
         }
 
         const prefix = messagePrefixes[event.method] ?? '';
@@ -1257,37 +1259,144 @@ export function buildPlantUmlFromHarFile(
     return generatePlantUmlFromHar(har, config, options);
 }
 
+export interface HarEntryByteRange {
+    offset: number;
+    length: number;
+}
+
+/**
+ * Single-pass byte scanner over a raw HAR buffer that returns the byte range of every object
+ * inside `log.entries`, in file order. It never builds a parsed object graph for the whole file,
+ * so it scales to very large HARs (hundreds of MB): memory stays O(number of entries), not O(file).
+ * Each returned range is a self-contained JSON object that can be `JSON.parse`d on its own.
+ */
+export function indexHarEntryByteRanges(buffer: Buffer): HarEntryByteRange[] {
+    const keyNeedle = Buffer.from('"entries"');
+    const keyPos = buffer.indexOf(keyNeedle);
+    if (keyPos === -1) {
+        throw new Error('Invalid HAR: missing "entries" array');
+    }
+
+    // Advance to the array's opening '[' (skipping the ':' and any whitespace after the key).
+    let start = keyPos + keyNeedle.length;
+    while (start < buffer.length && buffer[start] !== 0x5b /* [ */) {
+        start++;
+    }
+    if (start >= buffer.length) {
+        throw new Error('Invalid HAR: "entries" array opening bracket not found');
+    }
+
+    const ranges: HarEntryByteRange[] = [];
+    let arrayDepth = 0; // bracket depth ('['); entries array itself is depth 1
+    let objectDepth = 0; // brace depth ('{') inside the current array element
+    let inString = false;
+    let escaped = false;
+    let entryStart = -1;
+
+    for (let p = start; p < buffer.length; p++) {
+        const c = buffer[p];
+
+        if (inString) {
+            if (escaped) {
+                escaped = false;
+            } else if (c === 0x5c /* \ */) {
+                escaped = true;
+            } else if (c === 0x22 /* " */) {
+                inString = false;
+            }
+            continue;
+        }
+
+        switch (c) {
+            case 0x22 /* " */:
+                inString = true;
+                break;
+            case 0x5b /* [ */:
+                arrayDepth++;
+                break;
+            case 0x5d /* ] */:
+                arrayDepth--;
+                if (arrayDepth === 0) {
+                    return ranges; // closed the entries array
+                }
+                break;
+            case 0x7b /* { */:
+                if (objectDepth === 0 && arrayDepth === 1) {
+                    entryStart = p; // start of a top-level entry object
+                }
+                objectDepth++;
+                break;
+            case 0x7d /* } */:
+                objectDepth--;
+                if (objectDepth === 0 && arrayDepth === 1 && entryStart !== -1) {
+                    ranges.push({ offset: entryStart, length: p - entryStart + 1 });
+                    entryStart = -1;
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    return ranges;
+}
+
+/**
+ * Read a single HAR entry directly from the source .har using a byte offset/length from the index.
+ * This is an O(1) seek + bounded read (no sequential scan, no whole-file parse), so it stays fast
+ * regardless of HAR size. Pair with the entryOffset/entryLength on a HarIndexEntry.
+ */
+export function read_har_entry(harPath: string, entryOffset: number, entryLength: number): HarEntry {
+    const fd = fs.openSync(path.resolve(harPath), 'r');
+    try {
+        const buffer = Buffer.allocUnsafe(entryLength);
+        fs.readSync(fd, buffer, 0, entryLength, entryOffset);
+        return JSON.parse(buffer.toString('utf8')) as HarEntry;
+    } finally {
+        fs.closeSync(fd);
+    }
+}
+
 export function generate_indexHAR(harPath: string): HarIndexFile {
     const absHarPath = path.resolve(harPath);
-    const har = loadHarFile(absHarPath);
-    const rawHar = fs.readFileSync(absHarPath, 'utf8');
-    const lines = rawHar.split(/\r?\n/);
+    const buffer = fs.readFileSync(absHarPath);
+    const ranges = indexHarEntryByteRanges(buffer);
 
-    const entries = normalizeEntries(har.log.entries);
-    const refs = buildIndexLineRefs(entries, lines);
-
-    const indexedEntries: HarIndexEntry[] = entries.map((entry, index) => {
-        const method = (entry.request?.method || 'GET').toUpperCase();
-        const url = entry.request?.url || '';
-        const status = Number(entry.response?.status ?? 0);
-        const parsed = parseUrl(url);
-
-        return {
-            requestId: index + 1,
-            method,
-            url,
-            status,
-            host: parsed?.host,
-            path: parsed?.path,
-            startedDateTime: entry.startedDateTime,
-            lineRefs: refs[index],
-        };
+    // Parse each entry slice individually (bounded memory) to read its index metadata; the full
+    // body stays on disk and is fetched on demand via read_har_entry(entryOffset, entryLength).
+    const parsed = ranges.map(range => {
+        const slice = buffer.toString('utf8', range.offset, range.offset + range.length);
+        const entry = JSON.parse(slice) as HarEntry;
+        return { range, entry };
     });
 
+    // requestId N === the Nth entry in chronological order (same ordering as the sequence views).
+    parsed.sort((a, b) => {
+        const at = a.entry.startedDateTime;
+        const bt = b.entry.startedDateTime;
+        if (!at && !bt) return 0;
+        if (!at) return 1;
+        if (!bt) return -1;
+        const av = Date.parse(at);
+        const bv = Date.parse(bt);
+        if (Number.isNaN(av) || Number.isNaN(bv)) return 0;
+        return av - bv;
+    });
+
+    const indexedEntries: HarIndexEntry[] = parsed.map(({ range, entry }, index) => ({
+        requestId: index + 1,
+        method: (entry.request?.method || 'GET').toUpperCase(),
+        url: entry.request?.url || '',
+        status: Number(entry.response?.status ?? 0),
+        entryOffset: range.offset,
+        entryLength: range.length,
+    }));
+
     return {
-        schemaVersion: 'indexHAR.v1',
-        harFile: absHarPath,
-        generatedAt: new Date().toISOString(),
+        schemaVersion: 'indexHAR.v2',
+        harFile: path.basename(absHarPath),
+        harBytes: buffer.length,
+        harSha256: crypto.createHash('sha256').update(buffer).digest('hex'),
         totalRequests: indexedEntries.length,
         entries: indexedEntries,
     };
@@ -1302,10 +1411,22 @@ export function create_indexHAR_file(harPath: string, outputPath?: string): stri
     const indexData = generate_indexHAR(absHarPath);
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
 
-    const yamlText = yaml.dump(indexData, {
+    const onDisk: IndexHARv2OnDisk = {
+        schemaVersion: 'indexHAR.v2',
+        harFile: indexData.harFile,
+        harBytes: indexData.harBytes,
+        harSha256: indexData.harSha256,
+        totalRequests: indexData.totalRequests,
+        columns: [...INDEX_V2_COLUMNS],
+        // requestId is implicit (row index + 1); keys live once in `columns`, not on every row.
+        entries: indexData.entries.map((e): IndexV2Row => [e.method, e.url, e.status, e.entryOffset, e.entryLength]),
+    };
+
+    const yamlText = yaml.dump(onDisk, {
         lineWidth: -1,
         noRefs: true,
         sortKeys: false,
+        flowLevel: 2, // render each entry row as an inline [..] array
     });
     fs.writeFileSync(outPath, yamlText.endsWith('\n') ? yamlText : `${yamlText}\n`, 'utf8');
 

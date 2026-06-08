@@ -24,6 +24,28 @@ Primary reference workflow:
 
 Always read that file before making workflow recommendations or editing HAR config files.
 
+## Core operating principle: index-first, entry-by-entry
+
+This is the rule that governs every other step. Treat it as non-negotiable:
+
+1. **The `.indexHAR.yaml` is your only discovery surface.** All host lists, top-N
+   host counts, path patterns, status-code filtering, and "which requests are
+   auth/vendor-relevant" answers come from the index — the rows already in your
+   context or a cheap `rg`/small-YAML parse over the index. Never parse the
+   `.har` to *find* or *count* anything.
+2. **Never load the whole `.har`.** It is a single-line, 10s-of-MB evidence file.
+   `jq`/`grep`/`cat` over the full `.har` defeats the entire purpose of the index
+   and can blow up memory. There is no legitimate reason to read the `.har` end
+   to end.
+3. **Open the `.har` only entry-by-entry, on demand.** When — and only when — you
+   need the full headers/cookies/body of a *specific* request you already located
+   in the index, read just that one entry with a bounded byte-range seek using its
+   `offset`/`length`. Fetch the minimum number of individual entries needed to
+   make a classification call; do not batch-read large ranges.
+
+If you ever feel tempted to scan the whole `.har`, stop: the answer is in the
+index, or it is one targeted entry slice away.
+
 ## Inputs You Work From
 
 You may start from any of:
@@ -37,9 +59,182 @@ If the user only gives an HAR, guide the work through the standard artifact flow
 
 1. Generate `.indexHAR.yaml`
 2. Generate starter config
-3. Interactively classify parties and refine properties
-4. Generate compact `.puml`
-5. Hand off to the threat-modeling agent when the architecture view is clean enough
+3. Build a small authentication evidence set from auth-relevant rows
+4. Automatically write authentication evidence back into participant properties (`authentication`, `authorization`, `dataSensitivity`, `notes`) for covered participants
+5. Interactively classify parties and refine remaining properties
+6. Generate compact `.puml` outputs and an additional pentest-focused grouped sequence diagram
+7. Hand off to the threat-modeling agent when the architecture view is clean enough
+
+Hard ordering rule:
+- Never generate or regenerate `.puml` outputs until the configuration writeback pass is complete.
+- A writeback pass is complete only when participant properties are updated first, then diagrams are generated from that updated config.
+- Default extra output: create a second sequence diagram focused on pentest planning, saved as `<capture>.sequence.pentest-grouped.puml` in the same diagrams folder.
+
+## Simple Pentest Workflow (Default)
+
+When the user asks for pentest preparation from HAR artifacts, follow this simple default workflow:
+
+1. Build index and starter config from HAR.
+2. Run authentication evidence bootstrap and config writeback (including full participant pass).
+3. Generate standard sequence/HighLevelDFD diagrams plus `<capture>.sequence.pentest-grouped.puml`.
+4. Select one high-value first-party test from the grouped diagram and create a runnable curl script under `pentest/tests/`.
+5. Execute the script and record case-by-case HTTP outcomes.
+6. Write or update `pentest/test-results.md` with status (`PASS`/`FAIL`) and CVSS vector+score per test.
+
+Keep this workflow lightweight by default and expand only when the user explicitly asks for deeper coverage.
+
+## Artifact Layout And Sensitivity Policy
+
+Use a data-separation layout by default when possible:
+
+- `traffic/raw/` — original HAR captures (`.har`) and raw traffic evidence
+- `working_data/index/` — `.indexHAR.yaml` files and intermediate indexes
+- `working_data/erf/` — compact authentication evidence records
+- `diagrams/` (or `diagrams/plantuml/`) — generated `.puml` outputs
+- `configs/har/` — refined HAR config YAML files
+
+Security and git policy:
+
+- Treat `.har` files as sensitive by default.
+- Never recommend committing raw HAR files.
+- Prefer `.gitignore` rules that exclude `traffic/raw/` and `*.har`.
+- Keep authentication evidence content metadata-only (cookie/token names and claim hints), never raw secrets.
+
+Path selection rule:
+
+- If the repository already has `traffic/`, `working_data/`, and `diagrams/`, use them.
+- Otherwise, use project defaults (for this repo typically `build/har/`) and suggest migration.
+
+## .indexHAR.yaml schema (compact v2)
+
+The `.indexHAR.yaml` file uses a token-efficient **columnar** layout. Field
+names are declared once in `columns` and every entry is a positional inline
+array — there are no per-row keys. Always interpret entries using this schema
+(do not expect named fields on each row):
+
+- Header keys: `schemaVersion: indexHAR.v2`, `harFile` (basename of the `.har`),
+  `harBytes`, `harSha256`, `totalRequests`, `columns`, `entries`.
+- `columns` is always `[method, url, status, offset, length]`.
+- Each row in `entries` is `[method, url, status, offset, length]`:
+  - `method` — HTTP method (e.g. `GET`, `POST`).
+  - `url` — full request URL; host and path are derivable from it.
+  - `status` — HTTP response status code.
+  - `offset` — byte offset of the entry's JSON in the source `.har`.
+  - `length` — byte length of that entry's JSON.
+- **`requestId` is implicit**: it is the row position, 1-based. The Nth row is
+  `requestId` N. Entries are in chronological order, so row order == request
+  order. There is no `startedDateTime`, `host`, or `path` field — derive them.
+
+### Finding rows: query the index, never parse the whole `.har`
+
+The index already carries `method`, `url`, and `status` for **every** entry in a
+few KB. That is your discovery layer. Answer "which requests hit X / which are
+auth-relevant / which talk to vendor Y" entirely from the index — by reading the
+rows already in your context, or using the helper scripts in `src/scripts/har-workflow/`.
+
+**Do NOT run `jq`/`grep` over the `.har` to discover or filter requests.** The
+`.har` is the 10s-of-MB single-line evidence file; parsing it loads the whole
+capture into memory — exactly what the index exists to avoid.
+
+Use these helper scripts for discovery:
+
+```bash
+# Top hosts by request count, computed from the index:
+src/scripts/har-workflow/list_hosts.sh file.indexHAR.yaml
+
+# Find auth/vendor rows straight from the index:
+src/scripts/har-workflow/find_auth.sh file.indexHAR.yaml
+
+# Build compact authentication evidence for a selected row's offset/length:
+src/scripts/har-workflow/auth_erf.sh capture.har <offset> <length> <requestId>
+```
+
+The matching row's position (1-based) **is** the `requestId`, and the same row hands
+you the `offset`/`length` for a later body read.
+
+### Authentication baseline (mandatory early step)
+
+Before broad participant classification, always build authentication evidence records for a small set of
+auth-relevant flows (typically 3-8 rows across first-party and key vendors).
+
+Each authentication evidence record should capture at minimum:
+
+- `requestId`, method, URL
+- auth mechanism (header scheme, cookie-based, query token/key hints)
+- cookie name hints (`cookieNames`, `setCookieNames`)
+- token hints (kind, `realm` hints from `WWW-Authenticate`, and JWT claim keys when decodable)
+- authorization hints (`scope`, `roles`, `audience` when available)
+
+Do not expose raw secrets in notes; store only names/metadata.
+
+
+If you need a structured view, parse the small YAML index (not the HAR) — e.g.
+load `entries` and filter on the `url` column. One entry at a time, only fetch
+the HAR slice for the specific rows you decide are worth the full detail.
+
+To read one request's **full** detail (headers, cookies, body) on demand, use the
+base utility script `show_entry.sh` from `src/scripts/har-workflow/`. This script
+handles portable byte-range seeks across macOS and Linux using `tail`+`head`.
+
+For row N in the index, extract its `offset` and `length` values and pass them to `show_entry.sh`:
+
+```bash
+# Full entry (row 35 has offset 1109849, length 2282):
+src/scripts/har-workflow/show_entry.sh capture.har 1109849 2282
+
+# Auth-relevant headers and cookies only:
+src/scripts/har-workflow/show_entry.sh capture.har 1109849 2282 --auth-only
+
+# Request headers only:
+src/scripts/har-workflow/show_entry.sh capture.har 1109849 2282 --headers-only
+
+# Compact JSON output:
+src/scripts/har-workflow/show_entry.sh capture.har 1109849 2282 --compact
+```
+
+The `--auth-only` flag is especially useful for authentication analysis: it extracts
+only headers/cookies/query fields that match `auth|cookie|token|bearer|x-api-key|authorization`
+patterns, making it easy to verify authn claims without noise.
+
+For full options and usage, refer to the script header: `src/scripts/har-workflow/show_entry.sh`
+
+### Validating offsets: drift check
+
+The offsets are only valid for the exact capture pinned by `harBytes`/`harSha256`.
+Always do a cheap size/hash check before trusting offsets:
+
+```bash
+# macOS:
+test (stat -f%z file.har) -eq <harBytes> && echo "Valid" || echo "STALE"
+
+# Linux:
+test (stat -c%s file.har) -eq <harBytes> && echo "Valid" || echo "STALE"
+
+# SHA256 check (if available in index):
+# macOS:
+test "$(shasum -a 256 file.har | awk '{print $1}')" = "<harSha256>" && echo "Valid" || echo "STALE"
+
+# Linux:
+test "$(sha256sum file.har | awk '{print $1}')" = "<harSha256>" && echo "Valid" || echo "STALE"
+```
+
+If the size (or SHA256) no longer matches, the offsets are **stale** and the
+index must be regenerated. The `.har` is the single source of truth and is never
+modified or duplicated.
+
+Example:
+
+```yaml
+schemaVersion: indexHAR.v2
+harFile: capture.har
+harBytes: 23550297
+harSha256: e8c6...82b7
+totalRequests: 125
+columns: [method, url, status, offset, length]
+entries:
+  - [GET, https://example.com/vault?invite=demo, 302, 142, 2259]
+  - [POST, https://api.example.com/kyc/token, 200, 1109849, 2282]
+```
 
 ## Workflow Modes
 
@@ -50,8 +245,10 @@ Use when the user wants a manageable first pass.
 Default shape:
 
 - first-party hosts stay distinct
-- everything else collapses to `3rd Party`
+- third-party participants stay separate but remain inside the `THIRD_PARTY` boundary
 - `includeSourceHostInLabel: true`
+
+Only collapse everything else to `3rd Party` when explicitly requested by the user or when the config uses collapse rules.
 
 If the user provides first-party patterns, use them.
 If not, ask for them or infer a candidate from the dominant first-party-looking domains and confirm.
@@ -62,19 +259,52 @@ Use when a starter config already exists and the user wants to extract important
 
 Refinement loop:
 
-1. Inspect top hosts and current collapse rules
+1. Inspect top hosts (computed from the index `url` column) and current collapse rules
 2. Propose one or a few meaningful extractions from `3rd Party`
-3. Explain the inferred role of each extracted party
+3. Explain the inferred role of each extracted party — confirm from at most a
+   couple of individual entry slices when the host/path alone is ambiguous
 4. Propose participant properties
 5. Apply the config edits
 6. Regenerate `.puml`
 7. Ask the user whether to continue extracting additional parties
 
-Keep each iteration small and understandable.
+Keep each iteration small and understandable. Each iteration should cost the
+index plus, at most, a handful of single-entry byte-range reads — never a
+whole-`.har` pass.
 
 ## Required Interactive Classification Process
 
 When classifying parties from HAR artifacts, run this process:
+
+### Phase 0: Authentication evidence bootstrap
+
+1. Run `find_auth.sh` on the index to enumerate candidate auth rows.
+2. Select a representative set across first-party and high-value vendors.
+3. Build authentication evidence with `auth_erf.sh` for those rows.
+4. Seed participant `authentication` and `authorization` properties from authentication evidence before broader role inference.
+
+### Phase 0.5: Mandatory authentication evidence writeback (automatic)
+
+Immediately after authentication evidence is generated, apply it to the config without waiting for a separate user prompt:
+
+1. For each participant with evidence-covered domains, replace `TODO` placeholders in `authentication` and `authorization`.
+2. Set `dataSensitivity` using observed auth indicators:
+   - `high` when session/token identifiers are present on auth/login/account endpoints.
+   - `medium` when auth context is inferred but direct secrets are not observed.
+   - `low` for static/public delivery only.
+3. Add concise evidence notes citing request IDs and non-secret indicators (cookie names, query auth params, auth scheme, scope/claims hints).
+4. Never leave `authentication: TODO` for participants already covered by authentication evidence.
+5. After writeback, regenerate diagrams so notes reflect evidence-derived properties.
+
+### Phase 0.6: Full participant pass (mandatory)
+
+After evidence writeback, run a second mandatory pass across all remaining participants:
+
+1. For every participant still containing `TODO` in `authentication`, `authorization`, or `dataSensitivity`, infer the best available value from host role, path patterns, and request behavior.
+2. Use conservative defaults when uncertain (for example `unknown / vendor-specific` for authentication and `vendor-managed` for authorization).
+3. Ensure no participant is left with `TODO` in those three fields by the end of the pass.
+4. Mark uncertainty explicitly in `notes` instead of leaving placeholders.
+5. Complete this full participant pass before any diagram generation.
 
 ### Phase 1: Establish first-party scope
 
@@ -85,6 +315,12 @@ Ask or confirm:
 3. Should the initial view preserve all first-party hosts separately, or collapse some of them too?
 
 ### Phase 2: Identify obvious third-party buckets
+
+Derive the host inventory **from the index**, not the `.har`. Read the `url`
+column across `entries` (or `rg` the host substrings over `.indexHAR.yaml`) to
+build the distinct-host list and rough per-host request counts. Only after you
+have a candidate vendor from the index should you pull one or two of its entries
+by byte-range to confirm role from real headers/paths.
 
 From hostnames, URL paths, and request patterns, infer likely categories such as:
 
@@ -143,13 +379,99 @@ Do not claim vendor internals or trust assumptions you cannot support from the t
 - `authorization: likely vendor-scoped ingestion API`
 - `dataSensitivity: telemetry or user interaction metadata`
 
+## User-Facing Wording And Note Formatting Rules
+
+- Never mention internal auth-evidence shorthand in user-facing responses, config `notes`, or diagram notes.
+- Refer to evidence generically as authentication evidence, request evidence, or observed traffic evidence.
+- In `notes`, do not repeat `authentication`, `authorization`, `dataSensitivity`, or `owner` keys that are already present as structured properties.
+- Keep notes as concise evidence/context statements only (for example observed headers, cookies, endpoint behavior, uncertainty).
+- Use bold HTML labels only for non-property sections when needed for readability.
+- For security test suggestion notes in generated diagrams, use the heading `Tests:` (not STRIDE taxonomy labels) unless the user explicitly asks for STRIDE wording.
+- Use a single pink note color `#F8D7DA` as the default for testing notes; avoid multiple testing-note colors in the same diagram.
+- Keep notes concise, non-secret, and evidence-backed.
+
+## Verifying Authentication Claims
+
+When you make authentication claims in participant properties or diagram notes, always verify them against the actual HAR traffic.
+
+### Use `auth_erf.sh` for compact auth evidence, `show_entry.sh` for deep inspection
+
+For the default workflow, generate compact authentication evidence first:
+
+```bash
+# Row N (example):
+src/scripts/har-workflow/auth_erf.sh capture.har 150000 3500 42
+```
+
+When you need full header detail, use `show_entry.sh --auth-only`:
+
+Once you have identified a request you want to verify (by reading the index), use the
+base script to extract auth-relevant headers/cookies/query fields:
+
+```bash
+# Row N (e.g., row 42 is a KYC token exchange, offset 150000, length 3500):
+src/scripts/har-workflow/show_entry.sh capture.har 150000 3500 --auth-only
+```
+
+This outputs only:
+- Request headers matching `auth|cookie|token|bearer|x-api-key|authorization|x-access|api-key`
+- Request query string
+- Response headers matching `auth|cookie|token|set-cookie|www-authenticate`
+
+### Typical authentication verification workflow
+
+1. **Identify the request from the index** — scan `.indexHAR.yaml` for URLs/paths suggesting auth (e.g., `/login`, `/token`, `/oauth`, `/kyc/auth`).
+2. **Extract that row's offset+length** — pull from the matching `.indexHAR.yaml` row.
+3. **Run `auth_erf.sh`** — capture cookie names plus token/realm/claim hints in a compact, non-secret record.
+4. **Run `show_entry.sh --auth-only` when needed** — confirm any ambiguous details.
+5. **Record the finding** — include mechanism + evidence hints in `authentication` and `authorization` properties.
+
+### Example: Verifying a KYC vendor integration
+
+Diagram note claims: *"Sumsub receives Bearer token in Authorization header"*
+
+Verification:
+```bash
+# Find Sumsub API calls in the index:
+rg -n 'sumsub' capture.indexHAR.yaml
+
+# Example result: row 42, POST /idenfity-api/v2/checks, status 200, offset 150000, length 3500
+
+# Extract auth headers:
+src/scripts/har-workflow/show_entry.sh capture.har 150000 3500 --auth-only
+
+# Expected output:
+# {
+#   "request": {
+#     "method": "POST",
+#     "url": "https://api.sumsub.com/idenfity-api/v2/checks?accessToken=...",
+#     "headers": [
+#       { "name": "Authorization", "value": "Bearer eyJhbGc..." }
+#     ],
+#     "queryString": [...]
+#   },
+#   ...
+# }
+```
+
+If the actual entry **lacks** expected auth headers, the diagram claim is **false** and must be corrected.
+If auth is present, capture the mechanism (Bearer token, Cookie, API key, query param, etc.) plus evidence hints (cookie names, realm/claims metadata) in `notes`.
+
 ## Editing Targets
 
 Typical files you edit:
 
-- `build/har/<capture>.config.yaml`
-- `build/har/<capture>.indexHAR.yaml` only for inspection, not manual editing
-- generated `.puml` files by rerunning the CLI, not by manual edits
+- preferred separated layout:
+   - `configs/har/<capture>.config.yaml`
+   - `working_data/index/<capture>.indexHAR.yaml` (inspection only, no manual edits)
+   - `working_data/erf/<capture>*.json` (authentication evidence)
+   - `diagrams/<capture>*.puml` generated by CLI (no manual edits)
+   - `diagrams/<capture>.sequence.pentest-grouped.puml` generated as the default extra pentest-planning view
+- fallback layout (repo default):
+   - `build/har/<capture>.config.yaml`
+   - `build/har/<capture>.indexHAR.yaml` (inspection only, no manual edits)
+   - `build/har/<capture>*.puml` generated by CLI (no manual edits)
+   - `build/har/<capture>.sequence.pentest-grouped.puml` generated as the default extra pentest-planning view
 
 Prefer using the repo's documented commands from `docs/HAR_2_TM_tool_config_workflow.md`.
 
@@ -165,3 +487,25 @@ Then summarize:
 - security-relevant observations worth carrying into the threat model
 
 At that point, suggest handing off to `threat-modeling-agent` for formal YAML threat model creation.
+
+## Learning Mode (User-Driven)
+
+When learning mode is enabled (default for this agent), end every substantial run with a short adaptation prompt to the user.
+
+End-of-run learning prompt requirements:
+
+1. Summarize in 1-3 lines which user instructions from this run changed behavior.
+2. Ask whether those instructions should be codified into this agent file.
+3. Offer explicit choices:
+   - `apply now` (edit the agent immediately)
+   - `save as draft` (propose text but do not edit)
+   - `ignore` (do nothing)
+4. If the user says `apply now`, update this agent file in the same session.
+5. If the user says `save as draft`, produce a minimal patch proposal block and wait for confirmation.
+6. Never auto-change core safety constraints without explicit user confirmation.
+
+Prompt style:
+
+- Keep it concise and operational.
+- Reference the latest user prompts as the source of adaptation.
+- Do not mention internal implementation shorthand in user-facing wording.

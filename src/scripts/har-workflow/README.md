@@ -4,6 +4,8 @@ This folder contains scripts used for HAR-to-threat-model preprocessing and diag
 
 ## Scripts
 
+### TypeScript / Node.js
+
 - `init-har-config.ts`
   - Creates a HAR index file (`.indexHAR.yaml`) and a starter HAR config (`.config.yaml`).
   - Backed by npm script: `npm run har:init-config -- ...`
@@ -11,6 +13,63 @@ This folder contains scripts used for HAR-to-threat-model preprocessing and diag
 - `har2seq.ts`
   - Generates sequence and high-level sequence diagrams in PlantUML from HAR + config.
   - Backed by npm script: `npm run har2seq -- ...`
+
+### Shell Utilities
+
+- `list_hosts.sh`
+  - Lists unique request hosts with counts from `.indexHAR.yaml`.
+  - Scans entry rows only, then extracts URL hosts.
+
+  **Usage:**
+  ```bash
+  src/scripts/har-workflow/list_hosts.sh build/har/capture.indexHAR.yaml
+  ```
+
+- `find_auth.sh`
+  - Finds auth and identity-related request rows from `.indexHAR.yaml`.
+  - Scans entry rows only and prints source line numbers plus full row content.
+
+  **Usage:**
+  ```bash
+  src/scripts/har-workflow/find_auth.sh build/har/capture.indexHAR.yaml
+  ```
+
+- `auth_erf.sh`
+  - Builds a compact Authentication Evidence Record (ERF) for one request row.
+  - Uses `offset`/`length` and reports:
+    - cookie names and set-cookie names
+    - auth header scheme
+    - token hints (kind, realm hints, issuer/audience/scope when JWT)
+    - authorization hints (scope/roles/audience)
+  - Does not output raw token secrets.
+
+  **Usage:**
+  ```bash
+  src/scripts/har-workflow/auth_erf.sh capture.har 1109849 2282 35
+  src/scripts/har-workflow/auth_erf.sh capture.har 1109849 2282 35 --compact
+  ```
+
+- `show_entry.sh`
+  - Reads a single HAR entry by byte-range seek using `offset` and `length` from `.indexHAR.yaml`.
+  - Supports multiple output modes: full entry, auth-only headers, headers-only.
+  - **Portable**: uses `tail`+`head` (macOS and Linux).
+  
+  **Usage:**
+  ```bash
+  # Full entry (row 35 has offset 1109849, length 2282):
+  src/scripts/har-workflow/show_entry.sh capture.har 1109849 2282
+  
+  # Auth-relevant headers and cookies only:
+  src/scripts/har-workflow/show_entry.sh capture.har 1109849 2282 --auth-only
+  
+  # Request headers only:
+  src/scripts/har-workflow/show_entry.sh capture.har 1109849 2282 --headers-only
+  
+  # Compact JSON:
+  src/scripts/har-workflow/show_entry.sh capture.har 1109849 2282 --compact
+  ```
+  
+  For full usage and options, see the script header comments: `src/scripts/har-workflow/show_entry.sh`
 
 ## Unified HAR Workflow (Scripts + Agent)
 

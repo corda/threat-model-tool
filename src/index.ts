@@ -18,6 +18,8 @@ export {
     generate_puml_sequence,
     generate_indexHAR,
     create_indexHAR_file,
+    indexHarEntryByteRanges,
+    read_har_entry,
     generate_starter_HAR_config_yaml,
     create_starter_HAR_config_file,
     load_indexHAR_file,
@@ -37,7 +39,7 @@ export {
     type HarFile,
     type HarIndexFile,
     type HarIndexEntry,
-    type HarIndexLineRefs,
+    type HarEntryByteRange,
     type StarterConfigOptions,
 } from './utils/HAR_2_TM_tool.js';
 

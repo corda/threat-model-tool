@@ -39,6 +39,47 @@ test('create_starter_HAR_config_file writes starter YAML to disk', () => {
     }
 });
 
+test('generate_starter_HAR_config_yaml keeps third-party participants separate by default', () => {
+    const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'har-config-default-split-'));
+    const harFile = path.join(outDir, 'default-split.har.json');
+
+    try {
+        fs.writeFileSync(harFile, JSON.stringify({
+            log: {
+                entries: [
+                    {
+                        startedDateTime: '2026-05-10T10:00:00.000Z',
+                        request: {
+                            method: 'GET',
+                            url: 'https://app.example.com/home',
+                        },
+                        response: { status: 200 },
+                    },
+                    {
+                        startedDateTime: '2026-05-10T10:00:01.000Z',
+                        request: {
+                            method: 'GET',
+                            url: 'https://js.stripe.com/v3',
+                        },
+                        response: { status: 200 },
+                    },
+                ],
+            },
+        }, null, 2), 'utf8');
+
+        const yamlText = generate_starter_HAR_config_yaml(harFile, undefined, {
+            firstPartyPatterns: ['*.example.com'],
+        });
+
+        assert.ok(!yamlText.includes('ID: THIRD_PARTY\n    title: 3rd Party'));
+        assert.ok(!yamlText.includes('collapseTo: THIRD_PARTY'));
+        assert.ok(yamlText.includes('ID: STRIPE_COM'));
+        assert.ok(yamlText.includes('trustBoundary: THIRD_PARTY'));
+    } finally {
+        fs.rmSync(outDir, { recursive: true, force: true });
+    }
+});
+
 test('generate_starter_HAR_config_yaml supports collapsing all third parties behind a catch-all participant', () => {
     const yamlText = generate_starter_HAR_config_yaml(harFixture, undefined, {
         firstPartyPatterns: ['*.example.com', '*.example.it'],
