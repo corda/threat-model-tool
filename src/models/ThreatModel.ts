@@ -26,8 +26,8 @@ export default class ThreatModel extends BaseThreatModelObject {
     schemaVersion: number = 1;
 
     constructor(fileIn: string, parent: ThreatModel | null = null, publicFlag: boolean = false, versionsFilterStr: string | null = null) {
-        const tmDict = fileIn && (fileIn.endsWith('.yaml') || fileIn.endsWith('.yml'))
-            ? ThreatModel.loadYaml(fileIn)
+        const tmDict = fileIn && ThreatModel.isSupportedFile(fileIn)
+            ? ThreatModel.loadFile(fileIn)
             : {};
             
         super(tmDict, parent);
@@ -329,5 +329,36 @@ export default class ThreatModel extends BaseThreatModelObject {
         } catch (error) {
             throw new Error(`Error loading YAML file ${filename}: ${(error as Error).message}`);
         }
+    }
+
+    private static loadJson(filename: string): Record<string, any> {
+        try {
+            const fileContents = fs.readFileSync(filename, 'utf8');
+            return JSON.parse(fileContents) as Record<string, any>;
+        } catch (error) {
+            throw new Error(`Error loading JSON file ${filename}: ${(error as Error).message}`);
+        }
+    }
+
+    /**
+     * Whether a file path looks like one of the supported threat-model formats.
+     * Matches the formats advertised by `loadThreatModel` / `parseThreatModel`
+     * in `src/parser.ts`.
+     */
+    private static isSupportedFile(filename: string): boolean {
+        const lower = filename.toLowerCase();
+        return lower.endsWith('.yaml') || lower.endsWith('.yml') || lower.endsWith('.json');
+    }
+
+    /**
+     * Load a threat model file, routing on the extension. Previously the
+     * constructor only matched `.yaml` / `.yml` and silently produced an
+     * empty model for `.json` inputs, even though `parser.ts` advertises
+     * JSON support.
+     */
+    private static loadFile(filename: string): Record<string, any> {
+        return filename.toLowerCase().endsWith('.json')
+            ? ThreatModel.loadJson(filename)
+            : ThreatModel.loadYaml(filename);
     }
 }
