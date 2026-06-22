@@ -1,6 +1,8 @@
 ---
 name: har-party-classifier
 description: 'Use when starting from an HAR file, .indexHAR.yaml, HAR config, or sequence diagram and you want an interactive workflow to classify first-party vs third-party domains, refine collapse rules, infer vendor roles, and propose participant properties such as authentication, authorization, and data sensitivity. Also use for requests like classify parties from HAR, infer 3rd party role, refine HAR config, or build a compact HAR threat-modeling view.'
+user-invocable: true
+# tools below are used by GitHub Copilot; Claude Code uses its native toolset
 tools: [vscode/askQuestions, execute/getTerminalOutput, execute/awaitTerminal, execute/killTerminal, execute/runInTerminal, execute/runTests, read/problems, read/readFile, search/fileSearch, search/listDirectory, search/searchResults, search/textSearch, agent/runSubagent, edit/createDirectory, edit/createFile, edit/editFiles, edit/rename, web/fetch, todo]
 ---
 
@@ -68,7 +70,7 @@ If the user only gives an HAR, guide the work through the standard artifact flow
 Hard ordering rule:
 - Never generate or regenerate `.puml` outputs until the configuration writeback pass is complete.
 - A writeback pass is complete only when participant properties are updated first, then diagrams are generated from that updated config.
-- Default extra output: create a second sequence diagram focused on pentest planning, saved as `<capture>.sequence.pentest-grouped.puml` in the same diagrams folder.
+- Default extra output: create a second sequence diagram focused on pentest planning, saved as `pentest/diagrams/<capture>.sequence.pentest-grouped.puml`.
 
 ## Simple Pentest Workflow (Default)
 
@@ -76,10 +78,59 @@ When the user asks for pentest preparation from HAR artifacts, follow this simpl
 
 1. Build index and starter config from HAR.
 2. Run authentication evidence bootstrap and config writeback (including full participant pass).
-3. Generate standard sequence/HighLevelDFD diagrams plus `<capture>.sequence.pentest-grouped.puml`.
+3. Generate standard sequence/HighLevelDFD diagrams plus `pentest/diagrams/<capture>.sequence.pentest-grouped.puml`.
 4. Select one high-value first-party test from the grouped diagram and create a runnable curl script under `pentest/tests/`.
 5. Execute the script and record case-by-case HTTP outcomes.
 6. Write or update `pentest/test-results.md` with status (`PASS`/`FAIL`) and CVSS vector+score per test.
+7. In the same run, update `pentest/diagrams/<capture>.sequence.pentest-grouped.puml` test-note status markers to reflect the latest report results.
+
+Failing-test evidence rule:
+- In `pentest/test-results.md`, start every test section with an `Impact summary:` line as the first line under the test heading.
+- Keep CVSS lines grouped and consistent directly after the impact summary (for example hypothetical score+vector, then observed score+vector when applicable).
+- Before declaring `FAIL`, run at least one live reproduction with the current authenticated session context; if the latest observed result is `403`/`400` for the tampered case, do not classify as an exploitable authorization `FAIL`.
+- For every test with `FAIL` status in `pentest/test-results.md`, include at least 1-3 concrete evidence rows.
+- Each evidence row must state: endpoint, tampered parameter name(s), tampered value(s), value source (for example original-user vs different-user capture), observed HTTP/result, and expected rejection behavior (typically `400`/`403`).
+- For every `FAIL`, include at least one reproducible `curl` command in the same test section using safe placeholders (for example `<SESSION_COOKIE>`) so the failure is understandable and runnable on its own.
+- When available, include human-readable identity/entity examples in the same `FAIL` section (for example user email/username, project name, organization/repository owner label) and show expected vs displayed mixed-up results.
+- In user-facing evidence sections, avoid internal artifact filenames/paths; describe evidence source in plain language (for example original-user capture vs different-user capture).
+- In every `FAIL` evidence block, include one concise impact summary sentence in plain language (for example: one user can list projects from another organization).
+- Keep `pentest/test-results.md` stateless: do not use temporal qualifiers such as "historical", "current rerun", "previous run", or similar chronology labels; describe observed behavior directly as the report's source of truth.
+- Write impact summaries in business terms (what unauthorized user action is possible and why it matters), not only protocol/status wording.
+- For authorization/IDOR findings, include at least one concrete human-readable expected-vs-observed example (for example project title/repo owner/user identity), not only opaque IDs.
+- Use concise, non-secret snippets only (for example body preview fragments or key response text), never raw credentials.
+- Keep this evidence in the same section as the failing test so reviewers can validate the failure without opening auxiliary files.
+
+Pentest diagram status rule:
+- After updating `pentest/test-results.md`, update `pentest/diagrams/<capture>.sequence.pentest-grouped.puml` notes so each executed test ID in `Tests:` lines includes a visible status marker.
+- Use `<font color="green">✅ PASS</font>` for pass and `<font color="red">❌ FAIL</font>` for fail.
+- Apply markers only to test IDs with observed results; leave unexecuted tests unmarked.
+- This is a unified workflow: report and pentest diagram must be kept in sync in the same execution.
+- Before ending the run, perform a final reconciliation pass so every executed test status in `pentest/test-results.md` exactly matches the corresponding status marker in `pentest/diagrams/<capture>.sequence.pentest-grouped.puml`; if any mismatch is found, update the diagram in the same run.
+- Apply the same status-marker update rule to custom added tests (for example `TM-APIV2-*`), not only predefined test IDs.
+
+Authorization test reliability rule:
+- For IDOR and authorization tampering coverage, suggest the user upload an additional HAR captured from a different authenticated user and/or different organization/tenant.
+- Use cross-identity evidence (different user/org captures) to validate that identifier tampering tests are meaningful and not false positives caused by single-identity context.
+- Index each additional identity HAR in the same workflow and treat it as a challenge-value source for tampering tests.
+- Compose authorization tests by combining: original-user auth context (cookies/tokens) + challenging identifiers (org/user/group/project IDs) extracted from different-user index rows.
+- Before declaring IDOR/authorization FAIL from sweep results, verify that the session used in the sweep does NOT have legitimate membership in the challenge org/group; if the session identity owns or belongs to the challenge tenant, all `200` responses are authorized access, not a bypass — treat as false positive and require a genuinely separate account for retesting.
+
+CVSS scoring rule:
+- CVSS in test reports represents the hypothetical security impact if the tested control fails (potential vulnerability impact), not whether the current test run passed or failed.
+- Keep `PASS`/`FAIL` as the observed execution result and CVSS as the potential risk severity for that test objective.
+
+SSRF out-of-band verification rule:
+- When behavioral SSRF evidence exists (e.g. scan stays in STARTED, timing differences, protocol-specific error responses), offer to upgrade the finding to confirmed out-of-band callback proof using ngrok or a similar tunnel tool.
+- Standard OOB verification workflow:
+  1. Start a local HTTP listener: `python3 -m http.server 7777 --directory /tmp &`
+  2. Configure ngrok authtoken if not already set: `ngrok config add-authtoken <TOKEN>`
+  3. Start tunnel: `ngrok http 7777 &` then capture public URL from `curl -s http://localhost:4040/api/tunnels`
+  4. Submit the test payload with the ngrok URL as the target (e.g. `git_uri`, redirect URL, webhook URL)
+  5. Poll ngrok request log: `curl -s http://localhost:4040/api/requests/http` and extract `remote_addr`, HTTP method, URI path, User-Agent, and all request headers
+  6. Document: source IP, User-Agent, exact request path, and timestamp as evidence in the test report
+- Evidence quality: out-of-band callback with source IP attribution is definitive SSRF proof; update test status from "blind SSRF" to "confirmed SSRF — out-of-band callback received"
+- Include the observed `remote_addr` (backend server IP), User-Agent, and request path in the test-results.md evidence table and in the pentest-grouped diagram note
+- Sync diagram status markers and test-results.md in the same run after OOB evidence is captured
 
 Keep this workflow lightweight by default and expand only when the user explicitly asks for deeper coverage.
 
@@ -151,6 +202,13 @@ src/scripts/har-workflow/auth_erf.sh capture.har <offset> <length> <requestId>
 
 The matching row's position (1-based) **is** the `requestId`, and the same row hands
 you the `offset`/`length` for a later body read.
+
+### Terminal shell rule
+
+- If the environment terminal starts in fish, switch to bash once per terminal session before running workflow commands.
+- Preferred switch command: `bash`
+- After switching, keep the rest of the command sequence in that same bash session for consistency.
+- Do not prefix every command with `bash`; run `bash` once, enter it, then continue normally in that terminal.
 
 ### Authentication baseline (mandatory early step)
 
@@ -466,12 +524,12 @@ Typical files you edit:
    - `working_data/index/<capture>.indexHAR.yaml` (inspection only, no manual edits)
    - `working_data/erf/<capture>*.json` (authentication evidence)
    - `diagrams/<capture>*.puml` generated by CLI (no manual edits)
-   - `diagrams/<capture>.sequence.pentest-grouped.puml` generated as the default extra pentest-planning view
+   - `pentest/diagrams/<capture>.sequence.pentest-grouped.puml` generated as the default extra pentest-planning view
 - fallback layout (repo default):
    - `build/har/<capture>.config.yaml`
    - `build/har/<capture>.indexHAR.yaml` (inspection only, no manual edits)
    - `build/har/<capture>*.puml` generated by CLI (no manual edits)
-   - `build/har/<capture>.sequence.pentest-grouped.puml` generated as the default extra pentest-planning view
+   - `pentest/diagrams/<capture>.sequence.pentest-grouped.puml` generated as the default extra pentest-planning view
 
 Prefer using the repo's documented commands from `docs/HAR_2_TM_tool_config_workflow.md`.
 

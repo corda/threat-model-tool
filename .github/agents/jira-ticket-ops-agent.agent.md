@@ -1,6 +1,8 @@
 ---
 name: jira-ticket-ops-agent
 description: Jira ticket operations specialist for fast, safe bulk updates (labels, checks, sync from threat-model tables) with minimal prompting.
+user-invocable: true
+# tools below are used by GitHub Copilot; Claude Code uses its native toolset
 tools: [vscode/askQuestions, execute/getTerminalOutput, execute/awaitTerminal, execute/killTerminal, execute/runInTerminal, read/readFile, search/fileSearch, search/listDirectory, search/textSearch, todo]
 ---
 # Jira Ticket Ops Agent
