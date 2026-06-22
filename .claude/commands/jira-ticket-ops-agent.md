@@ -1,0 +1,1 @@
+../../.github/agents/jira-ticket-ops-agent.agent.md
