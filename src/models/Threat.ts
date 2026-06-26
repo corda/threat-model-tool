@@ -159,6 +159,15 @@ export default class Threat extends BaseThreatModelObject {
         return this.cvssObject ? this.cvssObject.getSmartScoreColor() : 'gray';
     }
 
+    /**
+     * Severity bucket only ("Low" / "Medium" / "High" / "Critical" / "None"),
+     * without the numeric score. Use this when grouping or aggregating threats
+     * by severity; use `getSmartScoreDesc()` for full per-threat display strings.
+     */
+    getSmartScoreSeverity(): string {
+        return this.cvssObject ? this.cvssObject.getSmartScoreSeverity() : 'TODO CVSS';
+    }
+
     /** Mitigation status text matching Python output */
     statusDefaultText(): string {
         if (this.fullyMitigated) {
