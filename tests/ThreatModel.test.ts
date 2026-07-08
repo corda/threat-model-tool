@@ -77,9 +77,28 @@ test('Markdown Rendering', async (t) => {
         const tm = new ThreatModel(path.join(examplesDir, 'Example2/Example2.yaml'));
         const renderer = new MarkdownRenderer(tm);
         const summary = renderer.renderSummary();
-        
+
         assert.ok(summary.includes('Summary'), 'Summary should have title');
         assert.ok(summary.includes('Total Threats'), 'Summary should have threat count');
+    });
+
+    await t.test('CVSS score line is not duplicated', () => {
+        // Regression: getSmartScoreDesc() already returns "<score> (<severity>)",
+        // so the renderer must not wrap it again ("7.5 (7.5 (High))").
+        const tm = new ThreatModel(path.join(examplesDir, 'Example2/Example2.yaml'));
+        const markdown = new MarkdownRenderer(tm).renderFullReport();
+        const cvssLines = markdown
+            .split('\n')
+            .filter(line => line.startsWith('**CVSS Score:**'));
+
+        assert.ok(cvssLines.length > 0, 'Example2 should produce at least one CVSS line');
+        for (const line of cvssLines) {
+            assert.doesNotMatch(
+                line,
+                /\(\s*\d+(\.\d+)?\s*\(/,
+                `CVSS line should not contain a nested score: ${line}`,
+            );
+        }
     });
 });
 
