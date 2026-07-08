@@ -24,11 +24,20 @@ export class PlantUMLRenderer {
         puml += '  BorderColor Black\n';
         puml += '}\n\n';
 
-        // Render threats as rectangles
+        // Render threats as rectangles.
+        //
+        // The `<<...>>` stereotype must match the keys declared in the
+        // `skinparam rectangle` block above ("Critical" / "High" / "Medium" /
+        // "Low" / "None"), otherwise PlantUML falls back to the default colour
+        // and the severity heatmap is lost. Previously this code used
+        // `getSmartScoreDesc()` (e.g. "9.8 (Critical)") as both the stereotype
+        // and the CVSS line, which broke the heatmap and printed the numeric
+        // score twice on the CVSS line. Use the severity bucket alone for the
+        // stereotype and compose the CVSS line from the score plus severity.
         for (const threat of this.threatModel.threats) {
-            const severity = threat.getSmartScoreDesc();
+            const severity = threat.cvssObject ? threat.cvssObject.getSmartScoreSeverity() : 'TODO CVSS';
             const score = threat.getSmartScoreVal().toFixed(1);
-            
+
             puml += `rectangle "${this.escapePlantUML(threat.title || threat.id)}" as ${threat.id} <<${severity}>> {\n`;
             puml += `  **Type:** ${this.escapePlantUML(threat.threatType || '')}\n`;
             puml += `  **CVSS:** ${score} (${severity})\n`;
