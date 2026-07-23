@@ -144,9 +144,16 @@ export class TMCVSS {
 
     /**
      * Return the vector string without the CVSS:3.x/ prefix, for display.
+     *
+     * Examples:
+     *   "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H" -> "AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+     *   "CVSS:3.0/AV:N/..."                            -> "AV:N/..."
+     *   "AV:N/AC:L/..." (no prefix)                    -> "AV:N/AC:L/..." (unchanged)
      */
     clean_vector(): string {
         if (!this.vector) return '';
-        return this.vector;
+        if (!this.vector.startsWith('CVSS:')) return this.vector;
+        const slash = this.vector.indexOf('/');
+        return slash >= 0 ? this.vector.slice(slash + 1) : this.vector;
     }
 }
