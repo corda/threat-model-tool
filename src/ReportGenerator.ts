@@ -20,6 +20,7 @@ import {
 import { AttackTreeGenerator } from './puml/AttackTreeGenerator.js';
 import { HeadingNumberer, resetHeadingNumbers, disableHeadingNumbering, enableHeadingNumbering, isHeadingNumberingEnabled } from './utils/HeadingNumberer.js';
 import { makeMarkdownLinkedHeader, createTitleAnchorHash, PAGEBREAK } from './utils/TemplateUtils.js';
+import { renderAnnexFolder, collectModelIds } from './utils/AnnexRenderer.js';
 
 export class ReportGenerator {
     private static TEMPLATE_MAPPING: Record<string, (tmo: ThreatModel, ctx: any) => string> = {
@@ -70,6 +71,9 @@ export class ReportGenerator {
         // Render report using the Python-aligned pipeline
         let mdReport = this.renderTemplateByName(template, tmo, context);
 
+        // Append the annex sections from assets/annexes (markdown files -> numbered annexes)
+        mdReport = this.appendAnnexFolder(tmo, mdReport, template, outputDir, context);
+
         // Inject pre/post markdown sections from assets/markdown_sections_1 when present
         mdReport = this.injectPrePostMarkdownSections(tmo, mdReport, context);
 
@@ -92,6 +96,38 @@ export class ReportGenerator {
         if (!(context.skipDiagrams ?? false)) {
             this.generatePlantUML(tmo, outputDir);
         }
+    }
+
+    /**
+     * Append the markdown files of `<model>/assets/annexes/` as annex sections (docs/ANNEXES.md).
+     * Skipped for public reports (the annexes are internal documents) or when `process_annexes` is false.
+     */
+    private static appendAnnexFolder(tmo: ThreatModel, mdReport: string, template: string, outputDir: string, ctx: any): string {
+        const annexesDir = path.join(tmo.assetDir(), 'annexes');
+        const enabled = (ctx.process_annexes ?? true) && (tmo as any)._visibility !== 'public';
+        if (!enabled || !fs.existsSync(annexesDir) || !fs.statSync(annexesDir).isDirectory()) {
+            return mdReport;
+        }
+
+        const modelFiles = [tmo, ...tmo.getDescendantsTM()].map(model => (model as any).fileName as string);
+        const annexes = renderAnnexFolder({
+            annexesDir,
+            outputDir,
+            // The full report already has Annex 1 and 2; the MkDocs report names its sections differently.
+            firstNumber: ['full', 'TM_templateFull'].includes(template) ? 3 : 1,
+            headerLevel: (ctx.rootHeaderLevel || 1) + 1,
+            useAttrListAnchors: Boolean(ctx.useMarkDown_attr_list_ext),
+            knownIds: collectModelIds(modelFiles),
+        });
+
+        for (const warning of [...annexes.linkWarnings, ...annexes.idWarnings]) {
+            console.warn(`Annex warning: ${warning}`);
+        }
+        if (ctx.strictAnnexes && annexes.linkWarnings.length > 0) {
+            throw new Error(`Annex check failed with ${annexes.linkWarnings.length} link problem(s)`);
+        }
+        console.log(`Annexes: ${annexes.fileCount} file(s) from ${annexesDir}`);
+        return annexes.markdown ? `${mdReport}\n${annexes.markdown}` : mdReport;
     }
 
     private static injectPrePostMarkdownSections(tmo: ThreatModel, mdReport: string, ctx: any): string {
@@ -607,7 +643,9 @@ export class ReportGenerator {
         for (const model of models) {
             const assetDir = model.assetDir();
             if (fs.existsSync(assetDir) && fs.statSync(assetDir).isDirectory()) {
-                fs.cpSync(assetDir, outputDir, { recursive: true, force: true });
+                // assets/annexes is rendered into the report, not published as raw files
+                const annexesDir = path.join(assetDir, 'annexes');
+                fs.cpSync(assetDir, outputDir, { recursive: true, force: true, filter: (source) => source !== annexesDir });
             }
         }
 

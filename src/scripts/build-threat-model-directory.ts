@@ -125,6 +125,8 @@ Options:
   --pdfHeaderNote <text>     Text shown in PDF page headers
   --pdfArtifactLink <url>    Reserved for future artifact linking
     --assetFolder <path>       Asset folder(s) copied into each output (repeat or comma-separate)
+  --noAnnexes                Leave assets/annexes markdown files out of the reports
+  --strictAnnexes            Fail when an annex file has a broken link
 `);
     process.exit(0);
 }
@@ -141,6 +143,8 @@ const generatePDF     = parseFlag(cliArgs, 'generatePDF');
 const pdfHeaderNote   = parseOption(cliArgs, 'pdfHeaderNote') ?? 'Private and confidential';
 const pdfArtifactLink = parseOption(cliArgs, 'pdfArtifactLink');
 const assetFolders    = parseMultiOption(cliArgs, 'assetFolder');
+const noAnnexes       = parseFlag(cliArgs, 'noAnnexes');
+const strictAnnexes   = parseFlag(cliArgs, 'strictAnnexes');
 
 buildFullDirectory(tmDirectory, outputDir, {
     template,
@@ -151,4 +155,6 @@ buildFullDirectory(tmDirectory, outputDir, {
     pdfHeaderNote,
     pdfArtifactLink,
     assetFolders: assetFolders.length > 0 ? assetFolders : undefined,
+    noAnnexes,
+    strictAnnexes,
 });

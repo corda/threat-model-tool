@@ -269,6 +269,8 @@ npx tsx src/scripts/build-threat-model.ts <path-to-yaml> [output-dir] [options]
 - `--generatePDF`: Generate a PDF (requires PDF tooling configured in your environment/CI).
 - `--pdfHeaderNote="text"`: Custom header for PDF pages.
 - `--assetFolder <path>`: Additional asset folder(s) to copy into the output root. Repeat the option or use comma-separated values.
+- `--noAnnexes`: Leave the markdown files in `assets/annexes/` out of the report (see [docs/ANNEXES.md](docs/ANNEXES.md)).
+- `--strictAnnexes`: Fail the build when an annex file has a broken link.
 
 Example:
 ```bash
@@ -307,6 +309,8 @@ npx tsx src/scripts/build-threat-model-directory.ts [options]
 | `--pdfHeaderNote <text>` | `Private and confidential` | Text shown in the PDF page header |
 | `--pdfArtifactLink <url>` | *(none)* | Reserved for future artifact linking |
 | `--assetFolder <path>` | `src/assets_MD_HTML` | Extra asset folder(s) copied into each TM output (repeat option or comma-separate) |
+| `--noAnnexes` | *(annexes on)* | Leave `assets/annexes` markdown files out of each report |
+| `--strictAnnexes` | *(off)* | Fail when an annex file has a broken link |
 | `--help` | | Print this help and exit |
 
 **Examples:**
@@ -354,6 +358,10 @@ For single-model and directory builds, output assets come from these sources:
 When file paths collide, the last copied source wins. For custom assets this means:
 - if you pass `--assetFolder`, those folders are copied in the order provided;
 - if you do **not** pass `--assetFolder`, only the default `src/assets_MD_HTML` folder is applied at this stage.
+
+#### Annexes from markdown files
+
+Markdown files in `<model>/assets/annexes/` become numbered annex sections at the end of the report (HTML, PDF and MkDocs), with their links and PlantUML diagrams resolved. See [docs/ANNEXES.md](docs/ANNEXES.md).
 
 #### PDF generation
 

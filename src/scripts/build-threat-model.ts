@@ -169,6 +169,10 @@ export interface BuildTMOptions {
     pdfArtifactLink?: string;
     assetFolders?: string[];
     skipDiagrams?: boolean;
+    /** Leave the assets/annexes markdown files out of the report */
+    noAnnexes?: boolean;
+    /** Fail the build when an annex file has a broken link */
+    strictAnnexes?: boolean;
 }
 
 export function buildSingleTM(yamlFile: string, outputDir: string, options: BuildTMOptions = {}): void {
@@ -182,7 +186,9 @@ export function buildSingleTM(yamlFile: string, outputDir: string, options: Buil
         fileName,
         pdfHeaderNote = 'Private and confidential',
         assetFolders = [DEFAULT_ASSET_FOLDER],
-        skipDiagrams = false
+        skipDiagrams = false,
+        noAnnexes = false,
+        strictAnnexes = false
     } = options;
 
     const fullPath = path.resolve(yamlFile);
@@ -203,6 +209,8 @@ export function buildSingleTM(yamlFile: string, outputDir: string, options: Buil
         // Keep alias for backward compatibility with existing callers.
         headerNumbering,
         skipDiagrams,
+        process_annexes: !noAnnexes,
+        strictAnnexes,
     });
 
     copyAssetFolders(assetFolders, absOutputDir);
@@ -268,6 +276,8 @@ if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith
     let visibility: 'full' | 'public' = 'full';
     let headerNumbering = true;
     let skipDiagrams = false;
+    let noAnnexes = false;
+    let strictAnnexes = false;
     let assetFolders: string[] | undefined;
 
     for (let i = 0; i < args.length; i++) {
@@ -282,6 +292,10 @@ if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith
             pdfHeaderNote = args[++i];
         } else if (arg === '--skipDiagrams') {
             skipDiagrams = true;
+        } else if (arg === '--noAnnexes') {
+            noAnnexes = true;
+        } else if (arg === '--strictAnnexes') {
+            strictAnnexes = true;
         } else if (arg === '--no-headerNumbering') {
             headerNumbering = false;
         } else if (arg === '--headerNumbering') {
@@ -304,7 +318,7 @@ if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith
     }
 
     if (!yamlFile) {
-        console.error('Usage: build-threat-model.ts <yaml-file> [output-dir (default: ./build)] [--mainTitle "Title"] [--generatePDF] [--pdfHeaderNote "text"] [--template name] [--visibility full|public] [--no-headerNumbering] [--assetFolder <path>] [--skipDiagrams]');
+        console.error('Usage: build-threat-model.ts <yaml-file> [output-dir (default: ./build)] [--mainTitle "Title"] [--generatePDF] [--pdfHeaderNote "text"] [--template name] [--visibility full|public] [--no-headerNumbering] [--assetFolder <path>] [--skipDiagrams] [--noAnnexes] [--strictAnnexes]');
         console.error('Note: defaults keep generated artifacts under ./build/* to avoid polluting source folders.');
         process.exit(1);
     }
@@ -319,6 +333,8 @@ if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith
             headerNumbering,
             assetFolders,
             skipDiagrams,
+            noAnnexes,
+            strictAnnexes,
         });
         console.log('Done!');
     } catch (err: any) {

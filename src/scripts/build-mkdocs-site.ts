@@ -441,6 +441,8 @@ Options:
   --generatePDF                     Generate PDF per TM
   --pdfHeaderNote <text>            PDF page header text
   --pdfArtifactLink <url>           Optional link shown on index page
+  --noAnnexes                       Leave assets/annexes markdown files out of the reports
+  --strictAnnexes                   Fail when an annex file has a broken link
   --help                            Print this help
 `);
     process.exit(0);
@@ -462,6 +464,8 @@ const headerNumbering = !parseFlag(cliArgs, 'no-headerNumbering');
 const generatePDF = parseFlag(cliArgs, 'generatePDF');
 const pdfHeaderNote = parseOption(cliArgs, 'pdfHeaderNote') ?? 'Private and confidential';
 const pdfArtifactLink = parseOption(cliArgs, 'pdfArtifactLink');
+const noAnnexes = parseFlag(cliArgs, 'noAnnexes');
+const strictAnnexes = parseFlag(cliArgs, 'strictAnnexes');
 
 buildMkdocsSite(tmDirectory, outputDir, {
     MKDocsDir,
@@ -476,4 +480,6 @@ buildMkdocsSite(tmDirectory, outputDir, {
     generatePDF,
     pdfHeaderNote,
     pdfArtifactLink,
+    noAnnexes,
+    strictAnnexes,
 });
