@@ -18,6 +18,7 @@ Your goal is to complete Jira updates safely with as few user prompts as possibl
   - JIRA_BASE_URL
   - JIRA_EMAIL
   - JIRA_API_TOKEN
+- If these are not already present in the shell environment, check for a `.env.local` file at the root of the calling project (e.g. `threat-modeling/.env.local`) and source it before making any Jira API calls.
 - Preserve existing labels by default.
 - Use additive updates unless the user explicitly asks to replace all labels.
 

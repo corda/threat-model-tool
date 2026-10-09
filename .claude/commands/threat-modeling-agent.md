@@ -864,6 +864,37 @@ threats:
 
 When generating `.puml` diagrams inside `assets/img/` folders, **always reference them as `.svg`** in YAML fields and Markdown content (e.g., `img/MyDiagram.svg`). A separate build process converts `.puml` files to `.svg` — never link directly to the `.puml` source file.
 
+**Commit the `.puml` source ONLY — never leave rendered `.svg`/`.png` in the repo.** The images are build-engine output. A checked-in render is duplicated state that goes stale as soon as the source changes, and adds binary churn to every diff. The YAML reference to `img/MyDiagram.svg` is expected to resolve *after* the build, not in the working tree.
+
+- Rendering locally to check your work is encouraged: `plantuml -tpng MyDiagram.puml`, read the image, confirm it is correct — then **delete it** before finishing the task. Never `git add` it.
+- Use **one format flag per invocation**. `plantuml -tsvg -tpng ...` silently honours only the last flag and skips the rest of the run, so it looks like it worked while producing nothing.
+- The output filename comes from the `@startuml <name>` id, not the source filename (`devnetDeploy.puml` emits `devnet_deploy.svg`). Keep the `@startuml` id equal to the file basename so references and cleanup stay predictable.
+- Do not add `.gitignore` rules for these artifacts unless the user asks — deleting them is the expected discipline.
+- Hand-made images that have no `.puml` source are legitimate repo content; leave them alone.
+
+**Label threats in diagrams with their YAML threat IDs, not ad-hoc `T1`/`T2`/`P1` numbering.** A diagram note that reads `**APPROVED_PROPOSAL_NEVER_EXPIRES** — ...` is traceable back to the model; `**T7** — ...` is not, and drifts the moment either side is renumbered. When a note belongs to a threat in a sibling model, qualify it (`AUTHORITY_LEFT_OUTSIDE_GOVERNANCE (SolanaProgramsLifecycle)`). If a diagram note has no corresponding threat in the YAML, that is a gap — add the threat rather than dropping the note. After relabelling, verify every ID cited in the diagrams resolves to a real `- ID:` in the YAML.
+
+### Verify tooling claims before writing them into a model
+
+Threat models routinely document concrete commands, CLI flags, API endpoints, account
+fields and PDA derivations. **Never write these from memory.** Check them against the
+vendor's documentation or the tool's source before they go into the YAML or a diagram,
+and say in the text where a non-obvious fact came from.
+
+Recalled flag names and field names are the most common source of confidently wrong
+documentation, and a threat model is exactly the artifact people later execute against
+during a ceremony or an incident. A wrong flag makes a runbook fail; a wrong claim about
+what a tool *can* do can invalidate a control.
+
+- Prefer the source over the docs when they disagree, and over both when the question is
+  "can this tool actually do X" (e.g. reading a CLI's signer resolution to learn whether
+  it accepts hardware-wallet URLs, not just a file path).
+- State assumptions explicitly for anything left unverified — mark it as a placeholder
+  rather than presenting it as a working command.
+- A tooling constraint discovered this way is often itself threat-model content: if a key
+  cannot be held by the CLI, or a signer must be driven through a third-party approval
+  API, that shapes the ceremony and belongs in the analysis.
+
 ### Assets 
 
 - External assets usually are out of scope, there may be dataflows to that asset (e.g. DF_INTERNALASSET_TO_EXTERNALASSET) that are in scope, but the external asset itself is not.
@@ -877,10 +908,13 @@ Before writing any child model YAML, **read the parent threat model** and invent
 
 #### Security Objectives
 
+**Default: security objectives live in the PARENT and are shared by every child.** A child-local objective is the exception, not the norm. Objectives are the spine of the attack tree and of cross-model impact traceability — one defined inside a child is invisible to its siblings and cannot be aggregated.
+
 1. **First choice: reuse parent objectives directly** via `REFID`. Map each child threat's impact to the most semantically appropriate parent objective.
 2. **If no parent objective fits:** Do NOT create a local substitute with a different name (e.g., `INFRA_CONFIDENTIALITY` when the parent has no confidentiality objective). Instead, **propose adding a new objective to the parent** that serves both the parent and child models. Ask the user before adding it.
 3. **Check semantic fit, not just keyword match.** A parent objective like `PROGRAM_INTEGRITY` (specific to on-chain programs) should NOT be used for generic infrastructure integrity. If the parent objective is too narrow, propose a broader parent objective (e.g., `INTEGRITY`) and make the existing narrow one `contributesTo` it.
-4. **Only create child-specific objectives** (with `contributesTo` linking to a parent objective) when the child genuinely needs a specialised sub-objective that has no place in the parent's scope.
+4. **Only create child-specific objectives** (with `contributesTo` linking to a parent objective) when the child genuinely needs a specialised sub-objective that has no place in the parent's scope. This is rare — if two children could plausibly reference it, it belongs in the parent.
+5. **When editing an existing child model,** treat any objective declared in its `scope.securityObjectives` as a candidate to promote to the parent. Move it up (keeping its `contributesTo` link), delete the child copy, and re-verify that threat and countermeasure counts are unchanged.
 
 **Decision flowchart:**
 ```
@@ -895,9 +929,16 @@ For each impact in the child model:
 
 #### Attackers
 
+**Default: a child model declares NO `scope.attackers` block at all.** Parent attackers are inherited automatically and can be referenced by `REFID` from any threat in the child. Sharing attackers from the parent is strongly preferred — a child-local attacker is the exception that must be justified, not the starting point.
+
 1. **First choice: reuse parent attackers** via `REFID`. A parent `EXTERNAL_ATTACKER` covers external adversaries in all child models — do NOT create `INFRA_EXTERNAL_ATTACKER`, `UI_EXTERNAL_ATTACKER`, etc.
-2. **Only create child-specific attackers** when the child introduces a genuinely distinct threat agent not represented in the parent (e.g., `COMPROMISED_WORKLOAD` for an infrastructure model where the parent has no equivalent).
-3. **If an attacker is out of scope for this child but relevant to the parent:** Note it in the child's scope description and suggest adding it to the parent. Do NOT define it locally as `inScope: false` if it already belongs in the parent.
+2. **Never redefine an attacker the parent already has**, even with identical content. A local `EXTERNAL_ATTACKER` shadows the parent's and fragments the model.
+3. **Check for a semantic equivalent under a different name before adding anything.** `COMPROMISED_DEVELOPER` and a parent `DEVELOPER` that already means "malicious insider or compromised developer credentials" are the same attacker — reuse the parent's ID and drop the local one.
+4. **If the attacker is genuinely new but useful beyond this child, add it to the PARENT**, not the child. Ask the user, then define it once at parent level. Most "child-specific" attackers turn out to be reusable (e.g. `MALICIOUS_SIGNER`, `COMPROMISED_OPERATOR` apply to every model touching signing or deployment).
+5. **Only create a child-local attacker** when the threat agent cannot exist outside this child's scope, and say why in the child's scope description.
+6. **If an attacker is out of scope for this child but relevant to the parent:** Note it in the child's scope description. Do NOT define it locally as `inScope: false` if it already belongs in the parent — out-of-scope attackers belong at parent level too.
+
+**When editing an existing child model,** check whether it already declares `scope.attackers` that duplicate or shadow parent definitions. If it does, propose the cleanup: move genuinely shared attackers up to the parent, remap locally-named REFIDs to their parent equivalents, delete the child block, and re-verify. Confirm the threat and countermeasure counts are unchanged before and after — that is the signal that nothing was silently dropped.
 
 #### Assets (scope-level)
 

@@ -269,6 +269,16 @@ export default class ThreatModel extends BaseThreatModelObject {
             return bScore - aScore;
         });
     }
+    
+    /**
+     * Count countermeasures in this model and all descendant models,
+     * split by inPlace status.
+     */
+    getCountermeasureStats(): { inPlace: number; notInPlace: number; total: number } {
+        const countermeasures = this.getAllDown(Countermeasure);
+        const inPlace = countermeasures.filter(c => c.inPlace === true).length;
+        return { inPlace, notInPlace: countermeasures.length - inPlace, total: countermeasures.length };
+    }
 
     /**
      * Get all descendant threat models
