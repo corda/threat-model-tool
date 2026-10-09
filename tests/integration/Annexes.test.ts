@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ThreatModel from '../../src/models/ThreatModel.js';
 import { ReportGenerator } from '../../src/ReportGenerator.js';
-import { displayName, renderAnnexFolder, collectModelIds } from '../../src/utils/AnnexRenderer.js';
+import { displayName, renderAnnexFolder, collectModelIds, collectAnchors } from '../../src/utils/AnnexRenderer.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtureDir = path.join(__dirname, '..', 'fixtures', 'annexes', 'AnnexExample');
@@ -165,5 +165,45 @@ test('a model without an annexes folder is not affected', () => {
             fs.readFileSync(path.join(before, 'Example1.md'), 'utf8'),
             fs.readFileSync(path.join(after, 'Example1.md'), 'utf8')
         );
+    });
+});
+
+test('backticked model IDs with an anchor in the report become links; others and code fences stay plain', () => {
+    withTempDir((dir) => {
+        const { markdown } = render(dir, { linkTargets: new Set(['DATA_EXPOSURE', 'ACCESS_CONTROL_ENFORCEMENT']) });
+        assert.ok(markdown.includes('[`DATA_EXPOSURE`](#DATA_EXPOSURE)'));
+        assert.ok(markdown.includes('[`ACCESS_CONTROL_ENFORCEMENT`](#ACCESS_CONTROL_ENFORCEMENT)'));
+        assert.ok(markdown.includes('`NOT_IN_THE_MODEL`') && !markdown.includes('[`NOT_IN_THE_MODEL`]'), 'an ID without an anchor stays plain');
+        assert.ok(markdown.includes('`ALSO_NOT_CHECKED`') && !markdown.includes('[`ALSO_NOT_CHECKED`]'), 'code fences are never linked');
+    });
+});
+
+test('an ID that is already the text of a link is not linked twice', () => {
+    withTempDir((dir) => {
+        const folder = path.join(dir, 'annexes', '10-a');
+        fs.mkdirSync(folder, { recursive: true });
+        fs.writeFileSync(path.join(folder, 'doc.md'), '# Doc\n\nSee [`DATA_EXPOSURE`](https://example.com) and `DATA_EXPOSURE`.\n');
+        const { markdown } = renderAnnexFolder({
+            annexesDir: path.join(dir, 'annexes'), outputDir: dir, firstNumber: 1, headerLevel: 2,
+            useAttrListAnchors: false, linkTargets: new Set(['DATA_EXPOSURE']),
+        });
+        assert.ok(markdown.includes('[`DATA_EXPOSURE`](https://example.com)'));
+        assert.ok(markdown.includes('and [`DATA_EXPOSURE`](#DATA_EXPOSURE).'));
+    });
+});
+
+test('collectAnchors finds html and MkDocs anchors', () => {
+    const anchors = collectAnchors("## T <a id='THREAT_ONE'></a>\n\n<dt id='CM_ONE'>x</dt> ### H {#ASSET_ONE}");
+    assert.deepEqual([...anchors].sort(), ['ASSET_ONE', 'CM_ONE', 'THREAT_ONE']);
+});
+
+test('full report: model IDs in the annexes link to threats and countermeasures that have anchors', () => {
+    withTempDir((dir) => {
+        ReportGenerator.generate(new ThreatModel(fixtureYaml), 'full', dir, { skipDiagrams: true });
+        const md = fs.readFileSync(path.join(dir, 'AnnexExample.md'), 'utf8');
+        assert.ok(md.includes("<dt id='ACCESS_CONTROL_ENFORCEMENT'>"), 'countermeasures have an anchor');
+        assert.ok(md.includes('[`ACCESS_CONTROL_ENFORCEMENT`](#ACCESS_CONTROL_ENFORCEMENT)'));
+        assert.ok(md.includes('[`DATA_EXPOSURE`](#DATA_EXPOSURE)'));
+        assert.ok(md.includes('`NOT_IN_THE_MODEL`') && !md.includes('[`NOT_IN_THE_MODEL`]'));
     });
 });

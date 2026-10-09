@@ -34,6 +34,8 @@ export interface AnnexOptions {
     useAttrListAnchors: boolean;
     /** IDs defined by the model. When given, backticked IDs outside this set produce a warning. */
     knownIds?: Set<string>;
+    /** Anchors that exist in the report. A backticked ID that matches one becomes a link to it. */
+    linkTargets?: Set<string>;
 }
 
 export interface AnnexResult {
@@ -191,7 +193,7 @@ class AnnexRenderer {
             }
 
             this.checkIds(line, fileRel, reportedIds);
-            out.push(this.rewriteLinks(line, fileRel));
+            out.push(this.linkModelIds(this.rewriteLinks(line, fileRel)));
         }
         return out.join('\n').trim();
     }
@@ -208,6 +210,18 @@ class AnnexRenderer {
                 this.idWarnings.push(`annexes/${fileRel}: \`${id}\` is not an ID defined in the model`);
             }
         }
+    }
+
+    /** `ID` -> [`ID`](#ID) when the report has an anchor with that ID. Text already inside a link is left alone. */
+    private linkModelIds(line: string): string {
+        const targets = this.options.linkTargets;
+        if (!targets) {
+            return line;
+        }
+        return line.replace(ID_PATTERN, (whole, id: string, offset: number) => {
+            const insideLink = line[offset - 1] === '[' && line.slice(offset + whole.length).startsWith('](');
+            return targets.has(id) && !insideLink ? `[${whole}](#${id})` : whole;
+        });
     }
 
     private rewriteLinks(line: string, fileRel: string): string {
@@ -339,4 +353,13 @@ export function collectModelIds(yamlFiles: string[]): Set<string> {
         }
     }
     return ids;
+}
+
+/** Anchors present in a generated report: `<a id='X'>`, `id="X"`, `name='X'` and MkDocs `{#X}`. */
+export function collectAnchors(markdown: string): Set<string> {
+    const anchors = new Set<string>();
+    for (const match of markdown.matchAll(/(?:\bid|\bname)=['"]([A-Za-z0-9_.-]+)['"]|\{#([A-Za-z0-9_.-]+)\}/g)) {
+        anchors.add(match[1] ?? match[2]);
+    }
+    return anchors;
 }

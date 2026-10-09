@@ -43,7 +43,7 @@ threatModels/MyModel/
 
   On a line of its own it becomes a diagram in its own paragraph; inside a sentence it becomes an inline image. The `.puml` is copied to `img/annexes/` in the output, where the normal PlantUML step renders it to SVG. Images (`.png`, `.jpg`, `.gif`, `.svg`) next to your markdown are copied the same way.
 - **Code blocks** are never changed.
-- **Model IDs.** An identifier in backticks in the form `UPPER_CASE_NAME` that the model does not define as an `ID:` produces a warning. This catches typos and references to threats that were renamed or removed.
+- **Model IDs.** An identifier in backticks in the form `UPPER_CASE_NAME` becomes a link to that threat, countermeasure, asset, security objective or attacker in the report (`` `ONCHAIN_TX_ANOMALY_DETECTION` `` links to `#ONCHAIN_TX_ANOMALY_DETECTION`). One that the model does not define as an `ID:` produces a warning, which catches typos and references to items that were renamed or removed. Text that is already a link, and code blocks, are left alone.
 
 ## Switches
 
@@ -65,5 +65,6 @@ threatModels/MyModel/
 
 - `src/utils/AnnexRenderer.ts` does the scanning, ordering and rewriting. `ReportGenerator.generate` calls it after the template is rendered, so every template and every build script gets annexes.
 - `copyStaticAssets` skips `assets/annexes`, so the source files are not also published as raw files.
+- Countermeasures carry an anchor named after their ID in the report (`<dt id='ID'>`), like threats, assets, objectives and attackers, so every model ID can be a link target.
 - Annex headings carry explicit anchors (`<a id='annex-…'></a>`, or `{#annex-…}` for MkDocs templates), so links work in the HTML, the PDF and MkDocs.
 - Tests: `tests/integration/Annexes.test.ts`, with the fixture model in `tests/fixtures/annexes/AnnexExample`.

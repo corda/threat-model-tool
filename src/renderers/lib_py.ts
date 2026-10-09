@@ -143,7 +143,8 @@ function renderCountermeasure(cm: Countermeasure): string {
         const fullId = cm.getHierarchicalId ? cm.getHierarchicalId() : cm.id;
         lines.push(`<dt>Reference to <code>${fullId}</code> ${cm.title}</dt>`);
     } else {
-        lines.push(`<dt><code>${(cm as any)._id || cm.id}</code> ${cm.title}</dt>`);
+        const cmId = (cm as any)._id || cm.id;
+        lines.push(`<dt id='${cmId}'><code>${cmId}</code> ${cm.title}</dt>`);
     }
     
     if ((cm as any).appliesToVersions) {

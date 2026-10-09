@@ -20,7 +20,7 @@ import {
 import { AttackTreeGenerator } from './puml/AttackTreeGenerator.js';
 import { HeadingNumberer, resetHeadingNumbers, disableHeadingNumbering, enableHeadingNumbering, isHeadingNumberingEnabled } from './utils/HeadingNumberer.js';
 import { makeMarkdownLinkedHeader, createTitleAnchorHash, PAGEBREAK } from './utils/TemplateUtils.js';
-import { renderAnnexFolder, collectModelIds } from './utils/AnnexRenderer.js';
+import { renderAnnexFolder, collectModelIds, collectAnchors } from './utils/AnnexRenderer.js';
 
 export class ReportGenerator {
     private static TEMPLATE_MAPPING: Record<string, (tmo: ThreatModel, ctx: any) => string> = {
@@ -118,6 +118,7 @@ export class ReportGenerator {
             headerLevel: (ctx.rootHeaderLevel || 1) + 1,
             useAttrListAnchors: Boolean(ctx.useMarkDown_attr_list_ext),
             knownIds: collectModelIds(modelFiles),
+            linkTargets: collectAnchors(mdReport),
         });
 
         for (const warning of [...annexes.linkWarnings, ...annexes.idWarnings]) {
