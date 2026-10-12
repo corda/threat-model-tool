@@ -60,6 +60,7 @@ const ID_PATTERN = /`([A-Z][A-Z0-9_]{4,})`/g;
 const LINK_PATTERN = /(!?)\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
 const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.svg'];
 const FENCE_PATTERN = /^\s*(```|~~~)/;
+const LIST_ITEM_PATTERN = /^\s*([-*+]|\d+[.)])\s+\S/;
 const HEADING_PATTERN = /^(#{1,6})\s+(.*?)\s*$/;
 const MANUAL_NUMBER_PATTERN = /^\d{1,2}(\.\d{1,2})*\.?\s+/;
 const SKIP_TOC = "<span class='skipTOC'></span>";
@@ -193,6 +194,12 @@ class AnnexRenderer {
             }
 
             this.checkIds(line, fileRel, reportedIds);
+            // Markdown renderers such as MkDocs need a blank line before a list that follows a paragraph.
+            const previous = out[out.length - 1];
+            if (LIST_ITEM_PATTERN.test(line) && previous !== undefined && previous.trim() !== ''
+                && !LIST_ITEM_PATTERN.test(previous) && !/^\s/.test(previous)) {
+                out.push('');
+            }
             out.push(this.linkModelIds(this.rewriteLinks(line, fileRel)));
         }
         return out.join('\n').trim();

@@ -38,10 +38,11 @@ threatModels/MyModel/
 - **Diagrams.** A link to a `.puml` file next to your markdown is replaced by the rendered diagram:
 
   ```markdown
-  [Swimlane diagram](PB-01-first.puml)
+  [Flowchart with roles](PB-01-first.puml)
   ```
 
   On a line of its own it becomes a diagram in its own paragraph; inside a sentence it becomes an inline image. The `.puml` is copied to `img/annexes/` in the output, where the normal PlantUML step renders it to SVG. Images (`.png`, `.jpg`, `.gif`, `.svg`) next to your markdown are copied the same way.
+- **Lists.** A blank line is added before a list that follows a paragraph line, because MkDocs and other renderers need it. It is still best to write the blank line in the file.
 - **Code blocks** are never changed.
 - **Model IDs.** An identifier in backticks in the form `UPPER_CASE_NAME` becomes a link to that threat, countermeasure, asset, security objective or attacker in the report (`` `ONCHAIN_TX_ANOMALY_DETECTION` `` links to `#ONCHAIN_TX_ANOMALY_DETECTION`). One that the model does not define as an `ID:` produces a warning, which catches typos and references to items that were renamed or removed. Text that is already a link, and code blocks, are left alone.
 

@@ -95,7 +95,7 @@ test('MkDocs anchors use the attr_list syntax', () => {
 test('a linked .puml becomes an image and is copied where PlantUML renders it', () => {
     withTempDir((dir) => {
         const { markdown } = render(dir);
-        assert.ok(markdown.includes('![Swimlane diagram](img/annexes/20-playbooks/PB-01-first.svg)'));
+        assert.ok(markdown.includes('![Flowchart with roles](img/annexes/20-playbooks/PB-01-first.svg)'));
         assert.ok(fs.existsSync(path.join(dir, 'img', 'annexes', '20-playbooks', 'PB-01-first.puml')));
     });
 });
@@ -205,5 +205,20 @@ test('full report: model IDs in the annexes link to threats and countermeasures 
         assert.ok(md.includes('[`ACCESS_CONTROL_ENFORCEMENT`](#ACCESS_CONTROL_ENFORCEMENT)'));
         assert.ok(md.includes('[`DATA_EXPOSURE`](#DATA_EXPOSURE)'));
         assert.ok(md.includes('`NOT_IN_THE_MODEL`') && !md.includes('[`NOT_IN_THE_MODEL`]'));
+    });
+});
+
+test('a blank line is added before a list that directly follows a paragraph', () => {
+    withTempDir((dir) => {
+        const folder = path.join(dir, 'annexes', '10-a');
+        fs.mkdirSync(folder, { recursive: true });
+        fs.writeFileSync(path.join(folder, 'doc.md'),
+            '# Doc\n\nIntro line:\n- first\n- second\n\n1. one\n   - nested\n2. two\n\n```text\ntext\n- in a fence\n```\n');
+        const { markdown } = renderAnnexFolder({
+            annexesDir: path.join(dir, 'annexes'), outputDir: dir, firstNumber: 1, headerLevel: 2, useAttrListAnchors: false,
+        });
+        assert.ok(markdown.includes('Intro line:\n\n- first\n- second'), 'list after a paragraph gets a blank line');
+        assert.ok(markdown.includes('1. one\n   - nested\n2. two'), 'items and nested items are not separated');
+        assert.ok(markdown.includes('text\n- in a fence'), 'code fences are untouched');
     });
 });
